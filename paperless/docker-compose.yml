@@ -1,0 +1,36 @@
+version: "3.4"
+
+services:
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: paperless
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - /mnt/usb-hdd/paperless/data:/usr/src/paperless/data
+      - /mnt/usb-hdd/paperless/media:/usr/src/paperless/media
+      - /mnt/usb-hdd/paperless/export:/usr/src/paperless/export
+      - /mnt/usb-hdd/paperless/consume:/usr/src/paperless/consume
+    environment:
+      PAPERLESS_REDIS: redis://paperless-redis:6379
+      PAPERLESS_DBHOST: paperless-db
+      PAPERLESS_ADMIN_USER: admin
+      PAPERLESS_ADMIN_PASSWORD: ***ENTFERNT-20260820***
+
+  paperless-db:
+    image: postgres:15
+    restart: always
+    volumes:
+      - paperless_db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+      POSTGRES_PASSWORD: ***ENTFERNT-20260820***
+
+  paperless-redis:
+    image: redis:7
+    restart: always
+
+volumes:
+  paperless_db:

@@ -1,0 +1,26 @@
+services:
+  bichon:
+    image: rustmailer/bichon:latest
+    container_name: bichon
+    restart: unless-stopped
+
+    environment:
+      BICHON_LOG_LEVEL: info
+      BICHON_ROOT_DIR: /data
+      BICHON_ENABLE_ACCESS_TOKEN: "true"
+      # WICHTIG: Ein langes, geheimes Passwort – kann später NICHT geändert werden,
+      # ohne das Archiv zu zerstören.
+      BICHON_ENCRYPT_PASSWORD: "${BICHON_ENCRYPT_PASSWORD}"
+
+      # Optional: CORS einschränken (empfohlen für „richtigen“ Betrieb)
+      # Wenn du NUR lokal zugreifst, kannst du es erstmal weglassen.
+      #BICHON_CORS_ORIGINS: |
+      #  http://192.168.178.50:15630
+
+    volumes:
+      # Speicherort der Archive auf dem Pi
+      - /mnt/usb-hdd/bichon:/data:rw
+
+    ports:
+      # WebUI & API
+      - "15630:15630"

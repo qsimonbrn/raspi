@@ -1,0 +1,6 @@
+.env
+*.db
+**/data/
+*.log
+*.pid
+secrets/
