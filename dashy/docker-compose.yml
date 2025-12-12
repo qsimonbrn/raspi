@@ -1,19 +1,13 @@
-version: "3.8"
-
 services:
   dashy:
-    image: lissy93/dashy:arm64v8
+    image: lissy93/dashy:3.0.1
     container_name: dashy
     volumes:
       - ./config:/app/user-data
     ports:
-      - "8080:80"
+      - "0.0.0.0:8090:80"
     environment:
       - NODE_ENV=production
+      - DASHY_CONF_FILE=/app/user-data/conf.yml
+    command: ["node", "server"]
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "node", "/app/services/healthcheck"]
-      interval: 90s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
