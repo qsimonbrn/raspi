@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    user: "1000:1000"  # simon:simon
+    volumes:
+      - /mnt/usb-hdd:/srv
+      - /mnt/usb-hdd/filebrowser.db:/database/filebrowser.db
+    ports:
+      - "8082:80"
+    restart: unless-stopped
