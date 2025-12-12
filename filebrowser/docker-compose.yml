@@ -7,7 +7,7 @@ services:
     user: "1000:1000"  # simon:simon
     volumes:
       - /mnt/usb-hdd:/srv
-      - /mnt/usb-hdd/filebrowser.db:/database/filebrowser.db
+      - /mnt/usb-hdd/filebrowser-data:/database
     ports:
       - "8082:80"
     restart: unless-stopped
