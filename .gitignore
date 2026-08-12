@@ -5,3 +5,6 @@
 *.pid
 secrets/
 logs/
+
+# Sicherungskopien
+*.bak
