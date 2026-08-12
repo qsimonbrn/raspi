@@ -7,8 +7,8 @@
 | | |
 |---|---|
 | Docker-Version | 29.6.2 (build dfc4efb) |
-| Laufende Container | 7 von 7 |
-| Compose-Stacks | 5 |
+| Laufende Container | 9 von 9 |
+| Compose-Stacks | 6 |
 | Images gesamt | 9 (3,78 GB) |
 | Neustarts seit 2 Wochen | keine |
 
@@ -23,6 +23,8 @@
 | **filebrowser** | `filebrowser/filebrowser` | 8082 | Dateizugriff im Browser | `unless-stopped` |
 | **bichon** | `rustmailer/bichon` | 15630 | E-Mail-Archivierung | `unless-stopped` |
 | **portainer** | `portainer/portainer-ce` | 9000, 9443 | Docker-Verwaltung | `always` |
+| **homepage** | `ghcr.io/gethomepage/homepage` | 3000 | Dashboard mit Live-Status | `unless-stopped` |
+| homepage-dockerproxy | `tecnativa/docker-socket-proxy` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Homepage | `unless-stopped` |
 
 Kein Container läuft mit `privileged`, kein Container nutzt `network_mode: host`.
 Beides ist gut — es bedeutet, dass kein Dienst mehr Rechte hat als nötig.
@@ -207,5 +209,21 @@ Zusammen mit der im Git gelöschten `dashy/config/conf.yml` erklärt das, warum 
 Dashboard nie über einen Testzustand hinausgekommen ist: Jede Konfiguration ging beim
 nächsten Update verloren.
 
-**Das ist der eigentliche Grund, warum ein neues Dashboard-Setup nötig ist** — nicht die
-Wahl der Software. Details in [09 — Empfehlungen](09-empfehlungen.md).
+**Das war der eigentliche Grund, warum ein neues Dashboard-Setup nötig war** — nicht die
+Wahl der Software.
+
+### ✅ Behoben: Dashboard mit persistenter Konfiguration (13.08.2026)
+
+Als Nachfolger läuft **Homepage** auf Port 3000. Die Konfiguration liegt unter
+`docker-stacks/homepage/config/` — also als Volume eingebunden **und** im Git
+versioniert. Ein `docker compose pull && up -d` verliert sie nicht mehr.
+
+Der Docker-Zugriff läuft über einen **Socket-Proxy** mit Allowlist statt über einen
+direkt eingebundenen Socket. Hintergrund: Ein Bind-Mount mit `:ro` schützt nur die
+Socket-*Datei*, nicht die dahinterliegende API — wer den Socket erreicht, kann
+Container starten und damit faktisch Root auf dem Host werden. Der Proxy lässt
+ausschließlich lesende Container- und Info-Abfragen durch; schreibende Anfragen
+werden mit `403` abgewiesen (verifiziert).
+
+Dashy läuft vorerst unverändert auf Port 8080 weiter, damit ein Vergleich möglich
+ist. Sobald Homepage sich bewährt hat, kann der Dashy-Stack entfernt werden.

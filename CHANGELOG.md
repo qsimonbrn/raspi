@@ -8,6 +8,43 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.1.0] — 2026-08-13
+
+### Geändert am System
+
+- **Homepage als Dashboard installiert** (Port 3000), Stack unter
+  `docker-stacks/homepage/`. Konfiguration als Volume eingebunden und im Git
+  versioniert.
+- **Socket-Proxy** (`tecnativa/docker-socket-proxy`) ergänzt: Homepage erhält
+  Container-Status und Ressourcendaten über eine Allowlist statt über einen
+  direkt eingebundenen Docker-Socket. Schreibende Anfragen werden mit `403`
+  abgewiesen — verifiziert.
+- SSD unter `/mnt/usb-hdd` schreibgeschützt in den Homepage-Container
+  eingebunden, damit das Speicher-Widget die Belegung anzeigen kann.
+- Dashy läuft unverändert weiter (Port 8080), zunächst zum Vergleich.
+
+### Behoben
+
+- **Dashy-Konfiguration nicht persistent** — der Nachfolger Homepage hat die
+  Konfiguration als Volume. Siehe [05 — Docker](docs/05-docker.md).
+- Empfehlung 3.1 (Dashboard) abgeschlossen.
+
+### Aktualisiert
+
+- `docs/03-netzwerk.md` — Port 3000 in der Portliste
+- `docs/05-docker.md` — Containerzahl 7 → 9, Stacks 5 → 6, neue Einträge
+- `docs/09-empfehlungen.md` — 3.1 als erledigt markiert
+- `docs/10-zugriff.md` — Homepage in Übersicht und Zugriffsmatrix
+- `README.md` — Dashboard-Link
+
+### Offen
+
+- Push zu GitHub steht aus: SSH-Schlüssel des Pi ist auf dem Konto nicht
+  hinterlegt, und die OAuth-Freigabe des GitHub-Connectors umfasst keinen
+  Repository-Zugriff (`403 Resource not accessible by integration`).
+
+---
+
 ## [1.0.0] — 2026-08-13
 
 Erste vollständige Bestandsaufnahme.

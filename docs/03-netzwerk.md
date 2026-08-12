@@ -94,6 +94,7 @@ Dass er DOWN ist, bestätigt: Es läuft kein Container außerhalb eines Compose-
 | 80 | Pi-hole Web | `0.0.0.0` + `[::]` |
 | 443 | Pi-hole | `0.0.0.0` + `[::]` |
 | 139 / 445 | Samba | `0.0.0.0` + `[::]` |
+| 3000 | Homepage (Dashboard) | `0.0.0.0` + `[::]` |
 | 8000 | Paperless-ngx | `0.0.0.0` + `[::]` |
 | 8080 | Dashy | `0.0.0.0` + `[::]` |
 | 8082 | Filebrowser | `0.0.0.0` + `[::]` |

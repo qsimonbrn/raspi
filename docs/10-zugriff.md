@@ -11,6 +11,7 @@ Alle Zugangswege zum System auf einen Blick.
 | Dienst | Adresse | Zweck |
 |---|---|---|
 | **Pi-hole** | `http://192.168.178.80/admin` | DNS-Statistiken, Blocklisten, lokale DNS-Einträge |
+| **Homepage** | `http://192.168.178.80:3000` | **Dashboard — Einstieg zu allen Diensten** |
 | **Paperless-ngx** | `http://192.168.178.80:8000` | Dokumentenarchiv, Suche, OCR |
 | **Dashy** | `http://192.168.178.80:8080` | Dashboard / Startseite |
 | **Filebrowser** | `http://192.168.178.80:8082` | Dateizugriff auf die SSD im Browser |
@@ -61,6 +62,7 @@ außen. Das ist beabsichtigt und richtig so.
 
 | Dienst | Aus dem LAN | Über VPN | Aus dem Internet |
 |---|---|---|---|
+| Homepage | ✅ | ✅ | ❌ |
 | Pi-hole Web | ✅ | ✅ | ❌ |
 | Paperless | ✅ | ✅ | ❌ |
 | Portainer | ✅ | ✅ | ❌ |

@@ -56,6 +56,8 @@ separaten Repository.
 | Ausstehende OS-Updates | 0 |
 | Fehlgeschlagene Dienste | 0 |
 
+**Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
+
 ### Die drei wichtigsten offenen Punkte
 
 1. **Keine automatisierten Backups.** Letzter rclone-Lauf: 12.12.2025. Die

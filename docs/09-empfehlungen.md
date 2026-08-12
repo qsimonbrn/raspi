@@ -87,7 +87,15 @@ Container-Ports müssen zusätzlich über die `DOCKER-USER`-Chain abgesichert od
 
 ## Stufe 3 — Betrieb und Komfort
 
-### 3.1 Dashboard richtig aufsetzen
+### 3.1 Dashboard richtig aufsetzen — ✅ erledigt am 13.08.2026
+
+> Umgesetzt mit **Homepage** auf Port 3000, Konfiguration persistent und im Git,
+> Docker-Anbindung über einen lesenden Socket-Proxy.
+> Siehe [05 — Docker](05-docker.md).
+
+<details>
+<summary>Ursprüngliche Analyse und Optionsvergleich</summary>
+
 
 **Das Problem ist nicht die Software, sondern die fehlende Persistenz.** In der aktuellen
 `dashy/docker-compose.yml` ist der Volume-Block auskommentiert — jede Konfiguration geht
@@ -105,6 +113,8 @@ müssen. Und der Live-Status beantwortet die Frage, für die man ein Dashboard �
 öffnet: „Läuft alles?"
 
 In jedem Fall: **Konfiguration als Volume mounten und ins Git-Repo aufnehmen.**
+
+</details>
 
 ### 3.2 Reverse Proxy plus lokale DNS-Einträge
 
