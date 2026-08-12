@@ -1,0 +1,34 @@
+---
+title: raspberrypi
+description: Heimserver 192.168.178.80
+
+theme: dark
+color: slate
+
+headerStyle: boxed
+hideVersion: true
+disableCollapse: false
+useEqualHeights: true
+
+# Reihenfolge und Spaltenaufteilung der Gruppen aus services.yaml
+layout:
+  Netzwerk & DNS:
+    style: row
+    columns: 2
+    icon: mdi-lan
+  Dokumente & Daten:
+    style: row
+    columns: 3
+    icon: mdi-file-document-multiple
+  Verwaltung:
+    style: row
+    columns: 2
+    icon: mdi-cog
+
+# Statusanzeige an den Kacheln
+statusStyle: dot
+
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: true
+  showSearchSuggestions: false

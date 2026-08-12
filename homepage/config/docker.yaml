@@ -1,0 +1,9 @@
+# Docker-Anbindung fuer Container-Status und Ressourcenanzeige.
+#
+# Verbindung geht NICHT direkt auf den Socket, sondern ueber den
+# Socket-Proxy aus docker-compose.yml (nur lesende Container-Abfragen).
+# Der Name "pi" wird in services.yaml bei jedem Dienst als "server:" referenziert.
+
+pi:
+  host: dockerproxy
+  port: 2375
