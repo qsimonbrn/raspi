@@ -8,6 +8,44 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.3.0] — 2026-08-13
+
+### Geändert am System
+
+- **Paperless-ngx vollständig konfiguriert**: OCR auf `deu+eng`, Zeitzone
+  Europe/Berlin, Ablageschema `Jahr/Korrespondent/Datum_Titel`, Deskew und
+  Seitendrehung aktiv, `OCR_MODE: skip` für bereits durchsuchbare PDFs,
+  Worker-Zahl auf den Pi 4 abgestimmt.
+- **Samba-Freigabe `scans`** angelegt, zeigt auf den Consume-Ordner. macOS-Beiwerk
+  (`._*`, `.DS_Store`) wird über `veto files` ausgesperrt.
+- **Polling statt inotify** für den Einwurf-Ordner — verhindert, dass halb
+  übertragene Dateien eingelesen werden.
+- **Zugangsdaten bereinigt**: PostgreSQL-Passwort und Secret-Key zufällig erzeugt,
+  in `.env` ausgelagert, über `.gitignore` ausgeschlossen. Das alte Passwort wurde
+  per `ALTER USER` in der laufenden Datenbank ersetzt.
+- Container-Abhängigkeiten über `condition: service_healthy` statt blossem
+  `depends_on`; Healthchecks für Paperless und PostgreSQL ergänzt.
+
+### Hinzugefügt zur Doku
+
+- **[13 — Paperless-ngx](docs/13-paperless.md)** — Einwurfwege, Konfiguration mit
+  Begründung, automatische Zuordnung, Einordnung von KI-Erweiterungen, Betrieb
+  und Fehlersuche.
+
+### Korrigiert
+
+- **Sachfehler in `docs/05-docker.md`**: Die Behauptung, `postgres:15` könne
+  unbeabsichtigt auf PostgreSQL 16 springen, war falsch — der Tag ist an die
+  Major-Version gebunden. Auch in `docs/09` entsprechend richtiggestellt.
+
+### Geprüft
+
+- Vollständiger Durchlauf mit Testdokument: Erkennung nach 15 s, OCR korrekt,
+  Ablage nach Schema, Einwurf-Ordner geleert, 62 s für eine Seite. Testdokument
+  anschließend entfernt.
+
+---
+
 ## [1.2.0] — 2026-08-13
 
 ### Geändert am System

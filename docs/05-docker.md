@@ -82,10 +82,11 @@ erreichbar.
 Der naheliegende Reflex wäre Watchtower mit automatischem Update aller `:latest`-Tags.
 Das ist bei diesem Setup gefährlich:
 
-- **`postgres:15`** ist ein Major-Version-Tag. Zieht Watchtower irgendwann ein Image mit
-  PostgreSQL 16, startet der Container nicht mehr — das Datenverzeichnis von Version 15
-  ist für Version 16 unlesbar und muss migriert werden. Paperless wäre offline, im
-  ungünstigen Fall mit beschädigtem Zustand.
+- **`postgres:15`** bleibt dauerhaft bei PostgreSQL 15 — ein unbeabsichtigter Sprung
+  auf 16 ist über diesen Tag **nicht** möglich. *(Korrektur vom 13.08.2026: Die erste
+  Fassung dieser Dokumentation behauptete das Gegenteil. Das war schlicht falsch.)*
+  Das tatsächliche Risiko liegt woanders: Ein Sprung innerhalb von 15 kann mit einem
+  gleichzeitigen Paperless-Update unglücklich zusammenfallen.
 - **Paperless-ngx** hat in der Vergangenheit Releases mit erforderlichen manuellen
   Migrationsschritten gehabt. Ein Auto-Update über mehrere Versionen hinweg kann
   Datenbank-Migrationen auslösen, die nicht rückwärtskompatibel sind.

@@ -39,6 +39,7 @@ separaten Repository.
 | [10 — Zugriff](docs/10-zugriff.md) | Alle URLs, Ports und Zugangswege |
 | [11 — Notfallwiederherstellung](docs/11-disaster-recovery.md) | Wiederaufbau von Null |
 | [12 — Backup](docs/12-backup.md) | Strategie, Umfang, Wiederherstellung, Grenzen |
+| [13 — Paperless-ngx](docs/13-paperless.md) | Dokumentenarchiv: Einwurf, OCR, Zuordnung, KI-Optionen |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 

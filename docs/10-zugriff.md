@@ -27,6 +27,7 @@ Alle Zugangswege zum System auf einen Blick.
 | Weg | Adresse | Hinweis |
 |---|---|---|
 | **Samba (macOS)** | `smb://192.168.178.80/usb-share` | Finder → *Gehe zu* → *Mit Server verbinden* |
+| **Einwurf Paperless** | `smb://192.168.178.80/scans` | Dateien hier ablegen → werden automatisch eingelesen |
 | **Samba (Windows)** | `\\192.168.178.80\usb-share` | |
 | **Home-Verzeichnis** | `smb://192.168.178.80/simon` | nicht in der Netzwerkumgebung sichtbar |
 | Benutzer | `simon` | einziger berechtigter Samba-Benutzer |

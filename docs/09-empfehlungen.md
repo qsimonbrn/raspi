@@ -174,7 +174,7 @@ mit physischem Zugang oder zweitem Zugangsweg durchführen.
 
 | Idee | Warum nicht |
 |---|---|
-| **Watchtower mit Auto-Update auf `:latest`** | Bei `postgres:15` kann ein unbeabsichtigter Sprung auf Version 16 das Datenverzeichnis unlesbar machen. Paperless hatte Releases mit manuellen Migrationsschritten. Benachrichtigung (Diun) ist hier klar besser als Automatik. |
+| **Watchtower mit Auto-Update auf `:latest`** | Paperless-ngx hatte Releases mit erforderlichen manuellen Migrationsschritten — ein unbeaufsichtigtes Update über mehrere Versionen kann Datenbank-Migrationen auslösen, die nicht rückwärtskompatibel sind. Benachrichtigung (Diun) ist hier klar besser als Automatik. |
 | **Nextcloud** | Neben Paperless und PostgreSQL wird es bei 3,7 GB RAM eng. Für Dateizugriff existieren mit Samba und Filebrowser bereits zwei funktionierende Wege. Der Nutzen rechtfertigt die Last nicht. |
 | **Grafana + Prometheus** | Für sieben Container ist das Overhead ohne Erkenntnisgewinn. Uptime Kuma beantwortet die relevante Frage („läuft es?") mit einem Bruchteil der Ressourcen. |
 | **SSH-Port von 22 verlegen** | Verhindert nur Log-Rauschen, keine gezielten Angriffe. `PasswordAuthentication no` bringt ungleich mehr. |
