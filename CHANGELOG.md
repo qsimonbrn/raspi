@@ -8,6 +8,24 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.3.1] — 2026-08-13
+
+### Geändert am System
+
+- Tag **`Posteingang`** als Inbox-Tag angelegt — jedes neu eingelesene Dokument
+  wird damit markiert, bis es durchgesehen ist.
+- Acht Dokumenttypen vorangelegt: Rechnung, Vertrag, Behördenpost, Kontoauszug,
+  Versicherung, Quittung, Bescheinigung, Kündigung.
+
+### Hinzugefügt zur Doku
+
+- `docs/13-paperless.md`, neuer Abschnitt 4 **„Der Arbeitsablauf im Alltag"**:
+  Schleife vom Einwurf bis zur Ablage, Posteingang-Konzept, Abgrenzung von
+  Korrespondent / Dokumenttyp / Tag, Empfehlung zur Tag-Struktur, Vorsortieren
+  über Unterordner, Suchsyntax mit Beispielen, Zugriff vom Mobilgerät.
+
+---
+
 ## [1.3.0] — 2026-08-13
 
 ### Geändert am System

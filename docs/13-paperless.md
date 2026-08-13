@@ -86,7 +86,110 @@ versucht Paperless, sie als Dokumente einzulesen. Die Samba-Freigabe blendet sie
 
 ---
 
-## 4. Konfiguration im Einzelnen
+## 4. Der Arbeitsablauf im Alltag
+
+Der Kern von Paperless ist eine Schleife aus vier Schritten. Wer sie einhält, hat ein
+gepflegtes Archiv; wer sie überspringt, hat einen Haufen unsortierter PDFs mit Suchfunktion.
+
+```
+   Scannen / Speichern
+           ↓
+   in  smb://192.168.178.80/scans  legen
+           ↓
+   Paperless liest ein  →  Dokument bekommt automatisch den Tag "Posteingang"
+           ↓
+   In der Oberflaeche unter "Posteingang" durchsehen:
+   Titel pruefen · Korrespondent setzen · Dokumenttyp waehlen · Tags vergeben
+           ↓
+   Tag "Posteingang" entfernen  →  Dokument ist abgelegt
+```
+
+### Der Posteingang
+
+Jedes neu eingelesene Dokument bekommt automatisch den Tag **`Posteingang`**. Er ist der
+einzige Tag, der eine technische Funktion hat: Er markiert „noch nicht durchgesehen".
+
+In der Oberfläche gibt es dafür links den Punkt **Posteingang**. Was dort liegt, wartet
+auf dich. Ist die Liste leer, ist alles abgelegt.
+
+**Das ist bewusst ein manueller Schritt.** Die automatische Erkennung wird gut, aber sie
+wird nie perfekt — und ein falsch abgelegtes Dokument findest du in fünf Jahren nicht
+wieder. Zehn Sekunden pro Dokument beim Durchsehen sind der Preis dafür, dass das Archiv
+verlässlich bleibt.
+
+### Wie oft?
+
+Einmal pro Woche reicht. Der Posteingang darf sich füllen — er ist eine Warteschlange,
+kein Alarm.
+
+### Struktur: Korrespondent, Dokumenttyp, Tag
+
+Paperless kennt drei Ordnungsebenen. Sie sauber auseinanderzuhalten, ist der wichtigste
+Punkt überhaupt:
+
+| Ebene | Antwortet auf | Beispiele |
+|---|---|---|
+| **Korrespondent** | *Von wem?* | Stadtwerke Musterstadt, Finanzamt, HUK-Coburg, Vermieter |
+| **Dokumenttyp** | *Was ist es?* | Rechnung, Vertrag, Kontoauszug, Bescheinigung |
+| **Tag** | *Wozu gehört es?* | Wohnung, Auto, Steuer 2026, Gesundheit |
+
+Ein Dokument hat **genau einen** Korrespondenten und **genau einen** Dokumenttyp, aber
+beliebig viele Tags. Die Stromrechnung ist also: Korrespondent *Stadtwerke*, Typ
+*Rechnung*, Tags *Wohnung* und *Steuer 2026*.
+
+**Bereits angelegt** wurden acht gängige Dokumenttypen: Rechnung, Vertrag, Behördenpost,
+Kontoauszug, Versicherung, Quittung, Bescheinigung, Kündigung. Umbenennen und Löschen
+ist jederzeit möglich.
+
+**Tags bleiben bewusst dir überlassen** — sie hängen davon ab, wie du denkst. Eine
+Empfehlung aus der Praxis: **zehn bis fünfzehn Tags, nicht mehr.** Tags nach Lebensbereich
+(*Wohnung*, *Auto*, *Arbeit*, *Gesundheit*) funktionieren besser als Tags nach Thema, weil
+das Thema meist schon im Dokumenttyp oder Korrespondenten steckt. Doppelt zu erfassen,
+was ohnehin da ist, macht die Suche nicht besser — nur die Pflege aufwendiger.
+
+### Vorsortieren beim Einwerfen
+
+Weil Unterordner zu Tags werden, kannst du dir Arbeit sparen:
+
+```
+scans/Auto/tuev-2026.pdf        →  Dokument bekommt Tag "Auto"
+scans/Steuer 2026/spende.pdf    →  Dokument bekommt Tag "Steuer 2026"
+```
+
+Die Unterordner werden bei Bedarf automatisch angelegt und der Tag bei Bedarf ebenso.
+
+### Dokumente wiederfinden
+
+Die Suche oben durchsucht **den erkannten Text**, nicht nur Titel und Tags. Die Suche
+nach `Zählernummer` findet also auch eine Rechnung, in der das Wort nur im Kleingedruckten
+steht.
+
+Nützliche Suchbefehle:
+
+| Eingabe | Findet |
+|---|---|
+| `stadtwerke` | überall — Text, Titel, Korrespondent |
+| `correspondent:stadtwerke` | nur diesen Absender |
+| `type:rechnung created:[2026 to 2027]` | Rechnungen aus 2026 |
+| `tag:auto` | alles mit diesem Tag |
+| `"jährliche abrechnung"` | exakte Wortfolge |
+| `is:inbox` | alles im Posteingang |
+
+Filter lassen sich links auch anklicken und als **gespeicherte Ansicht** sichern — etwa
+„Alle Rechnungen dieses Jahres" fest in der Seitenleiste.
+
+### Vom Handy
+
+Es gibt keine offizielle App, aber die Oberfläche ist für Mobilgeräte gebaut. Im Browser
+`http://192.168.178.80:8000` aufrufen und zum Homescreen hinzufügen — verhält sich dann
+wie eine App. Von unterwegs geht das über den WireGuard-Tunnel.
+
+Für iOS und Android gibt es zusätzlich Apps aus der Community (etwa *Swift Paperless* und
+*Paperless Mobile*), die sich mit derselben Adresse und einem API-Token verbinden.
+
+---
+
+## 5. Konfiguration im Einzelnen
 
 Alle Werte stehen in `docker-stacks/paperless/docker-compose.yml`. Geheimnisse liegen
 in `.env` und sind über `.gitignore` ausgeschlossen.
@@ -142,7 +245,7 @@ wiederherstellbar, bevor sie endgültig verschwinden.
 
 ---
 
-## 5. Automatische Zuordnung
+## 6. Automatische Zuordnung
 
 Paperless bringt einen eigenen Klassifikator mit (scikit-learn, kein LLM). Er lernt aus
 den Dokumenten, die du selbst zugeordnet hast, und schlägt danach Korrespondent,
@@ -188,7 +291,7 @@ beurteilen, ob er es nicht tut. Wenn die Zuordnung nach 50 bis 100 Dokumenten ni
 
 ---
 
-## 6. Sicherung
+## 7. Sicherung
 
 Paperless wird vom täglichen Backup erfasst — siehe [12 — Backup](12-backup.md).
 
@@ -201,7 +304,7 @@ Wiederherstellung Schritt für Schritt in [12 — Backup, Abschnitt 7](12-backup
 
 ---
 
-## 7. Betrieb
+## 8. Betrieb
 
 ```bash
 # Läuft alles?
@@ -232,7 +335,7 @@ cd ~/docker-stacks/paperless && docker compose up -d
 
 ---
 
-## 8. Aufbau des Stacks
+## 9. Aufbau des Stacks
 
 | Container | Aufgabe |
 |---|---|
@@ -253,7 +356,7 @@ bis der Container läuft.
 
 ---
 
-## 9. Prüfung bei der Einrichtung
+## 10. Prüfung bei der Einrichtung
 
 Der komplette Weg wurde am 13.08.2026 mit einem Testdokument durchlaufen:
 
