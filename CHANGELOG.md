@@ -8,6 +8,34 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.4.2] — 2026-08-13
+
+### Geändert am System
+
+- **Erstsortierung des Paperless-Bestands**: 26 Dokumente mit Titel, Korrespondent,
+  Dokumenttyp und Tags versehen. 14 Leerseiten (Duplex-Rückseiten) in den Papierkorb
+  verschoben — 30 Tage wiederherstellbar.
+- Vier Dokumenttypen ergänzt: Arztbrief, Laborbefund, Verdienstabrechnung,
+  Bussgeldbescheid. Sechs Tags angelegt: Gesundheit, Auto, Arbeit, Finanzen,
+  Versicherung, Einkauf — dazu `Pruefen` für Zweifelsfälle.
+- Elf Korrespondenten angelegt.
+- Das Skript liegt unter `docker-stacks/paperless/kategorisieren.py`.
+
+### Behoben
+
+- **Falsche Dokumentdaten.** Bei Arztbriefen hatte der Datumsparser das im Text
+  stehende Geburtsdatum übernommen. Neuer Ansatz: Geburtsdatum ausschließen,
+  nur Punkte als Trenner akzeptieren (sonst werden Laborwerte wie `11.6-14` als
+  Datum gelesen), zweistellige Jahre unterstützen, das späteste plausible Datum
+  wählen. Ergebnis: kein Dokument mehr vor 2015 datiert.
+
+### Offen
+
+- Drei Dokumente tragen den Tag `Pruefen` und bleiben im Posteingang: zwei
+  unlesbare Scans und ein Schreiben ohne auffindbares Datum.
+
+---
+
 ## [1.4.1] — 2026-08-13
 
 ### Behoben
