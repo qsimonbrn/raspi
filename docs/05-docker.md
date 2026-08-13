@@ -7,8 +7,8 @@
 | | |
 |---|---|
 | Docker-Version | 29.6.2 (build dfc4efb) |
-| Laufende Container | 9 von 9 |
-| Compose-Stacks | 6 |
+| Laufende Container | 10 von 10 |
+| Compose-Stacks | 7 |
 | Images gesamt | 9 (3,78 GB) |
 | Neustarts seit 2 Wochen | keine |
 
@@ -24,6 +24,7 @@
 | **bichon** | `rustmailer/bichon` | 15630 | E-Mail-Archivierung | `unless-stopped` |
 | **portainer** | `portainer/portainer-ce` | 9000, 9443 | Docker-Verwaltung | `always` |
 | **homepage** | `ghcr.io/gethomepage/homepage` | 3000 | Dashboard mit Live-Status | `unless-stopped` |
+| **ntfy** | `binwiederhier/ntfy` | 2586 | Push-Benachrichtigungen | `unless-stopped` |
 | homepage-dockerproxy | `tecnativa/docker-socket-proxy` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Homepage | `unless-stopped` |
 
 Kein Container läuft mit `privileged`, kein Container nutzt `network_mode: host`.

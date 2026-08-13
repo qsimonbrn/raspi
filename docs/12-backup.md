@@ -322,14 +322,24 @@ sudo -E restic snapshots
 sudo -E restic stats --mode raw-data
 ```
 
-Schlägt ein Lauf fehl, endet der Dienst mit Fehlerstatus und erscheint dauerhaft in
-`systemctl --failed` — dieselbe Stelle, die auch `inventar/collect.sh` bei jeder
-Bestandsaufnahme abfragt. Ein stiller Ausfall ist damit ausgeschlossen, solange die
-Bestandsaufnahme gelegentlich läuft.
+### Push-Benachrichtigung (seit 13.08.2026)
 
-**Ergänzung, sobald Uptime Kuma steht** (siehe [09 — Empfehlungen](09-empfehlungen.md)):
-Ein „Push"-Monitor, den das Skript am Ende aufruft. Bleibt der Aufruf aus, meldet sich
-Uptime Kuma aktiv — statt darauf zu warten, dass jemand nachsieht.
+Jeder Lauf meldet sich per **ntfy** aufs Handy — siehe
+[14 — Benachrichtigungen](14-benachrichtigungen.md):
+
+| Fall | Priorität | Verhalten |
+|---|---|---|
+| Fehlgeschlagen | `urgent` | Ton und Vibration |
+| Mit Warnungen | `high` | normale Benachrichtigung |
+| Erfolgreich | `min` | stiller Eintrag im Verlauf |
+
+Der Erfolgsfall wird absichtlich mitgemeldet, wenn auch lautlos: Bleibt die tägliche
+Meldung aus — etwa weil der Timer gar nicht mehr läuft —, ist genau das die
+Information. Bei „nur bei Fehlern melden" wäre dieser Fall unsichtbar.
+
+Zusätzlich endet ein fehlgeschlagener Lauf mit Fehlerstatus und erscheint dauerhaft in
+`systemctl --failed` — dieselbe Stelle, die `inventar/collect.sh` bei jeder
+Bestandsaufnahme abfragt.
 
 ---
 

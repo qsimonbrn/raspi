@@ -8,6 +8,30 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.4.0] — 2026-08-13
+
+### Geändert am System
+
+- **ntfy eingerichtet** (Port 2586): selbst gehostete Push-Benachrichtigungen,
+  Zugriffsschutz `deny-all`, Benutzer `simon` mit Rolle admin, Token für das
+  Backup in `/root/.ntfy-token`.
+- **Backup meldet sich jetzt**: fehlgeschlagen mit `urgent`, Warnungen mit `high`,
+  Erfolg lautlos mit `min` — der stille Erfolgseintrag dient als Lebenszeichen.
+- ntfy ins Dashboard aufgenommen, Lesezeichen für den Paperless-Einwurf ergänzt.
+
+### Hinzugefügt zur Doku
+
+- **[14 — Benachrichtigungen](docs/14-benachrichtigungen.md)** — Einrichtung auf dem
+  Handy, Einschränkung auf das Heimnetz mit Abwägung der Alternativen, eigene
+  Nachrichten verschicken, Zugriffsschutz, Betrieb.
+
+### Geprüft
+
+- Zweiter Backup-Lauf inkrementell: **12,2 MiB übertragen statt 705 MiB**, 32
+  Sekunden. Erfolgsmeldung mit Priorität `min` nachweislich zugestellt.
+
+---
+
 ## [1.3.1] — 2026-08-13
 
 ### Geändert am System

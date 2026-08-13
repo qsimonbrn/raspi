@@ -40,6 +40,7 @@ separaten Repository.
 | [11 — Notfallwiederherstellung](docs/11-disaster-recovery.md) | Wiederaufbau von Null |
 | [12 — Backup](docs/12-backup.md) | Strategie, Umfang, Wiederherstellung, Grenzen |
 | [13 — Paperless-ngx](docs/13-paperless.md) | Dokumentenarchiv: Einwurf, OCR, Zuordnung, KI-Optionen |
+| [14 — Benachrichtigungen](docs/14-benachrichtigungen.md) | ntfy: Push aufs Handy, Anbindung ans Backup |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 
