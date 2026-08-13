@@ -8,6 +8,28 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.4.1] — 2026-08-13
+
+### Behoben
+
+- **`PAPERLESS_FILENAME_DATE_ORDER` entfernt.** Die Variable war bei der Einrichtung
+  fälschlich auf `DMY` gesetzt; aus Scanner-Dateinamen wurden dadurch sinnlose Daten
+  abgeleitet (10 Dokumente auf den 10.11.2000). Stattdessen `PAPERLESS_DATE_ORDER: DMY`
+  für die Auswertung des Inhalts. Die betroffenen Daten wurden aus dem Inhalt neu
+  abgeleitet — alle 10 erfolgreich.
+
+### Hinzugefügt zur Doku
+
+- `docs/13-paperless.md`: Abschnitte zu **Duplex-Leerseiten** (14 von 40 Dokumenten
+  beim ersten Durchlauf, Prüfung ergab 0,00 % dunkle Fläche) und zur bewussten
+  Abschaltung der Datumsauswertung aus Dateinamen.
+
+### Geändert am System
+
+- Tag `Leerseite` angelegt und auf alle inhaltsleeren Dokumente gesetzt.
+
+---
+
 ## [1.4.0] — 2026-08-13
 
 ### Geändert am System

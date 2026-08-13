@@ -238,6 +238,37 @@ Vier Kerne, 3,7 GiB RAM — zwei Worker mit je zwei Threads lasten die CPU aus, 
 Pi-hole und den übrigen Diensten den Speicher zu nehmen. Höhere Werte bringen auf dieser
 Hardware nichts, weil OCR speicher- und nicht kerngebunden ist.
 
+### ⚠️ Duplex-Scans: Rückseiten werden zu leeren Dokumenten
+
+Scannt der Scanner beidseitig, entsteht für jede leere Rückseite ein eigenes
+Dokument ohne Inhalt. Beim ersten Durchlauf am 13.08.2026 waren das **14 von 40**.
+
+Die Texterkennung arbeitet dabei korrekt — die Seiten sind nachweislich leer
+(0,00 % dunkle Fläche bei der Prüfung). Im Protokoll erscheint dazu
+`[tesseract] Error during processing` zusammen mit `Too few characters`. Das ist
+kein Fehler, sondern die Lagebestimmung, die auf einer leeren Seite naturgemäß
+nichts findet.
+
+**Zwei Wege dagegen:**
+
+1. **Am Scanner** die Leerseitenerkennung aktivieren (heißt je nach Gerät
+   „Blank Page Removal", „Leerseiten überspringen" oder „Skip Blank Page"). Das ist
+   die saubere Lösung — die Seiten entstehen gar nicht erst.
+2. **Nachträglich in Paperless**: Leere Dokumente tragen den Tag `Leerseite`.
+   Danach filtern, alle auswählen, löschen. Der Papierkorb hält sie 30 Tage vor.
+
+### ⚠️ Datum aus dem Dateinamen: bewusst abgeschaltet
+
+`PAPERLESS_FILENAME_DATE_ORDER` ist **nicht** gesetzt — und das ist Absicht.
+
+Bei der Einrichtung stand die Variable versehentlich auf `DMY`. Scanner-Dateinamen
+wie `doc00451220260813032623_020` bestehen aus langen Ziffernketten, aus denen der
+Parser sinnlose Daten ableitet: Zehn Dokumente landeten auf dem **10.11.2000**.
+
+Ohne die Variable durchsucht Paperless nur den erkannten **Inhalt** nach einem Datum
+(`PAPERLESS_DATE_ORDER: DMY`) — und findet dort das tatsächliche Rechnungs- oder
+Briefdatum. Die zehn falschen Daten wurden nachträglich aus dem Inhalt neu abgeleitet.
+
 ### Papierkorb
 
 `PAPERLESS_EMPTY_TRASH_DELAY: 30` — gelöschte Dokumente bleiben 30 Tage
