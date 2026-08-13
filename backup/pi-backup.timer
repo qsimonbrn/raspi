@@ -1,0 +1,17 @@
+[Unit]
+Description=Taegliches Backup des Raspberry Pi
+Documentation=https://github.com/qsimonbrn/raspi-doku/blob/main/docs/12-backup.md
+
+[Timer]
+# Taeglich um 03:17 -- bewusst nicht zur vollen Stunde, damit der Lauf
+# nicht mit apt-daily und logrotate zusammenfaellt.
+OnCalendar=*-*-* 03:17:00
+
+# Bis zu 20 Minuten Streuung, damit nicht alle Geraete gleichzeitig hochladen
+RandomizedDelaySec=20m
+
+# Verpasste Laeufe (Pi war aus) werden beim naechsten Start nachgeholt
+Persistent=true
+
+[Install]
+WantedBy=timers.target
