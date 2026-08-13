@@ -1,36 +1,132 @@
-version: "3.4"
+# =============================================================================
+#  Paperless-ngx — Dokumentenarchiv mit Texterkennung
+#
+#  Geheimnisse (Datenbankpasswort, Secret-Key) stehen in .env und sind ueber
+#  .gitignore vom Repository ausgeschlossen. Diese Datei enthaelt bewusst
+#  keine Zugangsdaten.
+#
+#  Dokumentation: raspi-doku/docs/13-paperless.md
+# =============================================================================
 
 services:
+
   paperless:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
     container_name: paperless
     restart: always
+
+    depends_on:
+      paperless-db:
+        condition: service_healthy
+      paperless-redis:
+        condition: service_started
+
     ports:
       - "8000:8000"
+
     volumes:
       - /mnt/usb-hdd/paperless/data:/usr/src/paperless/data
       - /mnt/usb-hdd/paperless/media:/usr/src/paperless/media
       - /mnt/usb-hdd/paperless/export:/usr/src/paperless/export
       - /mnt/usb-hdd/paperless/consume:/usr/src/paperless/consume
+
+    env_file:
+      - .env
+
     environment:
+      # --- Anbindung ---------------------------------------------------------
       PAPERLESS_REDIS: redis://paperless-redis:6379
       PAPERLESS_DBHOST: paperless-db
+      PAPERLESS_DBUSER: paperless
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_URL: http://192.168.178.80:8000
+
+      # --- Sprache und Zeitzone ----------------------------------------------
+      PAPERLESS_TIME_ZONE: Europe/Berlin
+      PAPERLESS_OCR_LANGUAGE: deu+eng      # Texterkennung
+      PAPERLESS_FILENAME_DATE_ORDER: DMY   # 03.05.2026 = 3. Mai, nicht 5. Maerz
       PAPERLESS_ADMIN_USER: admin
-      PAPERLESS_ADMIN_PASSWORD: ***ENTFERNT-20260820***
+
+      # --- Einwurf-Ordner ----------------------------------------------------
+      # Dateien kommen ueber die Samba-Freigabe "scans" herein. Bei Schreibzugriffen
+      # ueber das Netz kann inotify eine Datei melden, die noch nicht vollstaendig
+      # geschrieben ist -- deshalb wird gepollt statt auf Ereignisse zu horchen.
+      PAPERLESS_CONSUMER_POLLING: 15           # alle 15 Sekunden nachsehen
+      PAPERLESS_CONSUMER_POLLING_DELAY: 5      # 5 s warten, bis die Datei ruht
+      PAPERLESS_CONSUMER_POLLING_RETRY_COUNT: 6
+      PAPERLESS_CONSUMER_RECURSIVE: "true"           # Unterordner mit einbeziehen
+      PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: "true"     # Unterordnername wird zum Tag
+      PAPERLESS_CONSUMER_DELETE_DUPLICATES: "true"
+
+      # --- Ablage ------------------------------------------------------------
+      # Ordnerstruktur im Medienverzeichnis. Macht die Dateien auch ausserhalb
+      # von Paperless auffindbar -- wichtig, falls die Anwendung mal nicht laeuft.
+      PAPERLESS_FILENAME_FORMAT: "{{ created_year }}/{{ correspondent }}/{{ created }}_{{ title }}"
+      PAPERLESS_FILENAME_FORMAT_REMOVE_NONE: "true"
+
+      # --- Leistung auf einem Raspberry Pi 4 ---------------------------------
+      # 4 Kerne, 4 GB RAM. Zwei Worker mit je zwei Threads lasten die CPU aus,
+      # ohne den uebrigen Diensten den Speicher wegzunehmen.
+      PAPERLESS_TASK_WORKERS: 2
+      PAPERLESS_THREADS_PER_WORKER: 2
+      PAPERLESS_WEBSERVER_WORKERS: 2
+
+      # --- Texterkennung -----------------------------------------------------
+      # skip = bereits durchsuchbare PDFs werden nicht erneut erkannt.
+      # Spart auf dem Pi erheblich Zeit bei digitalen Rechnungen.
+      PAPERLESS_OCR_MODE: skip
+      PAPERLESS_OCR_SKIP_ARCHIVE_FILE: never
+      PAPERLESS_OCR_CLEAN: clean
+      PAPERLESS_OCR_DESKEW: "true"        # schief eingescannte Seiten geraderuecken
+      PAPERLESS_OCR_ROTATE_PAGES: "true"  # falsch herum liegende Seiten drehen
+
+      # --- Automatische Zuordnung --------------------------------------------
+      PAPERLESS_TRAIN_TASK_CRON: "5 */2 * * *"   # lernt alle 2 Stunden dazu
+
+      # --- Aufbewahrung ------------------------------------------------------
+      PAPERLESS_EMPTY_TRASH_DELAY: 30      # Papierkorb 30 Tage vorhalten
+
+      # --- Dateirechte -------------------------------------------------------
+      USERMAP_UID: 1000
+      USERMAP_GID: 1000
+
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-S", "--max-time", "2", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
 
   paperless-db:
     image: postgres:15
+    container_name: paperless-paperless-db-1
     restart: always
+
     volumes:
       - paperless_db:/var/lib/postgresql/data
+
+    env_file:
+      - .env
+
     environment:
       POSTGRES_DB: paperless
       POSTGRES_USER: paperless
-      POSTGRES_PASSWORD: ***ENTFERNT-20260820***
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperless -d paperless"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   paperless-redis:
     image: redis:7
+    container_name: paperless-paperless-redis-1
     restart: always
+    volumes:
+      - paperless_redis:/data
 
 volumes:
   paperless_db:
+    name: paperless_paperless_db     # bestehendes Volume weiterverwenden
+    external: true
+  paperless_redis:
