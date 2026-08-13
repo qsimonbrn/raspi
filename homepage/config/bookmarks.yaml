@@ -16,6 +16,11 @@
           description: Alle docker-compose-Dateien
 
 - Handbuecher:
+    - Paperless-Einwurf:
+        - abbr: SCN
+          href: smb://192.168.178.80/scans
+          description: Dokumente hier ablegen
+
     - Paperless-ngx:
         - abbr: PNX
           href: https://docs.paperless-ngx.com/

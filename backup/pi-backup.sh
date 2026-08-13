@@ -23,6 +23,20 @@ FEHLER=0
 log()  { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*"; }
 warn() { printf '[%s] WARNUNG: %s\n' "$(date +%H:%M:%S)" "$*"; FEHLER=$((FEHLER+1)); }
 
+# Push-Benachrichtigung ueber ntfy. Schlaegt der Versand fehl, laeuft das
+# Backup trotzdem weiter -- eine fehlende Meldung darf keine Sicherung verhindern.
+notify() {  # $1=Titel  $2=Text  $3=Prioritaet  $4=Tags
+  [ -n "${NTFY_URL:-}" ] || return 0
+  [ -r "${NTFY_TOKEN_FILE:-/nonexistent}" ] || return 0
+  curl -s -m 20 -o /dev/null \
+    -H "Authorization: Bearer $(cat "$NTFY_TOKEN_FILE")" \
+    -H "Title: $1" \
+    -H "Priority: ${3:-default}" \
+    -H "Tags: ${4:-floppy_disk}" \
+    -d "$2" \
+    "$NTFY_URL/${NTFY_TOPIC:-raspberrypi}" || true
+}
+
 # --- Nur eine Instanz gleichzeitig -------------------------------------------
 exec 9>/var/lock/pi-backup.lock
 if ! flock -n 9; then
@@ -118,6 +132,9 @@ RC=$?
 
 if [ $RC -ne 0 ]; then
   echo "FEHLER: restic backup endete mit Code $RC"
+  notify "Backup fehlgeschlagen" \
+         "restic endete mit Code $RC. Details: journalctl -u pi-backup.service" \
+         "urgent" "rotating_light"
   rm -rf "$STAGE"
   exit $RC
 fi
@@ -137,10 +154,21 @@ rm -rf "$STAGE"
 log "Belegung im Repository:"
 restic stats --mode raw-data 2>/dev/null | sed 's/^/    /'
 
+GROESSE=$(restic stats --mode raw-data 2>/dev/null | awk '/Total Size/{print $3" "$4}')
+
 if [ "$FEHLER" -gt 0 ]; then
   echo "=== Backup abgeschlossen, aber mit $FEHLER Warnung(en) ==="
+  notify "Backup mit Warnungen" \
+         "$FEHLER Warnung(en). Repository: ${GROESSE:-unbekannt}. Details: journalctl -u pi-backup.service" \
+         "high" "warning"
   exit 1
 fi
+
+# Erfolg wird mit niedrigster Prioritaet gemeldet: keine Toene, kein Vibrieren,
+# aber ein sichtbarer Eintrag im Verlauf. So faellt auf, wenn er ausbleibt.
+notify "Backup erfolgreich" \
+       "Repository: ${GROESSE:-unbekannt}" \
+       "min" "white_check_mark"
 
 log "=== Backup erfolgreich abgeschlossen ==="
 exit 0

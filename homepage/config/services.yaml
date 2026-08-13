@@ -60,6 +60,14 @@
         server: pi
         container: portainer
 
+    - ntfy:
+        href: http://192.168.178.80:2586
+        siteMonitor: http://192.168.178.80:2586/v1/health
+        description: Push-Benachrichtigungen, u. a. vom Backup
+        icon: ntfy.png
+        server: pi
+        container: ntfy
+
     - Samba:
         href: smb://192.168.178.80/usb-share
         description: Netzlaufwerk usb-share
