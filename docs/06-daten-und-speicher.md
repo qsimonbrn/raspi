@@ -47,7 +47,26 @@ ist nur noch ein Rückstand und kann entfernt werden.
 
 ---
 
-## 🔴 Befund: Es existieren keine automatisierten Backups
+## ✅ Behoben: Automatisiertes Backup seit 13.08.2026
+
+Seit dem 13.08.2026 läuft täglich um 03:17 Uhr ein verschlüsseltes, versioniertes
+Backup nach OneDrive (restic über rclone). Vollständige Beschreibung inklusive
+Wiederherstellung in [12 — Backup](12-backup.md).
+
+**Wichtige Korrektur zur ursprünglichen Einschätzung:** Die Messung ergab, dass
+Paperless **0 Dokumente** enthält — das Medienverzeichnis ist leer. Die unten
+beschriebene Sorge um eingescannte Papierunterlagen war unbegründet. Das Bichon-Archiv
+umfasst 45 E-Mails (689 MB, überwiegend Anhänge). Der Schutz bleibt sinnvoll, weil das
+Archiv wachsen soll — die Dringlichkeit war aber geringer als zunächst dargestellt.
+
+**Weiterhin offen:** 222 GB unter `SSD_Müll` (darunter 2.971 Bilddateien) und 86 GB
+unter `rclone_bak` passen nicht in die 5 GB der OneDrive-Freeversion.
+Siehe [12 — Backup, Abschnitt 8](12-backup.md#8-was-dieses-backup-nicht-abdeckt).
+
+<details>
+<summary>Ursprünglicher Befund vom 13.08.2026 (vor der Einrichtung)</summary>
+
+## 🔴 Befund: Es existierten keine automatisierten Backups
 
 ### Was vorhanden ist
 
@@ -147,6 +166,8 @@ Wenn es einfach bleiben soll: ein systemd-Timer mit `rclone sync` und aktivierte
 gröbere Versionierung), aber ungleich besser als der aktuelle Zustand.
 
 **Der entscheidende Punkt ist nicht das Werkzeug, sondern dass überhaupt etwas läuft.**
+
+</details>
 
 ### Und dann: den Rückweg testen
 

@@ -11,14 +11,18 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | # | Baustein | Gesichert? | Wo liegt es? |
 |---|---|---|---|
 | 1 | **Compose-Dateien** aller Stacks | ✅ **ja** | GitHub: `qsimonbrn/docker-stacks` |
-| 2 | **Paperless-Dokumente + Datenbank** | ❌ nein | nur `/mnt/usb-hdd/paperless/` |
-| 3 | **Bichon-E-Mail-Archiv** | ❌ nein | nur `/mnt/usb-hdd/bichon/` |
-| 4 | **Pi-hole-Konfiguration** (Blocklisten, lokale DNS-Einträge, Anpassungen) | ❌ nein | nur `/etc/pihole/` |
-| 5 | **WireGuard-Schlüssel und Peer-Konfiguration** | ❌ nein | nur `/etc/wireguard/` |
-| 6 | **Samba-Konfiguration und Passwortdatenbank** | ❌ nein | nur `/etc/samba/` |
-| 7 | **Nutzdaten auf der SSD** (310 GB) | ⚠️ veraltet | Teilstand vom 12.12.2025 in OneDrive/Dropbox |
+| 2 | **Paperless-Dokumente + Datenbank** | ✅ **ja** | restic-Backup, täglich |
+| 3 | **Bichon-E-Mail-Archiv** | ✅ **ja** | restic-Backup, täglich |
+| 4 | **Pi-hole-Konfiguration** (Blocklisten, lokale DNS-Einträge, Anpassungen) | ✅ **ja** | Teleporter-Export im Backup |
+| 5 | **WireGuard-Schlüssel und Peer-Konfiguration** | ✅ **ja** | restic-Backup, täglich |
+| 6 | **Samba-Konfiguration und Passwortdatenbank** | ✅ **ja** | restic-Backup, täglich |
+| 7 | **Nutzdaten auf der SSD** (310 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
 
-**Eins von sieben.**
+**Sechs von sieben** — seit Einrichtung des Backups am 13.08.2026.
+Details in [12 — Backup](12-backup.md).
+
+Offen bleibt Position 7: die 222 GB unter `SSD_Müll` und 86 GB unter `rclone_bak`.
+Empfehlung dazu in [12 — Backup, Abschnitt 8](12-backup.md#8-was-dieses-backup-nicht-abdeckt).
 
 ---
 

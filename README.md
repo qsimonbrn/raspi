@@ -38,6 +38,7 @@ separaten Repository.
 | [09 — Empfehlungen](docs/09-empfehlungen.md) | Priorisierte Maßnahmen |
 | [10 — Zugriff](docs/10-zugriff.md) | Alle URLs, Ports und Zugangswege |
 | [11 — Notfallwiederherstellung](docs/11-disaster-recovery.md) | Wiederaufbau von Null |
+| [12 — Backup](docs/12-backup.md) | Strategie, Umfang, Wiederherstellung, Grenzen |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 
@@ -60,11 +61,16 @@ separaten Repository.
 
 ### Die drei wichtigsten offenen Punkte
 
-1. **Keine automatisierten Backups.** Letzter rclone-Lauf: 12.12.2025. Die
-   Paperless-Dokumente sind derzeit nicht gesichert. → [Kapitel 06](docs/06-daten-und-speicher.md)
+1. **222 GB unter `SSD_Müll` sind ungesichert** — darunter 2.971 Bilddateien und ein
+   vollständiges Windows-Benutzerprofil. In die 5 GB der OneDrive-Freeversion passt das
+   nicht. → [Kapitel 12](docs/12-backup.md)
 2. **Wurzeldateisystem liegt auf einer SD-Karte von 02/2023.** Ausfallrisiko nach
    3,5 Jahren Dauerbetrieb, während eine SSD zu 64 % leer danebenliegt. → [Kapitel 01](docs/01-hardware.md)
-3. **Keine Firewall, SSH-Passwortlogin aktiv.** → [Kapitel 07](docs/07-sicherheit.md)
+3. **Keine Firewall, SSH-Passwortlogin aktiv, schwache Standardpasswörter bei
+   Paperless.** → [Kapitel 07](docs/07-sicherheit.md)
+
+Das automatisierte Backup der unersetzlichen Daten läuft seit dem 13.08.2026 täglich.
+→ [Kapitel 12](docs/12-backup.md)
 
 ---
 

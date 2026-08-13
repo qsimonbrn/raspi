@@ -9,7 +9,18 @@ die, von denen abgeraten wird.
 
 ## Stufe 1 — Datenverlust verhindern
 
-### 1.1 Automatisiertes Backup einrichten
+### 1.1 Automatisiertes Backup einrichten — ✅ erledigt am 13.08.2026
+
+> Umgesetzt mit **restic über rclone** nach OneDrive, täglich 03:17 Uhr per
+> systemd-Timer, verschlüsselt und versioniert (7 Tage / 4 Wochen / 6 Monate).
+> Paperless wird über `document_exporter` plus `pg_dump` gesichert, Pi-hole über
+> den Teleporter-Export. Vollständig beschrieben in [12 — Backup](12-backup.md).
+>
+> **Nicht abgedeckt:** die 222 GB unter `SSD_Müll` — dafür reichen 5 GB nicht.
+
+<details>
+<summary>Ursprüngliche Empfehlung</summary>
+
 
 **Warum zuerst:** Alle anderen Maßnahmen schützen vor Ereignissen, die eintreten
 *können*. Ein Datenträgerausfall tritt irgendwann *ein*.
@@ -28,6 +39,8 @@ versehentliches Löschen zuverlässig in die Cloud — genau das soll ein Backup
 **Sonderfall Paperless:** Muss über `document_exporter` gesichert werden, nicht durch
 Kopieren des Datenverzeichnisses. Sonst fehlen Tags, Korrespondenten und OCR-Zuordnungen.
 Details in [06 — Daten & Speicher](06-daten-und-speicher.md).
+
+</details>
 
 ### 1.2 Wiederherstellung testen
 

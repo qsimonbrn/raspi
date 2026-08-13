@@ -8,6 +8,50 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.2.0] — 2026-08-13
+
+### Geändert am System
+
+- **Automatisiertes Backup eingerichtet**: restic über rclone nach OneDrive,
+  täglich 03:17 Uhr per systemd-Timer, verschlüsselt und versioniert
+  (7 Tage / 4 Wochen / 6 Monate).
+- Paperless wird über `document_exporter` plus `pg_dump` gesichert, Pi-hole über
+  `pihole-FTL --teleporter`, dazu `/etc/wireguard`, `/etc/samba`,
+  `passdb.tdb`, SSH-Konfiguration und Paketlisten.
+- Skript und Unit-Dateien liegen versioniert unter `docker-stacks/backup/`.
+- `RESTIC_PACK_SIZE=32` und rclone-Drosselung (`TPSLIMIT`, erhöhte Wiederholungen)
+  gegen die OneDrive-Antworten `resourceLocked` / HTTP 500 unter Last.
+
+### Hinzugefügt zur Doku
+
+- **[12 — Backup](docs/12-backup.md)** — Umfang, Ausschlüsse mit Begründung,
+  Zeitplan, Wiederherstellung Schritt für Schritt, Überwachung, Grenzen der
+  5-GB-Freeversion.
+
+### Korrigiert
+
+- **Paperless enthält 0 Dokumente.** Die erste Fassung nahm ein gefülltes
+  Dokumentenarchiv an und stufte das Risiko entsprechend hoch ein. Die Messung
+  ergab ein leeres Medienverzeichnis und 0 Datensätze in der Datenbank. Das
+  Bichon-Archiv umfasst 45 E-Mails (689 MB). Betroffen: `docs/06`, `README.md`.
+
+### Behoben
+
+- Empfehlung 1.1 (automatisiertes Backup) abgeschlossen.
+- `docs/11-disaster-recovery.md`: 6 von 7 Bausteinen gesichert statt 1 von 7.
+
+### Neue Befunde
+
+- **Schwache Standardpasswörter bei Paperless** — `PAPERLESS_ADMIN_PASSWORD`
+  steht auf `***ENTFERNT-20260820***`, `POSTGRES_PASSWORD` auf ***ENTFERNT-20260820***, beides im
+  Git-Repository. Aufgenommen in `docs/07-sicherheit.md`.
+- **222 GB unter `SSD_Müll` sind ungesichert** — darunter 2.971 Bilddateien und
+  ein vollständiges Windows-Benutzerprofil. Passt nicht in 5 GB.
+- **86 GB unter `rclone_bak`** sind Sicherungskopien auf derselben Festplatte,
+  die sie schützen sollen — keine wirksame Sicherung.
+
+---
+
 ## [1.1.0] — 2026-08-13
 
 ### Geändert am System

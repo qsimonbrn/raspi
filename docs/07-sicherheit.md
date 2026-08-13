@@ -115,6 +115,31 @@ abgeschottet.
 
 ---
 
+## 🟠 Schwache Standardpasswörter bei Paperless
+
+In `docker-stacks/paperless/docker-compose.yml` stehen unveränderte Beispielwerte:
+
+| Variable | Wert |
+|---|---|
+| `PAPERLESS_ADMIN_PASSWORD` | `***ENTFERNT-20260820***` |
+| `POSTGRES_PASSWORD` | `paperless` |
+
+Paperless ist auf `0.0.0.0:8000` gebunden, also aus dem gesamten Heimnetz erreichbar.
+`***ENTFERNT-20260820***` ist in jeder Standard-Wortliste enthalten.
+
+Erschwerend: Die Datei liegt in einem **Git-Repository**. Es ist privat, aber Passwörter
+gehören auch dort nicht hinein — sie landen dauerhaft in der Versionsgeschichte, wo sie
+auch nach einer Änderung noch nachlesbar bleiben.
+
+**Empfehlung:** Beide Werte in eine `.env`-Datei auslagern, diese über `.gitignore`
+ausschließen und in der Compose-Datei nur noch referenzieren. Anschließend das
+Paperless-Administratorpasswort in der Weboberfläche ändern — die Umgebungsvariable
+wirkt nur bei der Ersteinrichtung. Beim PostgreSQL-Passwort ist zu beachten, dass die
+Datenbank es beim ersten Start übernommen hat; eine Änderung erfordert `ALTER USER`
+in der laufenden Datenbank.
+
+---
+
 ## 🟡 Keine automatischen Sicherheitsupdates
 
 `unattended-upgrades` ist nicht aktiv. Details in
