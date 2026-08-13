@@ -44,7 +44,12 @@ services:
       # --- Sprache und Zeitzone ----------------------------------------------
       PAPERLESS_TIME_ZONE: Europe/Berlin
       PAPERLESS_OCR_LANGUAGE: deu+eng      # Texterkennung
-      PAPERLESS_FILENAME_DATE_ORDER: DMY   # 03.05.2026 = 3. Mai, nicht 5. Maerz
+      # Datum aus dem INHALT lesen. 03.05.2026 = 3. Mai, nicht 5. Maerz.
+      PAPERLESS_DATE_ORDER: DMY
+      # PAPERLESS_FILENAME_DATE_ORDER bewusst NICHT gesetzt: Scanner-Dateinamen
+      # wie "doc00451220260813032623_020" bestehen aus Ziffernketten, aus denen
+      # der Parser sinnlose Daten ableitet (hier: 10.11.2000 fuer 10 Dokumente).
+      # Ohne die Variable wird der Dateiname gar nicht erst nach Daten durchsucht.
       PAPERLESS_ADMIN_USER: admin
 
       # --- Einwurf-Ordner ----------------------------------------------------
