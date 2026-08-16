@@ -45,6 +45,13 @@ Datumsformat: JJJJ-MM-TT
 
 ### Neue Befunde
 
+- 🟠 **`document_exporter` erfasst ab v3 auch den Papierkorb.** Zu Dokument 1 (ein
+  Testdokument, am 13.08.2026 gelöscht) fehlte die Datei; der Export brach mit
+  `FileNotFoundError` ab. Damit war das Paperless-Backup nach dem Update nicht
+  lauffähig — aufgefallen erst beim Testen der Backup-Automatisierung, nicht durch
+  eine Fehlermeldung im Betrieb. Behoben durch Leeren des Papierkorbs. Bestand
+  seither: 26 aktive Dokumente, 0 im Papierkorb. Vorabprüfung in
+  `docs/13-paperless.md`.
 - 🟠 **`filebrowser` wird eingestellt.** Letztes Release v2.63.23, Repository wird am
   **01.09.2026** archiviert. Danach keine Sicherheits- oder Fehlerkorrekturen mehr.
   Als Empfehlung 2.9 aufgenommen.

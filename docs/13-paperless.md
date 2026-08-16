@@ -472,3 +472,45 @@ enthält sie.
 
 Nach dem Update: 26 aktive Dokumente, 15 im Papierkorb, 10 Tags, 11 Korrespondenten —
 alles unverändert. Keine `ERROR`-Zeile im Log, HTTP 302 auf `:8000`.
+
+### ⚠️ Nachtrag: `document_exporter` erfasst ab v3 auch den Papierkorb
+
+Beim Testen der Backup-Automatisierung am selben Abend brach der Export ab:
+
+```
+FileNotFoundError: [Errno 2] No such file or directory:
+'/usr/src/paperless/media/documents/originals/2026/2026-08-13_testrechnung.pdf'
+```
+
+Ursache: Bis Version 2 exportierte `document_exporter` nur aktive Dokumente. Ab
+v3 läuft er auch über den Papierkorb. Zu Dokument 1 — einem Testdokument aus der
+Einrichtung, am 13.08.2026 gelöscht — existierte die Datei nicht mehr. Der Export
+bricht daran ab, **nachdem** er bereits einen Teil kopiert hat, und es gibt kein
+Flag zum Überspringen.
+
+Das ist kein Randproblem: Damit war das Paperless-Backup zwischen dem Update und
+der Bereinigung nicht lauffähig, ohne dass irgendetwas Alarm geschlagen hätte. Der
+turnusmäßige restic-Lauf sichert die Dateien zwar weiterhin, aber der Export mit
+`manifest.json` — die Metadaten-Rückfallebene — fehlte.
+
+**Behoben** durch Leeren des Papierkorbs (16.08.2026). Bestand seither: 26 aktive
+Dokumente, 0 im Papierkorb.
+
+**Vorabprüfung vor jedem Export:**
+
+```bash
+docker exec paperless python3 -c "
+import django, os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE','paperless.settings')
+django.setup()
+from documents.models import Document
+qs = Document.global_objects.all() if hasattr(Document,'global_objects') else Document.objects.all()
+print([d.pk for d in qs if not os.path.exists(d.source_path)])
+"
+```
+
+Kommt hier etwas anderes als `[]` zurück, scheitert der Export. Betrifft es nur
+Papierkorb-Einträge: Papierkorb leeren. Fehlt einem **aktiven** Dokument die Datei,
+ist das ein eigener Vorfall.
+
+Die Skill `docker-updates` prüft das vor jedem Backup automatisch.
