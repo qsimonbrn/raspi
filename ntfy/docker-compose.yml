@@ -10,7 +10,7 @@
 
 services:
   ntfy:
-    image: binwiederhier/ntfy:latest
+    image: binwiederhier/ntfy:v2.27.0
     container_name: ntfy
     restart: unless-stopped
 
