@@ -8,6 +8,64 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.5.0] — 2026-08-16
+
+### Geändert am System
+
+- **Paperless-ngx von 2.15.3 auf 3.0.5.** In zwei Stufen über 2.20.15 — die
+  Migrationsanleitung lässt v3 ausschließlich von dieser Version aus zu. Ein direkter
+  Sprung auf `:latest` wäre gescheitert.
+- **Sechs Einstellungen in der Paperless-Compose umgeschrieben**, Verhalten unverändert:
+  `CONSUMER_POLLING` → `CONSUMER_POLLING_INTERVAL`, `CONSUMER_POLLING_DELAY` →
+  `CONSUMER_STABILITY_DELAY`, `CONSUMER_POLLING_RETRY_COUNT` entfällt,
+  `OCR_MODE: skip` → `auto`, `OCR_SKIP_ARCHIVE_FILE: never` →
+  `ARCHIVE_FILE_GENERATION: always`, neu `DBENGINE: postgresql` (ab v3 Pflicht).
+- **Alle Images auf feste Versionen gepinnt.** Kein `:latest` mehr im Bestand:
+  `postgres:15.19`, `redis:7.4`, `portainer-ce:2.39.6` (LTS, schließt sieben CVEs),
+  `ntfy:v2.27.0`, `docker-socket-proxy:v0.5.0`.
+- **Verifiziertes Backup vor dem Update** unter `/mnt/usb-hdd/backup/2026-08-16-vor-update/`:
+  `pg_dump` in beiden Formaten, `document_exporter`, alle Compose- und `.env`-Dateien.
+
+### Behoben
+
+- **Collation-Konflikt in PostgreSQL.** Der Wechsel von `postgres:15` auf `15.19`
+  brachte das Basis-Image von Debian Bookworm (glibc 2.36) auf Trixie (glibc 2.41).
+  Eine geänderte Sortierreihenfolge macht B-Tree-Indizes auf Textspalten still falsch —
+  Abfragen liefern unvollständige Ergebnisse, ohne dass ein Fehler auftritt. Behoben
+  mit `REINDEX DATABASE` und `ALTER DATABASE … REFRESH COLLATION VERSION` für
+  `paperless`, `postgres` und `template1`.
+- **Befund „Images seit 8 bis 17 Monaten nicht aktualisiert" erledigt** für alle
+  kritischen Dienste. In `docs/08-bewertung.md` aus der Mängelliste entfernt, in
+  `docs/09-empfehlungen.md` sind die Punkte 2.6 und 2.8 abgehakt.
+- **SSH-Zugang wiederhergestellt.** Der MCP-Server scheiterte mit
+  `Permission denied (publickey,password)`. Ursache: In `authorized_keys` auf dem Pi
+  lag nur der Schlüssel `pi-zugriff`, der Mac bot aber `macbook-simon` an — zwei
+  verschiedene Schlüssel. Der Mac-Schlüssel war nie autorisiert. Behoben mit
+  `ssh-copy-id`.
+
+### Neue Befunde
+
+- 🟠 **`filebrowser` wird eingestellt.** Letztes Release v2.63.23, Repository wird am
+  **01.09.2026** archiviert. Danach keine Sicherheits- oder Fehlerkorrekturen mehr.
+  Als Empfehlung 2.9 aufgenommen.
+- 🟡 **homepage v2.0.0** (14.08.2026) enthält einen Breaking Change bei der
+  Authentifizierung. Läuft weiterhin auf 1.13.2; bewusst nicht mitaktualisiert, weil
+  das Release zwei Tage alt ist. Empfehlung 2.10.
+- 🟡 **Dashy ist Altbestand.** Drei Image-Tags im System (`:latest` 9 Monate, `:3.0.1`
+  2 Jahre, `:arm64v8` 4 Jahre); Homepage hat die Rolle als Einstiegsseite übernommen.
+  Empfehlung 2.11.
+- 🟡 **20 Images für 10 Container** (8,66 GB). Durch die Updates liegen alte und neue
+  Fassungen nebeneinander. Bewusst noch nicht aufgeräumt — ein altes Image ist die
+  schnellste Rückfallebene.
+
+### Korrigiert
+
+- Beim Pinnen des `docker-socket-proxy` zunächst `0.3.0` gewählt. Das ist der letzte
+  Tag der alten Nummerierung (September 2024) und damit 23 Monate **älter** als das
+  zuvor verwendete `:latest`. Auf `v0.5.0` (27.07.2026) korrigiert.
+
+---
+
 ## [1.4.2] — 2026-08-13
 
 ### Geändert am System

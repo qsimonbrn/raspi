@@ -1,6 +1,6 @@
 # 05 — Docker
 
-*Erfasst: 13.08.2026*
+*Erfasst: 16.08.2026*
 
 ## Überblick
 
@@ -9,23 +9,23 @@
 | Docker-Version | 29.6.2 (build dfc4efb) |
 | Laufende Container | 10 von 10 |
 | Compose-Stacks | 7 |
-| Images gesamt | 9 (3,78 GB) |
-| Neustarts seit 2 Wochen | keine |
+| Images gesamt | 20 (8,66 GB) — die alten Tags sind noch da, siehe Aufräumhinweis unten |
+| Alle Images | auf feste Versionen gepinnt (seit 16.08.2026) |
 
 ## Container
 
 | Container | Image | Port (Host) | Zweck | Restart-Policy |
 |---|---|---|---|---|
 | **Dashy** | `lissy93/dashy` | 8080 | Dashboard / Startseite | `unless-stopped` |
-| **paperless** | `ghcr.io/paperless-ngx/paperless-ngx` | 8000 | Dokumentenarchiv mit OCR | `always` |
-| paperless-paperless-db-1 | `postgres:15` | — (intern) | Datenbank für Paperless | `always` |
-| paperless-paperless-redis-1 | `redis:7` | — (intern) | Task-Queue für Paperless | `always` |
+| **paperless** | `…/paperless-ngx:3.0.5` | 8000 | Dokumentenarchiv mit OCR | `always` |
+| paperless-paperless-db-1 | `postgres:15.19` | — (intern) | Datenbank für Paperless | `always` |
+| paperless-paperless-redis-1 | `redis:7.4` | — (intern) | Task-Queue für Paperless | `always` |
 | **filebrowser** | `filebrowser/filebrowser` | 8082 | Dateizugriff im Browser | `unless-stopped` |
 | **bichon** | `rustmailer/bichon` | 15630 | E-Mail-Archivierung | `unless-stopped` |
-| **portainer** | `portainer/portainer-ce` | 9000, 9443 | Docker-Verwaltung | `always` |
+| **portainer** | `portainer/portainer-ce:2.39.6` | 9000, 9443 | Docker-Verwaltung | `always` |
 | **homepage** | `ghcr.io/gethomepage/homepage` | 3000 | Dashboard mit Live-Status | `unless-stopped` |
-| **ntfy** | `binwiederhier/ntfy` | 2586 | Push-Benachrichtigungen | `unless-stopped` |
-| homepage-dockerproxy | `tecnativa/docker-socket-proxy` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Homepage | `unless-stopped` |
+| **ntfy** | `binwiederhier/ntfy:v2.27.0` | 2586 | Push-Benachrichtigungen | `unless-stopped` |
+| homepage-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Homepage | `unless-stopped` |
 
 Kein Container läuft mit `privileged`, kein Container nutzt `network_mode: host`.
 Beides ist gut — es bedeutet, dass kein Dienst mehr Rechte hat als nötig.
@@ -58,52 +58,93 @@ zusätzliche schlanke Dienste (Uptime Kuma, Caddy, Diun) sind problemlos möglic
 
 ---
 
-## ⚠️ Befund: Images seit 8 bis 17 Monaten nicht aktualisiert
+## ✅ Behoben: Images aktualisiert und gepinnt (16.08.2026)
 
-| Image | Alter | Risiko |
+Der frühere Befund lautete: kein einziges Image seit dem ersten Start aktualisiert,
+Alter zwischen 8 und 17 Monaten. Das ist für die kritischen Dienste erledigt.
+
+| Image | vorher | jetzt | Anlass |
+|---|---|---|---|
+| `paperless-ngx` | 2.15.3 (16 Monate) | **3.0.5** | zwei Major-Sprünge, siehe unten |
+| `postgres` | `:15` (17 Monate) | **15.19** | Minor gepinnt, kein Sprung auf 16 möglich |
+| `redis` | `:7` (15 Monate) | **7.4** | Minor gepinnt |
+| `portainer-ce` | `:latest` (8 Monate) | **2.39.6 LTS** | schließt sieben CVEs |
+| `ntfy` | `:latest` | **v2.27.0** | |
+| `docker-socket-proxy` | `:latest` | **v0.5.0** | |
+
+**Kein Image trägt mehr den Tag `:latest`.** Damit ist reproduzierbar, welche Version
+läuft, und ein Neustart holt nie unbemerkt eine andere Version.
+
+### Der Update-Pfad von Paperless-ngx
+
+Ein direkter Sprung von 2.15.3 auf 3.0.5 wäre gescheitert. Die offizielle
+Migrationsanleitung sagt: *„Upgrading to Paperless-ngx v3 can only be performed from
+version 2.20.15."* Gefahren wurde deshalb in zwei Stufen:
+
+```
+2.15.3  →  2.20.15 (27.04.2026)  →  3.0.5 (01.08.2026)
+```
+
+Sechs Einstellungen in der Compose-Datei mussten dabei umgeschrieben werden. Details
+in [Kapitel 13](13-paperless.md).
+
+### Nebenbefund: Collation-Konflikt bei PostgreSQL
+
+Beim Wechsel von `postgres:15` auf `15.19` wanderte das Basis-Image von Debian
+Bookworm (glibc 2.36) auf Trixie (glibc 2.41). PostgreSQL meldete daraufhin:
+
+```
+WARNING: database "paperless" has a collation version mismatch
+DETAIL:  created using collation version 2.36, OS provides version 2.41
+```
+
+Das ist kein kosmetisches Problem. Eine geänderte Sortierreihenfolge macht bestehende
+B-Tree-Indizes auf Textspalten still falsch — Abfragen liefern dann unvollständige
+Ergebnisse, ohne dass irgendetwas einen Fehler wirft. Behoben durch `REINDEX DATABASE`
+und `ALTER DATABASE … REFRESH COLLATION VERSION` für `paperless`, `postgres` und
+`template1`. Bei 41 Dokumenten dauerte das Sekunden; bei einem großen Archiv wäre es
+eine Wartungsfenster-Aufgabe.
+
+**Merken für künftige Postgres-Updates:** Nach jedem Sprung, der die Debian-Basis
+wechselt, in den Logs nach `collation version mismatch` sehen.
+
+---
+
+## ⚠️ Befund: Drei Stacks noch offen
+
+Diese drei sind bewusst nicht mitaktualisiert worden — sie sind Entscheidungen,
+keine reinen Updates.
+
+| Stack | Lage | Zu entscheiden |
 |---|---|---|
-| `postgres:15` | **17 Monate** | hoch — Datenbank mit Netzwerkzugang |
-| `ghcr.io/paperless-ngx/paperless-ngx:latest` | **16 Monate** | hoch — verarbeitet eingehende Dokumente |
-| `redis:7` | **15 Monate** | mittel |
-| `lissy93/dashy:latest` | 9 Monate | mittel |
-| `rustmailer/bichon:latest` | 8 Monate | mittel |
-| `filebrowser/filebrowser:latest` | 8 Monate | mittel |
-| `portainer/portainer-ce:latest` | 8 Monate | mittel |
+| **homepage** | läuft auf 1.13.2; **v2.0.0** (14.08.2026) bringt einen Breaking Change bei der Authentifizierung | Release Notes lesen, dann gezielt umstellen. Zwei Tage alt — noch nicht abgehangen. |
+| **filebrowser** | 🟠 **Das Projekt wird eingestellt.** Letztes Release v2.63.23, Repository wird am **01.09.2026** archiviert. Danach keine Sicherheitsupdates mehr. | Ersatz suchen oder abschalten. Samba deckt den Dateizugriff im Heimnetz bereits ab. |
+| **Dashy** | Altbestand. Drei Image-Tags liegen im System (`:latest` 9 Monate, `:3.0.1` 2 Jahre, `:arm64v8` 4 Jahre) | Homepage hat Dashy als Einstiegsseite abgelöst. Naheliegend: abschalten und die drei Images entfernen. |
 
-Seit dem jeweils ersten Start wurde **kein einziges Image aktualisiert**. In diesen
-Zeiträumen sind für praktisch alle genannten Projekte Sicherheitsupdates erschienen.
+`bichon` bleibt ebenfalls auf `:latest` — das Projekt veröffentlicht keine
+nachvollziehbaren Versions-Tags.
 
-Besonders relevant sind Paperless-ngx und PostgreSQL: Paperless nimmt Dokumente
-entgegen und verarbeitet sie mit OCR — also mit Bibliotheken, die untrusted Input
-parsen, historisch eine ergiebige Fehlerquelle. PostgreSQL ist über das Docker-Netz
-erreichbar.
+### 🟡 Aufräumen: 20 Images für 10 Container
 
-### Warum ein pauschales Auto-Update hier **nicht** die Lösung ist
+Durch die Updates liegen jetzt alte und neue Images nebeneinander (8,66 GB gesamt).
+Nicht mehr referenziert sind unter anderem `paperless-ngx:latest` und `:2.20.15`,
+`postgres:15`, `redis:7`, `portainer-ce:latest`, `docker-socket-proxy:0.3.0` und
+`:latest` sowie die drei Dashy-Tags.
 
-Der naheliegende Reflex wäre Watchtower mit automatischem Update aller `:latest`-Tags.
-Das ist bei diesem Setup gefährlich:
+Aufräumen erst, wenn die neuen Versionen ein paar Tage unauffällig gelaufen sind —
+ein altes Image ist die schnellste Rückfallebene:
 
-- **`postgres:15`** bleibt dauerhaft bei PostgreSQL 15 — ein unbeabsichtigter Sprung
-  auf 16 ist über diesen Tag **nicht** möglich. *(Korrektur vom 13.08.2026: Die erste
-  Fassung dieser Dokumentation behauptete das Gegenteil. Das war schlicht falsch.)*
-  Das tatsächliche Risiko liegt woanders: Ein Sprung innerhalb von 15 kann mit einem
-  gleichzeitigen Paperless-Update unglücklich zusammenfallen.
-- **Paperless-ngx** hat in der Vergangenheit Releases mit erforderlichen manuellen
-  Migrationsschritten gehabt. Ein Auto-Update über mehrere Versionen hinweg kann
-  Datenbank-Migrationen auslösen, die nicht rückwärtskompatibel sind.
+```bash
+docker image prune -a        # entfernt alles, was kein Container referenziert
+```
 
-### Empfohlenes Vorgehen
+### Was weiterhin gilt
 
-1. **Diun** installieren — meldet neue Images per Benachrichtigung, aktualisiert aber
-   nichts selbst. Die Entscheidung bleibt bei dir.
-2. **Datenbank-Images auf feste Versionen pinnen**: `postgres:15.14` statt `postgres:15`.
-   Damit kann kein unbeabsichtigter Major-Sprung passieren.
-3. **Vor jedem Update ein Backup** — insbesondere vor Paperless-Updates.
-4. Updates **einzeln und nacheinander** einspielen, nicht alle gleichzeitig. Wenn etwas
-   bricht, ist die Ursache dann eindeutig.
-
-**Reihenfolge nach Dringlichkeit:** Paperless-ngx → Portainer → filebrowser → bichon →
-Dashy. Redis und PostgreSQL zuletzt und nur mit vorherigem Datenbank-Dump.
+**Diun** (Punkt 2.7 in [Kapitel 09](09-empfehlungen.md)) ist durch das Pinnen nicht
+überflüssig geworden, sondern wichtiger: Mit festen Tags erfährt man von neuen
+Versionen sonst gar nichts mehr. Diun meldet, aktualisiert aber nicht — die
+Entscheidung bleibt bei dir. Watchtower mit Auto-Update bleibt die falsche Antwort;
+der Paperless-Zwischenschritt über 2.20.15 ist das Lehrstück dazu.
 
 ---
 

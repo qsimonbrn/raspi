@@ -1,6 +1,6 @@
 # 13 — Paperless-ngx
 
-*Eingerichtet: 13.08.2026 · Version 2.15.3*
+*Eingerichtet: 13.08.2026 · Aktualisiert: 16.08.2026 · **Version 3.0.5***
 
 Dokumentenarchiv mit Texterkennung. Dieses Kapitel beschreibt, wie die Einrichtung
 funktioniert, wie Dokumente hineinkommen und was bewusst so und nicht anders
@@ -71,9 +71,13 @@ Samba kann das Ereignis aber ausgelöst werden, während die Datei noch übertra
 Paperless liest dann ein halbes PDF ein. Deshalb:
 
 ```
-PAPERLESS_CONSUMER_POLLING: 15         alle 15 Sekunden nachsehen
-PAPERLESS_CONSUMER_POLLING_DELAY: 5    5 Sekunden Ruhe abwarten
+PAPERLESS_CONSUMER_POLLING_INTERVAL: 15   alle 15 Sekunden nachsehen
+PAPERLESS_CONSUMER_STABILITY_DELAY: 5     5 Sekunden Ruhe abwarten
 ```
+
+> Beide Variablen hießen bis v2 `CONSUMER_POLLING` und `CONSUMER_POLLING_DELAY`.
+> `CONSUMER_POLLING_RETRY_COUNT` ist in v3 ersatzlos entfallen — die Anwendung
+> verfolgt jetzt selbst, ob eine Datei ihre Größe noch ändert.
 
 Der Preis sind bis zu 20 Sekunden Verzögerung. Der Gewinn ist, dass keine halben
 Dokumente im Archiv landen.
@@ -199,15 +203,15 @@ in `.env` und sind über `.gitignore` ausgeschlossen.
 | Einstellung | Wert | Begründung |
 |---|---|---|
 | `PAPERLESS_OCR_LANGUAGE` | `deu+eng` | Deutsche Post und englische Online-Rechnungen |
-| `PAPERLESS_OCR_MODE` | `skip` | PDFs, die bereits Text enthalten, werden nicht erneut erkannt — spart auf einem Pi sehr viel Zeit |
-| `PAPERLESS_OCR_SKIP_ARCHIVE_FILE` | `never` | Es wird immer eine Archivfassung erzeugt |
+| `PAPERLESS_OCR_MODE` | `auto` | PDFs, die bereits Text enthalten, werden nicht erneut erkannt — spart auf einem Pi sehr viel Zeit. Hieß bis v2 `skip`; den Wert gibt es nicht mehr |
+| `PAPERLESS_ARCHIVE_FILE_GENERATION` | `always` | Es wird immer eine Archivfassung erzeugt. Ersetzt `OCR_SKIP_ARCHIVE_FILE: never` — v3 hat Texterkennung und Archivdatei entkoppelt |
 | `PAPERLESS_OCR_DESKEW` | `true` | Schief eingelegte Seiten werden geradegerückt |
 | `PAPERLESS_OCR_ROTATE_PAGES` | `true` | Falsch herum eingezogene Seiten werden gedreht |
 | `PAPERLESS_OCR_CLEAN` | `clean` | Scanflecken werden vor der Erkennung entfernt |
 | `PAPERLESS_FILENAME_DATE_ORDER` | `DMY` | `03.05.2026` ist der 3. Mai, nicht der 5. März |
 
 Ein reiner Text-Scan braucht auf diesem Pi rund **60 Sekunden pro Seite** — gemessen beim
-Einrichtungstest. Digitale PDFs mit vorhandenem Textlayer sind durch `OCR_MODE: skip` in
+Einrichtungstest. Digitale PDFs mit vorhandenem Textlayer sind durch `OCR_MODE: auto` in
 wenigen Sekunden durch.
 
 ### Ablagestruktur
@@ -401,3 +405,70 @@ Der komplette Weg wurde am 13.08.2026 mit einem Testdokument durchlaufen:
 | Verarbeitungsdauer | 62 Sekunden für eine Seite |
 
 Das Testdokument wurde anschließend wieder entfernt — das Archiv startet leer.
+
+---
+
+## Update auf Version 3 (16.08.2026)
+
+### Der Pfad
+
+Ein direkter Sprung von 2.15.3 auf `:latest` wäre gescheitert. Die Migrationsanleitung
+ist eindeutig: *„Upgrading to Paperless-ngx v3 can only be performed from version
+2.20.15."* Gefahren wurde deshalb in zwei Stufen, mit Log-Prüfung dazwischen:
+
+```
+2.15.3  →  2.20.15 (27.04.2026)  →  3.0.5 (01.08.2026)
+```
+
+Dazu wurden `postgres` auf `15.19` und `redis` auf `7.4` gepinnt. Details zum
+Collation-Konflikt, der dabei auftrat, in [Kapitel 05](05-docker.md).
+
+### Was in der Compose-Datei umgeschrieben werden musste
+
+| Bis v2 | Ab v3 | Verhalten |
+|---|---|---|
+| `PAPERLESS_CONSUMER_POLLING` | `PAPERLESS_CONSUMER_POLLING_INTERVAL` | unverändert |
+| `PAPERLESS_CONSUMER_POLLING_DELAY` | `PAPERLESS_CONSUMER_STABILITY_DELAY` | unverändert |
+| `PAPERLESS_CONSUMER_POLLING_RETRY_COUNT` | *entfällt* | v3 verfolgt Dateistabilität selbst |
+| `PAPERLESS_OCR_MODE: skip` | `PAPERLESS_OCR_MODE: auto` | `skip` existiert nicht mehr |
+| `PAPERLESS_OCR_SKIP_ARCHIVE_FILE: never` | `PAPERLESS_ARCHIVE_FILE_GENERATION: always` | unverändert |
+| — | `PAPERLESS_DBENGINE: postgresql` | **ab v3 Pflicht** |
+
+Die letzte Zeile ist die gefährlichste. Fehlt `PAPERLESS_DBENGINE`, fällt Paperless
+stillschweigend auf SQLite zurück und startet mit einem **leeren Archiv**. Die Daten
+in PostgreSQL bleiben unangetastet, sind aber nicht mehr sichtbar — es sieht aus wie
+Totalverlust, ist aber nur eine fehlende Zeile.
+
+`PAPERLESS_SECRET_KEY` ist ab v3 ebenfalls Pflicht und stand hier bereits in der `.env`.
+
+### Weitere Verhaltensänderungen in v3
+
+- **Dubletten sind jetzt standardmäßig erlaubt.** `PAPERLESS_CONSUMER_DELETE_DUPLICATES`
+  steht hier weiterhin auf `true`, damit der Scanner beim zweiten Einwurf desselben
+  Blattes nichts anlegt.
+- **Verschlüsselung von Dokumenten und Vorschaubildern** wird nicht mehr unterstützt.
+  Hier nie verwendet.
+- **Die Aufgaben-Historie** wurde beim Update geleert.
+- **Der Suchindex** wurde automatisch neu gebaut.
+- Das Feld `created` ist von `datetime` auf `date` gewechselt — relevant für eigene
+  Skripte, die die API oder das Django-Modell nutzen.
+
+### Backup vor dem Update
+
+Angelegt unter `/mnt/usb-hdd/backup/2026-08-16-vor-update/` und geprüft:
+
+| Teil | Umfang | Prüfung |
+|---|---|---|
+| `db/*.dump` (Custom-Format) | 855 KB | `pg_restore -l` liest 643 Objekte |
+| `db/*.sql` (Klartext) | 3,0 MB | 67 `CREATE TABLE` |
+| `export/documents/` | 15 MB | 80 Dateien, `manifest.json` mit 26 Dokumenten |
+| `compose/` | 108 KB | 8 Compose-Dateien und beide `.env`, Rechte `go-rwx` |
+
+Die Differenz zwischen 41 Dokumenten in der Datenbank und 26 im Export ist erklärt:
+15 liegen im Papierkorb, die exportiert `document_exporter` nicht. Der `pg_dump`
+enthält sie.
+
+### Ergebnis
+
+Nach dem Update: 26 aktive Dokumente, 15 im Papierkorb, 10 Tags, 11 Korrespondenten —
+alles unverändert. Keine `ERROR`-Zeile im Log, HTTP 302 auf `:8000`.

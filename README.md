@@ -2,7 +2,7 @@
 
 Vollständige Dokumentation des Heimservers `raspberrypi` (`192.168.178.80`).
 
-> **Stand:** 13.08.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
+> **Stand:** 16.08.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
 > **Nächste Prüfung empfohlen:** bei jeder Änderung am Setup, mindestens quartalsweise
 
 ---
@@ -17,9 +17,10 @@ Ein Raspberry Pi 4B als Heimserver mit drei Rollen:
 | **Dokumentenarchiv** | Paperless-ngx mit OCR, PostgreSQL, Redis |
 | **Dateiablage** | Samba + Filebrowser auf einer 1-TB-SSD |
 
-Dazu WireGuard für den Fernzugriff, Portainer zur Container-Verwaltung und Dashy als
-Einstiegsseite. Sieben Docker-Container, Compose-Dateien versioniert in einem
-separaten Repository.
+Dazu WireGuard für den Fernzugriff, Portainer zur Container-Verwaltung und Homepage als
+Einstiegsseite. Zehn Docker-Container in sieben Stacks, Compose-Dateien versioniert in
+einem separaten Repository — seit dem 16.08.2026 durchgängig auf feste Image-Versionen
+gepinnt.
 
 ---
 
@@ -50,14 +51,15 @@ separaten Repository.
 
 | | |
 |---|---|
-| Uptime | 16 Tage |
-| Load (1/5/15 min) | 0,05 / 0,14 / 0,15 bei 4 Kernen |
-| Temperatur | 47,7 °C — nie gedrosselt (`throttled=0x0`) |
-| RAM verfügbar | 2,4 von 3,7 GiB |
-| Systemdatenträger | 5 % belegt (8,9 G von 235 G) |
+| Uptime | 19 Tage |
+| Load (1/5/15 min) | 0,92 / 1,31 / 1,86 bei 4 Kernen — erhöht durch die Updates |
+| Temperatur | 51,6 °C — nie gedrosselt (`throttled=0x0`) |
+| RAM verfügbar | 2,1 von 3,7 GiB |
+| Systemdatenträger | 6 % belegt (14 G von 235 G) |
 | Datenspeicher SSD | 36 % belegt (310 G von 916 G) |
 | Ausstehende OS-Updates | 0 |
 | Fehlgeschlagene Dienste | 0 |
+| Container-Images | **alle auf feste Versionen gepinnt** (16.08.2026) |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 
@@ -70,6 +72,10 @@ separaten Repository.
    3,5 Jahren Dauerbetrieb, während eine SSD zu 64 % leer danebenliegt. → [Kapitel 01](docs/01-hardware.md)
 3. **Keine Firewall, SSH-Passwortlogin aktiv, schwache Standardpasswörter bei
    Paperless.** → [Kapitel 07](docs/07-sicherheit.md)
+
+Neu hinzugekommen: **`filebrowser` wird eingestellt.** Das Repository wird am
+**01.09.2026** archiviert, danach erscheinen keine Sicherheitsupdates mehr für einen
+Dienst, der Dateizugriff über HTTP anbietet. → [Kapitel 05](docs/05-docker.md)
 
 Das automatisierte Backup der unersetzlichen Daten läuft seit dem 13.08.2026 täglich.
 → [Kapitel 12](docs/12-backup.md)

@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 13.08.2026*
+*Stand: 16.08.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -84,9 +84,12 @@ Ausführliche Begründungen in [07 — Sicherheit](07-sicherheit.md).
 | 2.3 | `unattended-upgrades` aktivieren (nur Security, ohne Auto-Reboot) | 5 min | hoch |
 | 2.4 | `fail2ban` für SSH und Samba | 10 min | mittel |
 | 2.5 | `ufw` mit LAN-/VPN-Regelwerk | 30 min | hoch |
-| 2.6 | Container-Updates einspielen — **nach** Stufe 1 | 1–2 h | hoch |
+| ~~2.6~~ | ~~Container-Updates einspielen~~ — **erledigt 16.08.2026**, siehe [05](05-docker.md) | — | — |
 | 2.7 | **Diun** installieren (meldet neue Images, aktualisiert nicht) | 20 min | mittel |
-| 2.8 | Datenbank-Images auf feste Tags pinnen (`postgres:15.14`) | 5 min | mittel |
+| ~~2.8~~ | ~~Datenbank-Images auf feste Tags pinnen~~ — **erledigt 16.08.2026**: `postgres:15.19`, `redis:7.4`, alle übrigen ebenfalls gepinnt | — | — |
+| 2.9 | **Ersatz für `filebrowser`** — Projekt wird am 01.09.2026 archiviert | 1 h | mittel |
+| 2.10 | **homepage auf v2.0.0** — Breaking Change bei der Authentifizierung, Release Notes lesen | 30 min | mittel |
+| 2.11 | **Dashy abschalten** — durch Homepage abgelöst, drei alte Images im System | 15 min | niedrig |
 | 2.9 | Samba härten (`map to guest = Never`, `server min protocol = SMB3`) | 15 min | niedrig |
 
 **Zu 2.1 — Sicherheitsnetz:** Die bestehende SSH-Sitzung offen lassen und den Login in
@@ -191,9 +194,11 @@ Woche 1   1.1 Backup einrichten
           2.2 FRITZ!Box-Freigaben prüfen
           2.3 unattended-upgrades
 
-Woche 2   2.6 Container-Updates (jetzt mit Rückfallebene)
-          2.7 Diun
-          2.8 Datenbank-Tags pinnen
+Woche 2   2.6 Container-Updates          ✅ erledigt 16.08.2026
+          2.8 Datenbank-Tags pinnen      ✅ erledigt 16.08.2026
+          2.7 Diun — jetzt wichtiger: mit festen Tags erfährt man
+              von neuen Versionen sonst gar nichts mehr
+          2.9 Ersatz für filebrowser (Frist: 01.09.2026)
           3.1 Dashboard
 
 Später    1.3 Umzug auf SSD

@@ -1,6 +1,6 @@
 # 11 — Notfallwiederherstellung
 
-*Stand: 13.08.2026*
+*Stand: 16.08.2026*
 
 Was passiert, wenn der Pi morgen nicht mehr startet?
 
@@ -126,3 +126,27 @@ Eine Wiederherstellungsstrategie ist so gut wie die Antworten auf diese Fragen:
 
 Die letzte Frage ist keine technische. Wenn Pi-hole DNS für den ganzen Haushalt macht,
 betrifft ein Ausfall alle Mitbewohner — auch dann, wenn du gerade nicht da bist.
+
+---
+
+## Nachtrag 16.08.2026 — Vollständiges Paperless-Backup vorhanden
+
+Vor dem Update auf Version 3 wurde unter `/mnt/usb-hdd/backup/2026-08-16-vor-update/`
+ein geprüftes Backup abgelegt, das über den turnusmäßigen restic-Lauf hinausgeht:
+
+| Teil | Wofür es beim Wiederaufbau gut ist |
+|---|---|
+| `db/paperless-2026-08-16.dump` | Vollständige Datenbank inklusive Papierkorb, einspielbar mit `pg_restore` |
+| `db/paperless-2026-08-16.sql` | Dieselben Daten als Klartext — lesbar auch ohne passende PostgreSQL-Version |
+| `export/documents/` | Dokumente als Dateien plus `manifest.json` mit allen Metadaten. Damit lässt sich ein Archiv **ohne** Datenbank neu aufbauen (`document_importer`) |
+| `compose/` | Alle Compose- und `.env`-Dateien, Rechte `go-rwx` |
+
+Die `manifest.json` ist zusätzlich die Rückfallebene für Metadaten: Sie enthält Titel,
+Tags, Korrespondent und Dokumenttyp jedes Dokuments im Zustand vor dem Update. Werden
+diese Felder später fehlerhaft überschrieben — etwa durch eine automatische
+Verschlagwortung — lassen sie sich daraus per API einzeln zurückschreiben, ohne die
+ganze Datenbank zurückzurollen.
+
+**Grenze:** Das Verzeichnis liegt auf derselben SSD wie die Nutzdaten. Es schützt vor
+einem fehlgeschlagenen Update, nicht vor einem Ausfall der Platte. Dafür ist weiterhin
+der restic-Lauf nach OneDrive zuständig → [Kapitel 12](12-backup.md).

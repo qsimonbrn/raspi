@@ -1,6 +1,6 @@
 # 08 — Bewertung
 
-*Stand: 13.08.2026*
+*Stand: 16.08.2026*
 
 Eine ehrliche Einordnung des Gesamtzustands. Messwerte stehen in den Fachkapiteln; hier
 geht es um die Einschätzung.
@@ -72,7 +72,7 @@ Ausfallpunkt ist die SD-Karte — und für genau diesen Fall gibt es kein Backup
 |---|---|---|
 | Keine Firewall auf dem Host | Nur eine Schutzschicht (FRITZ!Box), keine Tiefenverteidigung | [07](07-sicherheit.md) |
 | SSH-Passwortanmeldung aktiv, kein `fail2ban` | Unbegrenzte Brute-Force-Versuche möglich | [07](07-sicherheit.md) |
-| Container-Images 8–17 Monate alt | Ungepatchte Sicherheitslücken, u. a. in Paperless und PostgreSQL | [05](05-docker.md) |
+| `filebrowser` wird eingestellt (Archivierung 01.09.2026) | Danach keine Sicherheitsupdates mehr für einen Dienst mit Dateizugriff | [05](05-docker.md) |
 | Öffentliche IPv6-Adresse ohne lokale Firewall | Eine Fehlkonfiguration in der FRITZ!Box legt alle Dienste offen | [03](03-netzwerk.md) |
 | Keine automatischen Sicherheitsupdates | Patch-Prozess hängt an einer einzelnen Person | [02](02-betriebssystem.md) |
 
