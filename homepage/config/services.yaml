@@ -36,14 +36,6 @@
         server: pi
         container: paperless
 
-    - Filebrowser:
-        href: http://192.168.178.80:8082
-        siteMonitor: http://192.168.178.80:8082
-        description: Dateien auf der SSD im Browser
-        icon: filebrowser.png
-        server: pi
-        container: filebrowser
-
     - Bichon:
         href: http://192.168.178.80:15630
         siteMonitor: http://192.168.178.80:15630
