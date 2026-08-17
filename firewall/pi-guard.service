@@ -1,0 +1,16 @@
+[Unit]
+Description=pi-guard — Verwaltungsoberflaechen nur ueber Tailscale erreichbar
+Documentation=https://github.com/qsimonbrn/raspi-doku
+# Nach Docker starten, damit die Kette DOCKER-USER bereits existiert.
+After=docker.service tailscaled.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/pi-guard.sh start
+ExecStop=/usr/local/sbin/pi-guard.sh stop
+
+[Install]
+WantedBy=multi-user.target

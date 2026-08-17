@@ -29,16 +29,16 @@
 
 - Dokumente & Daten:
     - Paperless-ngx:
-        href: http://192.168.178.80:8000
-        siteMonitor: http://192.168.178.80:8000
+        href: http://100.108.219.87:8000
+        siteMonitor: http://100.108.219.87:8000
         description: Dokumentenarchiv mit OCR
         icon: paperless-ngx.png
         server: pi
         container: paperless
 
     - Bichon:
-        href: http://192.168.178.80:15630
-        siteMonitor: http://192.168.178.80:15630
+        href: http://100.108.219.87:15630
+        siteMonitor: http://100.108.219.87:15630
         description: E-Mail-Archiv
         icon: mdi-email-multiple
         server: pi
@@ -46,8 +46,8 @@
 
 - Verwaltung:
     - Portainer:
-        href: http://192.168.178.80:9000
-        siteMonitor: http://192.168.178.80:9000
+        href: http://100.108.219.87:9000
+        siteMonitor: http://100.108.219.87:9000
         description: Container-Verwaltung
         icon: portainer.png
         server: pi
