@@ -39,6 +39,68 @@ Pi-hole ist der DNS-Server für das gesamte Heimnetz. Damit hängt die Namensauf
 > umstellen. Ein zweiter dauerhaft eingetragener DNS-Server hebelt allerdings die
 > Werbefilterung teilweise aus, weil Clients frei wählen dürfen. Bewusste Abwägung.
 
+### iCloud Private Relay wird absichtlich blockiert
+
+**Symptom.** Apple-Geräte melden gelegentlich, Private Relay sei in diesem Netzwerk
+nicht verfügbar. Bei Gästen, die das WLAN zum ersten Mal betreten, erscheint die Meldung
+regelmäßig; sie müssen Private Relay abschalten, bevor alles rund läuft.
+
+**Das ist kein Fehler, sondern eine Voreinstellung von Pi-hole.**
+
+| | |
+|---|---|
+| Einstellung | `dns.specialDomains.iCloudPrivateRelay = true` (Standard) |
+| Wirkung | NXDOMAIN auf `mask.icloud.com` und `mask-h2.icloud.com` |
+| Herkunft | eingebaut in Pi-hole — **nicht** aus einer der Blocklisten |
+| Nachweis | `dig @127.0.0.1 mask.icloud.com` → `status: NXDOMAIN`; in der Abfrageliste erscheinen diese Domains mit Status 16 (`SPECIAL_DOMAIN`) |
+
+**Warum das so gebaut ist.** Private Relay leitet Safaris Datenverkehr *und dessen
+DNS-Anfragen* über Apples Server. Ein Gerät mit aktivem Private Relay umgeht Pi-hole
+also — jedenfalls in Safari. Pi-hole schließt diese Lücke, indem es die Anmeldung beim
+Relay verhindert.
+
+Bemerkenswert: **Apple empfiehlt genau dieses Verfahren selbst.** In der Anleitung für
+Netzwerkbetreiber steht, eine NXDOMAIN-Antwort auf diese beiden Namen sei der schnellste
+und zuverlässigste Weg, und die Nutzer würden daraufhin benachrichtigt, Private Relay
+für dieses Netz abzuschalten oder ein anderes Netz zu wählen. Die Meldung ist also
+vorgesehenes Verhalten, kein Defekt.
+
+**Was Private Relay tatsächlich umfasst** — wichtig für die Abwägung:
+
+| Bereich | Mit aktivem Private Relay |
+|---|---|
+| Safari | läuft an Pi-hole vorbei, ungefiltert |
+| Apps, auch mit HTTPS | fragen weiterhin Pi-hole, **bleiben gefiltert** |
+| Andere Browser (Chrome, Firefox) | bleiben gefiltert |
+| Geräte ohne Apple-Konto | unberührt |
+
+Es entsteht also ein Loch, kein Totalausfall — allerdings genau dort, wo Werbung am
+meisten auffällt.
+
+### Was man Gästen sagt
+
+> „Kurz in Einstellungen → WLAN → auf das **(i)** neben dem Netznamen tippen → *iCloud
+> Private Relay* ausschalten. Das gilt nur für dieses WLAN; unterwegs bleibt es aktiv."
+
+Der Schalter ist netzbezogen. Wer ihn hier deaktiviert, verliert Private Relay
+anderswo nicht.
+
+### Geprüfte Alternative, falls es künftig stören sollte
+
+Am 18.08.2026 auf diesem Pi nachgemessen: Ein **Allowlist-Eintrag überstimmt die
+eingebaute Sperre** (vorher NXDOMAIN, nach `pihole allow mask.icloud.com` reguläre
+Auflösung; Testeintrag anschließend wieder entfernt). Da Allowlist-Einträge einzelnen
+Gerätegruppen zugewiesen werden können, ließe sich beides trennen:
+
+1. `mask.icloud.com` und `mask-h2.icloud.com` auf die Allowlist, zugewiesen **nur** der
+   Standardgruppe
+2. Die eigenen Apple-Geräte als Clients anlegen und einer eigenen Gruppe ohne diese
+   Ausnahme zuordnen
+
+Ergebnis: Gäste kommen ohne Warnung ins Netz und verlieren dabei die Safari-Filterung,
+die eigenen Geräte bleiben vollständig gefiltert. **Bewusst nicht umgesetzt** — die
+volle Filterwirkung wiegt schwerer als die gelegentliche Erklärung an Gäste.
+
 ---
 
 ## unbound — rekursiver DNS-Resolver

@@ -9,6 +9,30 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.7.0] — 2026-08-18
+
+### Hinzugefügt
+
+- **[04](docs/04-dienste-system.md): Abschnitt „iCloud Private Relay wird absichtlich
+  blockiert".** Erklärt die wiederkehrenden Meldungen auf Apple-Geräten — eigene wie
+  die von Gästen. Ursache ist die Pi-hole-Voreinstellung
+  `dns.specialDomains.iCloudPrivateRelay = true`, die NXDOMAIN auf `mask.icloud.com`
+  und `mask-h2.icloud.com` liefert; sie stammt **nicht** aus einer Blockliste. Apple
+  empfiehlt dieses Verfahren in seiner Anleitung für Netzwerkbetreiber selbst, die
+  Meldung ist vorgesehenes Verhalten.
+- **Abgrenzung, was Private Relay tatsächlich umfasst.** Nur Safari und dessen
+  DNS-Anfragen laufen daran vorbei; Apps — auch solche mit HTTPS — fragen weiterhin
+  Pi-hole und bleiben gefiltert. Die verbreitete Annahme „damit filtert Pi-hole gar
+  nichts mehr" trifft nicht zu.
+- **Handreichung für Gäste** (Einstellungen → WLAN → **(i)** → *iCloud Private Relay*),
+  netzbezogen und ohne Wirkung auf andere Netze.
+- **Dokumentierte, nachgemessene Alternative:** Ein Allowlist-Eintrag überstimmt die
+  eingebaute Sperre (auf dem Pi getestet, Testeintrag wieder entfernt). Zusammen mit
+  Gerätegruppen ließen sich Gäste und eigene Geräte trennen. Bewusst **nicht**
+  umgesetzt — die volle Filterwirkung wiegt schwerer.
+
+---
+
 ## [1.6.0] — 2026-08-18
 
 ### Geändert am System
