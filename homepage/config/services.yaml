@@ -22,9 +22,10 @@
         #   version: 6
         #   key: DEIN_PIHOLE_PASSWORT
 
-    - WireGuard:
-        description: VPN-Zugang von aussen, Port 51820/UDP
-        icon: wireguard.png
+    - Tailscale:
+        href: https://login.tailscale.com/admin/machines
+        description: VPN-Zugang von aussen (Mesh, kein Portforward)
+        icon: tailscale.png
 
 - Dokumente & Daten:
     - Paperless-ngx:

@@ -86,7 +86,7 @@ fi
 
 # --- 3. Systemkonfiguration ---------------------------------------------------
 log "Systemkonfiguration einsammeln"
-cp -a /etc/wireguard          "$STAGE/etc/"       2>/dev/null || warn "WireGuard-Konfiguration fehlt"
+cp -a /var/lib/tailscale      "$STAGE/etc/"       2>/dev/null || warn "Tailscale-Zustand fehlt"
 cp -a /etc/samba              "$STAGE/etc/"       2>/dev/null || warn "Samba-Konfiguration fehlt"
 cp -a /etc/ssh/sshd_config    "$STAGE/etc/"       2>/dev/null
 cp -a /etc/ssh/sshd_config.d  "$STAGE/etc/"       2>/dev/null

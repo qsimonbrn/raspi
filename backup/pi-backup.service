@@ -15,7 +15,7 @@ ExecStart=/usr/local/bin/pi-backup.sh
 CacheDirectory=restic
 Environment=RESTIC_CACHE_DIR=/var/cache/restic
 
-# Rechte: root wird gebraucht fuer /etc/wireguard, passdb.tdb und den
+# Rechte: root wird gebraucht fuer /var/lib/tailscale, passdb.tdb und den
 # Docker-Socket. Die Ausfuehrung ist auf das Noetige eingeschraenkt.
 User=root
 Nice=10
