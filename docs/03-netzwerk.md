@@ -1,6 +1,6 @@
 # 03 — Netzwerk
 
-*Erfasst: 13.08.2026*
+*Erfasst: 18.08.2026*
 
 ## Anbindung
 
@@ -39,13 +39,15 @@ Filebrowser **sofort und ungeschützt im Internet**.
 
 **Zu prüfen (manuell, in der FRITZ!Box):**
 *Internet → Freigaben → Portfreigaben* — dort die IPv6-Einstellungen des Geräts
-`raspberrypi` kontrollieren. Erwartung: keine Freigaben außer ggf. WireGuard.
+`raspberrypi` kontrollieren. Erwartung: **keine Freigaben**. Seit der Umstellung auf
+Tailscale wird von außen kein einziger eingehender Port mehr benötigt.
 
 ## Routing
 
 ```
 default via 192.168.178.1 dev eth0 src 192.168.178.80 metric 1002
-10.66.66.0/24 dev wg0 proto kernel scope link src 10.66.66.1
+100.108.219.87 dev tailscale0 proto kernel scope link
+192.168.178.0/24 dev eth0 proto kernel scope link src 192.168.178.80
 169.254.0.0/16 dev veth… (mehrfach, Docker)
 ```
 
@@ -55,16 +57,22 @@ virtuellen Container-Schnittstellen anfasst — kosmetisch unschön, funktional
 unkritisch. Siehe dazu den Befund zu den zwei Netzwerk-Managern in
 [02 — Betriebssystem](02-betriebssystem.md).
 
-## WireGuard-Tunnel
+## Tailscale-Netz
 
 | | |
 |---|---|
-| Schnittstelle | `wg0` |
-| Server-Adresse | `10.66.66.1/24` |
-| Port | **51820/UDP** |
-| Peers | 1 (`10.66.66.2/32`) |
+| Schnittstelle | `tailscale0` |
+| Adresse des Pi | `100.108.219.87/32` · `fd7a:115c:a1e0::aa01:dbd5/128` |
+| Tailnet-Bereich | `100.64.0.0/10` (CGNAT-Bereich, von Tailscale genutzt) |
+| Eingehender Port | **keiner** — Verbindungen werden von innen aufgebaut |
+| Beworbene Route | `192.168.178.0/24` (Subnetz-Router) |
 
-Details in [04 — Systemdienste](04-dienste-system.md).
+Der Pi ist unter `100.108.219.87` aus jedem verbundenen Gerät erreichbar, unabhängig
+vom Standort. Über den Subnetz-Router gilt das auch für alle anderen Geräte im
+Heimnetz.
+
+Die Ablösung von WireGuard und ihre Begründung stehen in
+[04 — Systemdienste](04-dienste-system.md).
 
 ## Docker-Netzwerke
 
@@ -101,7 +109,7 @@ Dass er DOWN ist, bestätigt: Es läuft kein Container außerhalb eines Compose-
 | 8082 | Filebrowser | `0.0.0.0` + `[::]` |
 | 9000 / 9443 | Portainer | `0.0.0.0` + `[::]` |
 | 15630 | Bichon | `0.0.0.0` + `[::]` |
-| 51820/UDP | WireGuard | — |
+| zufällig (UDP) | Tailscale (`tailscaled`) | `100.108.219.87` + Tailnet-IPv6 |
 
 ### Nur lokal gebunden
 

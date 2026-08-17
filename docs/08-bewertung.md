@@ -10,7 +10,7 @@ geht es um die Einschätzung.
 ## Gesamteindruck
 
 Das ist ein **überdurchschnittlich gut gebauter Heimserver**. Wer Pi-hole mit einem
-eigenen unbound-Resolver kombiniert, Fernzugriff über WireGuard statt über Portfreigaben
+eigenen unbound-Resolver kombiniert, Fernzugriff über ein VPN statt über Portfreigaben
 löst und seine Compose-Dateien in Git versioniert, weiß, was er tut. Das sind drei
 Entscheidungen, die in typischen Heimserver-Setups selten alle drei richtig getroffen
 werden.
@@ -30,8 +30,9 @@ das Betreiben.
 
 - **Pi-hole + unbound.** DNS wird selbst rekursiv aufgelöst. Kein externer Resolver sieht
   das Surfprofil des Haushalts. Alle drei Pi-hole-Komponenten aktuell.
-- **WireGuard statt Portfreigaben.** Genau ein verschlüsselter Eingang von außen,
-  statt sechs offener Weboberflächen.
+- **Tailscale statt Portfreigaben.** Gar kein eingehender Port, statt sechs offener
+  Weboberflächen. Seit dem 18.08.2026; der Vorgänger WireGuard war am DS-Lite-Anschluss
+  von außen nie erreichbar (siehe [04](04-dienste-system.md)).
 - **unbound nur auf localhost.** Kein missbrauchbarer offener Resolver.
 - **Getrennte Docker-Netze pro Stack.** Dienste sind gegeneinander isoliert.
 - **Keine privilegierten Container, kein `network_mode: host`.**
@@ -95,10 +96,10 @@ Ausfallpunkt ist die SD-Karte — und für genau diesen Fall gibt es kein Backup
 ## Die eine Zahl
 
 Für einen vollständigen Wiederaufbau nach Totalausfall werden sieben Dinge gebraucht.
-**Eines davon ist gesichert** — die Compose-Dateien in GitHub.
+**Sechs davon sind gesichert** — seit Einrichtung des restic-Backups am 13.08.2026.
 
-Nicht gesichert: Paperless-Dokumente, Bichon-E-Mail-Archiv, Pi-hole-Konfiguration,
-WireGuard-Schlüssel, Samba-Konfiguration, 310 GB Nutzdaten.
+Nicht gesichert bleiben die 310 GB Nutzdaten auf der SSD; sie passen nicht in den
+verfügbaren Cloud-Speicher.
 
 Details in [11 — Notfallwiederherstellung](11-disaster-recovery.md).
 

@@ -1,6 +1,6 @@
 # 10 — Zugriff
 
-*Erfasst: 13.08.2026*
+*Erfasst: 18.08.2026*
 
 Alle Zugangswege zum System auf einen Blick.
 
@@ -46,23 +46,28 @@ Alle Zugangswege zum System auf einen Blick.
 
 | | |
 |---|---|
-| Verfahren | WireGuard |
-| Port | 51820/UDP |
-| VPN-Netz | `10.66.66.0/24` |
-| Pi im VPN | `10.66.66.1` |
-| Eingerichtete Clients | 1 (`10.66.66.2`) |
+| Verfahren | Tailscale (Mesh-VPN auf WireGuard-Basis) |
+| Eingehender Port | **keiner** |
+| Tailnet | `tailf372ec.ts.net` |
+| Pi im Tailnet | `100.108.219.87` bzw. `raspberrypi.tailf372ec.ts.net` |
+| Verbundene Geräte | 2 (`raspberrypi`, `iphone-sibr`) |
+| Heimnetz über VPN | ja — `192.168.178.0/24` per Subnetz-Router |
+| DNS über VPN | Pi-hole, tailnetweit erzwungen |
 
-Im aktiven Tunnel sind alle oben genannten Adressen unverändert erreichbar — der Pi ist
-dann unter `192.168.178.80` **und** unter `10.66.66.1` ansprechbar.
+Bei aktiver Verbindung ist der Pi unter `192.168.178.80` **und** unter `100.108.219.87`
+ansprechbar. Dank Subnetz-Router funktionieren unterwegs auch die gewohnten
+`192.168.178.x`-Adressen — alle Lesezeichen bleiben gültig.
 
-**Es gibt keine direkten Portfreigaben ins Internet.** WireGuard ist der einzige Weg von
-außen. Das ist beabsichtigt und richtig so.
+**Es gibt keine Portfreigaben ins Internet, und es werden auch keine mehr benötigt.**
+Der Anschluss läuft über DS-Lite und hat gar keine eigene öffentliche IPv4-Adresse;
+Tailscale baut die Verbindung deshalb von innen nach außen auf. Siehe
+[04 — Systemdienste](04-dienste-system.md).
 
 ---
 
 ## Zugriffsmatrix
 
-| Dienst | Aus dem LAN | Über VPN | Aus dem Internet |
+| Dienst | Aus dem LAN | Über Tailscale | Aus dem Internet |
 |---|---|---|---|
 | Homepage | ✅ | ✅ | ❌ |
 | ntfy | ✅ | ✅ | ❌ |
@@ -74,7 +79,7 @@ außen. Das ist beabsichtigt und richtig so.
 | Dashy | ✅ | ✅ | ❌ |
 | Samba | ✅ | ✅ | ❌ |
 | SSH | ✅ | ✅ | ❌ |
-| WireGuard | ✅ | — | ✅ (Port 51820/UDP) |
+| Tailscale | ✅ | — | ❌ (kein eingehender Port) |
 
 > Die Spalte „Aus dem Internet" beschreibt den **Soll-Zustand**. Sie gilt, solange die
 > FRITZ!Box eingehende IPv6-Verbindungen blockiert. Auf dem Pi selbst gibt es keine
@@ -102,5 +107,5 @@ Checkliste dessen, was im Passwortmanager hinterlegt sein sollte:
 - [ ] Filebrowser Administratorkonto
 - [ ] Bichon Master-Passwort — ⚠️ laut Compose-Datei **nachträglich nicht änderbar**, ohne das Archiv zu zerstören
 - [ ] Samba-Passwort für `simon`
-- [ ] WireGuard-Client-Konfiguration (enthält private Schlüssel)
+- [ ] GitHub-Konto `qsimonbrn` — ⚠️ **Schlüssel zum Heimnetz**, seit der Tailscale-Anmeldung. Zwei-Faktor-Anmeldung zwingend
 - [ ] PostgreSQL-Zugangsdaten für Paperless

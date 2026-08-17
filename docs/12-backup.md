@@ -46,7 +46,7 @@ wie viel Daten vorhanden sind, sondern **wie viel davon unwiederbringlich** ist:
 |---|---|---|
 | Bichon E-Mail-Archiv | 689 MB | ❌ nein |
 | Paperless (Export + Datenbank) | ~25 MB | ❌ nein |
-| Systemkonfiguration (WireGuard, Samba, Pi-hole, SSH) | ~5 MB | ❌ nein — nur mit erheblichem Aufwand |
+| Systemkonfiguration (Tailscale, Samba, Pi-hole, SSH) | ~5 MB | ❌ nein — nur mit erheblichem Aufwand |
 | Filebrowser-Datenbank | 44 KB | ❌ nein |
 | Compose-Dateien und Doku | ~1 MB | ✅ liegt auch auf GitHub |
 | Docker-Images | 3,8 GB | ✅ jederzeit neu ladbar |
@@ -71,7 +71,7 @@ Die Free-Version reicht also. Für den Teil, für den sie *nicht* reicht, siehe
 | Repository | `rclone:onedrive:Backups/raspberrypi-restic` |
 | Repository-Format | Version 2 — mit Kompression |
 | Auslöser | systemd-Timer, täglich 03:17 Uhr |
-| Ausführung als | `root` (nötig für `/etc/wireguard`, `passdb.tdb`, Docker-Socket) |
+| Ausführung als | `root` (nötig für `/var/lib/tailscale`, `passdb.tdb`, Docker-Socket) |
 
 ### Warum restic und nicht `rclone sync`
 
@@ -125,7 +125,7 @@ Kilobyte statt 424 MB Query-Datenbank.
 
 | Quelle | Warum |
 |---|---|
-| `/etc/wireguard/` | Ohne die Schlüssel muss **jedes** VPN-Client-Gerät neu eingerichtet werden |
+| `/var/lib/tailscale/` | Node-Schlüssel. Verlust ist verkraftbar — eine Neuanmeldung stellt denselben Zustand her, ohne Client-Geräte anzufassen |
 | `/etc/samba/` | Freigaben und Berechtigungen |
 | `/var/lib/samba/private/passdb.tdb` | Samba-Passwort-Hashes |
 | `/etc/ssh/sshd_config*` | SSH-Härtung |
@@ -245,16 +245,21 @@ ist die Rückfallebene, falls der Import scheitert.
 Weboberfläche → *Settings → Teleporter → Restore*, dort die ZIP-Datei aus dem Backup
 hochladen. Blocklisten anschließend mit `pihole -g` neu aufbauen.
 
-### WireGuard wiederherstellen
+### Tailscale wiederherstellen
 
 ```bash
-sudo -E restic restore latest --include "*/etc/wireguard/*" --target /tmp/wh
-sudo cp -a /tmp/wh/.../etc/wireguard/* /etc/wireguard/
-sudo systemctl restart wg-quick@wg0
+sudo -E restic restore latest --include "*/var/lib/tailscale/*" --target /tmp/wh
+sudo systemctl stop tailscaled
+sudo cp -a /tmp/wh/.../var/lib/tailscale/* /var/lib/tailscale/
+sudo systemctl start tailscaled
+
+# Einfacher und meist ausreichend: gar nicht zurückspielen, sondern neu anmelden
+sudo tailscale up --advertise-routes=192.168.178.0/24 --advertise-exit-node --accept-dns=false
 ```
 
-Client-Geräte müssen **nicht** neu eingerichtet werden, solange die Schlüssel dieselben
-sind — genau deshalb ist dieses Verzeichnis im Backup.
+Client-Geräte müssen in **keinem** der beiden Fälle neu eingerichtet werden. Das ist der
+Unterschied zum früheren WireGuard-Aufbau: Dort hätte der Verlust der Serverschlüssel
+bedeutet, jedes Endgerät von Hand neu zu konfigurieren.
 
 ### Vollständiger Neuaufbau
 

@@ -69,7 +69,7 @@ ntfy läuft **ausschließlich lokal**. Es gibt keine Portfreigabe nach außen, u
 soll auch so bleiben.
 
 **Was das bedeutet:** Das Handy erhält Nachrichten, solange es im WLAN zu Hause ist
-oder der WireGuard-Tunnel aktiv ist. Unterwegs ohne VPN kommt nichts an — die
+oder Tailscale aktiv ist. Unterwegs ohne VPN kommt nichts an — die
 Nachricht wird aber nachgeliefert, sobald das Gerät wieder erreichbar ist
 (`cache-duration: 24h`).
 
@@ -80,7 +80,7 @@ Für den Zweck reicht das: Das Backup läuft um 03:17 Uhr nachts, das Handy lieg
 
 | Weg | Abwägung |
 |---|---|
-| WireGuard dauerhaft aktiv | Kein zusätzlicher Dienst, kostet etwas Akku |
+| Tailscale dauerhaft aktiv | Kein zusätzlicher Dienst, kostet etwas Akku. Seit dem 18.08.2026 auch tatsächlich von unterwegs nutzbar |
 | Öffentliches `ntfy.sh` als Relay | Funktioniert überall, aber die Meldungen laufen über einen fremden Server. Bei „Backup fehlgeschlagen" ist der Inhalt unkritisch — Metadaten fallen trotzdem an |
 | Reverse Proxy mit HTTPS und Portfreigabe | Volle Funktion, öffnet aber einen weiteren Weg von außen ins Heimnetz |
 

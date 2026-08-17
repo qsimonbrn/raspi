@@ -1,6 +1,6 @@
 # 06 — Daten & Speicher
 
-*Erfasst: 13.08.2026*
+*Erfasst: 18.08.2026*
 
 > **Dies ist das wichtigste Kapitel dieser Dokumentation.** Alle anderen Befunde sind
 > Optimierungen. Dieser hier betrifft möglichen dauerhaften Datenverlust.
@@ -142,7 +142,7 @@ sollte dabei nicht mitten in einem Import stehen.
 |---|---|---|---|
 | 1 | Paperless-Export + Bichon + Konfigurationen | lokal auf der SSD | täglich |
 | 2 | Ebene 1, verschlüsselt und dedupliziert | OneDrive via rclone | täglich |
-| 3 | Systemkonfiguration (`/etc/wireguard`, `/etc/samba`, Pi-hole-Export) | mit Ebene 1 | wöchentlich |
+| 3 | Systemkonfiguration (`/var/lib/tailscale`, `/etc/samba`, Pi-hole-Export) | mit Ebene 1 | wöchentlich |
 
 ### Werkzeugempfehlung: `restic`
 

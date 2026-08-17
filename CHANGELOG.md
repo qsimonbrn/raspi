@@ -1,10 +1,53 @@
 # Änderungsverlauf der Dokumentation
 
 Dieser Verlauf dokumentiert Änderungen an der **Dokumentation**, nicht am System selbst.
-Systemänderungen werden in den jeweiligen Kapiteln vermerkt.
+Systemänderungen stehen im Betriebstagebuch
+[15 — Änderungshistorie](docs/15-aenderungshistorie.md) und in den jeweiligen Kapiteln.
 
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) ·
 Datumsformat: JJJJ-MM-TT
+
+---
+
+## [1.6.0] — 2026-08-18
+
+### Geändert am System
+
+- **WireGuard durch Tailscale ersetzt.** WireGuard war am DS-Lite-Anschluss von außen
+  nie erreichbar — der eingerichtete Peer hatte null Bytes und keinen Handshake. Eine
+  IPv4-Portfreigabe ist bei DS-Lite technisch unmöglich. Tailscale 1.102.2 baut die
+  Verbindung von innen nach außen auf und benötigt keinen eingehenden Port.
+  Vollständige Begründung und Abwägung in
+  [15 — Änderungshistorie](docs/15-aenderungshistorie.md).
+- **Pi als Subnetz-Router und Exit Node.** Unterwegs ist das gesamte Heimnetz unter den
+  gewohnten `192.168.178.x`-Adressen erreichbar.
+- **Pi-hole `listeningMode` von `LOCAL` auf `ALL`.** Notwendig, weil `tailscale0` eine
+  `/32`-Adresse trägt und andere Tailnet-Geräte sonst als „nicht lokal" abgewiesen
+  worden wären.
+- **WireGuard rückstandslos entfernt**, Sicherungskopie unter
+  `/root/wireguard-entfernt-20260818.tar.gz`.
+- **Backup zieht `/var/lib/tailscale` statt `/etc/wireguard`** (`docker-stacks`,
+  Commit `fbd6b53`).
+
+### Hinzugefügt
+
+- **Kapitel [15 — Änderungshistorie](docs/15-aenderungshistorie.md).** Betriebstagebuch
+  für Systemänderungen mit Datum, Begründung und Nachmessung — abgegrenzt vom
+  CHANGELOG, der die Dokumentation selbst verfolgt. Mit Vorlage für neue Einträge.
+
+### Geändert
+
+- **Kapitel 03, 04, 06, 07, 08, 10, 11, 12, 13, 14 und README** auf Tailscale
+  umgestellt.
+- **Kapitel 04** um die Messwerte erweitert, die den Befund belegen (kein Handshake,
+  keine externe IPv4 laut UPnP).
+
+### Behoben
+
+- **Widerspruch in der Bewertung.** Der Abschnitt „Die eine Zahl" in
+  [08](docs/08-bewertung.md) nannte weiterhin ein einziges gesichertes Element,
+  während [11](docs/11-disaster-recovery.md) seit dem 13.08.2026 sechs von sieben
+  ausweist. Auf den tatsächlichen Stand korrigiert.
 
 ---
 

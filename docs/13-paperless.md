@@ -186,7 +186,8 @@ Filter lassen sich links auch anklicken und als **gespeicherte Ansicht** sichern
 
 Es gibt keine offizielle App, aber die Oberfläche ist für Mobilgeräte gebaut. Im Browser
 `http://192.168.178.80:8000` aufrufen und zum Homescreen hinzufügen — verhält sich dann
-wie eine App. Von unterwegs geht das über den WireGuard-Tunnel.
+wie eine App. Von unterwegs geht das über Tailscale — entweder über dieselbe Adresse
+`http://192.168.178.80:8000` (dank Subnetz-Router) oder über `http://100.108.219.87:8000`.
 
 Für iOS und Android gibt es zusätzlich Apps aus der Community (etwa *Swift Paperless* und
 *Paperless Mobile*), die sich mit derselben Adresse und einem API-Token verbinden.

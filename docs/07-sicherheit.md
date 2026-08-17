@@ -1,10 +1,10 @@
 # 07 — Sicherheit
 
-*Erfasst: 13.08.2026*
+*Erfasst: 18.08.2026*
 
 ## Zusammenfassung
 
-Die Architektur ist richtig gedacht: Fernzugriff läuft über WireGuard statt über
+Die Architektur ist richtig gedacht: Fernzugriff läuft über Tailscale statt über
 Portfreigaben, der rekursive DNS-Resolver ist auf localhost beschränkt, kein Container
 läuft privilegiert, die Samba-Freigabe ist auf einen Benutzer begrenzt, und das
 Betriebssystem ist vollständig gepatcht.
@@ -36,8 +36,8 @@ Kontrolle über alle Container — ohne weitere Hürde offen.
 | Regel | Zweck |
 |---|---|
 | `allow from 192.168.178.0/24 to any port 22,80,53,445,139` | LAN-Dienste |
-| `allow from 10.66.66.0/24` | VPN-Clients bekommen vollen Zugriff |
-| `allow 51820/udp` | WireGuard-Eingang |
+| `allow from 100.64.0.0/10` | Tailscale-Geräte bekommen vollen Zugriff |
+| `allow in on tailscale0` | Verkehr aus dem Tailnet |
 | `deny` für Verwaltungsoberflächen aus dem LAN, nur über VPN | Portainer (9000/9443) |
 | `default deny incoming` | alles Übrige |
 
@@ -176,7 +176,7 @@ unnötige Fläche.
 
 | | Warum es zählt |
 |---|---|
-| **WireGuard statt Portfreigaben** | Ein einziger, verschlüsselter Eingang. WireGuard antwortet auf unauthentifizierte Pakete gar nicht — ein Portscan sieht nichts. |
+| **Tailscale statt Portfreigaben** | Gar kein eingehender Port. Ein Portscan von außen findet nichts, weil es nichts zu finden gibt. Der Preis ist die Abhängigkeit von Tailscales Vermittlung und vom GitHub-Konto. |
 | **unbound nur auf `127.0.0.1`** | Ein offener rekursiver Resolver wäre für DNS-Amplification-Angriffe missbrauchbar. Korrekt vermieden. |
 | **Kein `privileged`-Container** | Ein Ausbruch aus einem Container führt nicht direkt zu Root auf dem Host. |
 | **Kein `network_mode: host`** | Container sind netzwerkseitig isoliert. |

@@ -14,7 +14,7 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | 2 | **Paperless-Dokumente + Datenbank** | ✅ **ja** | restic-Backup, täglich |
 | 3 | **Bichon-E-Mail-Archiv** | ✅ **ja** | restic-Backup, täglich |
 | 4 | **Pi-hole-Konfiguration** (Blocklisten, lokale DNS-Einträge, Anpassungen) | ✅ **ja** | Teleporter-Export im Backup |
-| 5 | **WireGuard-Schlüssel und Peer-Konfiguration** | ✅ **ja** | restic-Backup, täglich |
+| 5 | **Tailscale-Zustand** (`/var/lib/tailscale`) | ✅ **ja** | restic-Backup, täglich — im Notfall aber entbehrlich, siehe unten |
 | 6 | **Samba-Konfiguration und Passwortdatenbank** | ✅ **ja** | restic-Backup, täglich |
 | 7 | **Nutzdaten auf der SSD** (310 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
 
@@ -39,15 +39,22 @@ Der wahrscheinlichste Fall (siehe [01 — Hardware](01-hardware.md)).
 | Aufwand | 1–2 Tage |
 
 **Was neu aufgebaut werden muss:** Betriebssystem, Pi-hole samt Blocklisten und lokalen
-DNS-Einträgen, unbound, Samba mit Freigaben und Benutzern, WireGuard **inklusive
-Neueinrichtung jedes Client-Geräts**, Docker, alle Container.
+DNS-Einträgen, unbound, Samba mit Freigaben und Benutzern, Tailscale, Docker,
+alle Container.
 
 Die Compose-Dateien kommen aus GitHub — das ist der Teil, der funktioniert. Alles unter
 `/etc` muss aus dem Gedächtnis rekonstruiert werden.
 
-**Der unangenehmste Punkt:** Die WireGuard-Schlüssel. Ohne sie muss der Tunnel komplett
-neu aufgesetzt werden, und jedes Client-Gerät braucht eine neue Konfiguration. Die
-Dateien sind zusammen wenige Kilobyte groß.
+**Beim VPN entspannt sich die Lage seit der Umstellung auf Tailscale.** Geht
+`/var/lib/tailscale` verloren, genügt nach der Neuinstallation ein `tailscale up` mit
+Anmeldung über das GitHub-Konto — der Pi bekommt dieselbe Adresse `100.108.219.87`
+zurück, und **kein einziges Client-Gerät muss angefasst werden**. Der alte Eintrag ist
+in der Verwaltungsoberfläche zu löschen. Zu WireGuard-Zeiten war genau das der
+schmerzhafteste Punkt dieses Szenarios.
+
+Nachzuziehen sind nach dem Wiederaufbau nur die drei Einstellungen aus der
+Tailscale-Oberfläche: Subnetz-Route `192.168.178.0/24`, Exit Node und der
+DNS-Eintrag auf `100.108.219.87`.
 
 ### Szenario B — SSD fällt aus, System intakt
 
@@ -71,7 +78,7 @@ neu aufsetzen. Eingescannte Dokumente, deren Papieroriginale entsorgt wurden, ni
 
 ## Was sich mit geringem Aufwand ändern lässt
 
-Die Punkte 4, 5 und 6 der Tabelle oben — Pi-hole, WireGuard, Samba — sind **zusammen
+Die Punkte 4, 5 und 6 der Tabelle oben — Pi-hole, Tailscale, Samba — sind **zusammen
 wenige Megabyte**. Sie fehlen nicht aus technischen Gründen, sondern weil bisher niemand
 einen Job dafür eingerichtet hat.
 
@@ -80,7 +87,7 @@ Gedächtnis" auf „ein paar Stunden" verkürzen:
 
 | Quelle | Inhalt |
 |---|---|
-| `/etc/wireguard/` | Server- und Peer-Schlüssel |
+| `/var/lib/tailscale/` | Node-Schlüssel (im Notfall auch durch Neuanmeldung ersetzbar) |
 | `/etc/samba/smb.conf` + Samba-Passwortdatenbank | Freigaben und Benutzer |
 | Pi-hole-Teleporter-Export | Blocklisten, lokale DNS-Einträge, Anpassungen |
 | `/etc/fstab`, `/etc/ssh/sshd_config*` | Mounts und SSH-Konfiguration |
@@ -102,7 +109,8 @@ Punkt 2 und 3 — Paperless und Bichon — sind der Kern von Stufe 1 in
 6. Nutzdaten aus dem Backup zurückspielen — **vor** dem Start der Container
 7. Container starten, Stack für Stack, mit Prüfung dazwischen
 8. Pi-hole und unbound aufsetzen, Konfiguration importieren
-9. WireGuard-Schlüssel zurückspielen, Tunnel testen
+9. Tailscale installieren, `tailscale up` mit Subnetz-Route ausführen, in der
+   Verwaltungsoberfläche Route, Exit Node und DNS-Eintrag wieder setzen
 10. Samba einrichten, Freigabe prüfen
 11. **Backup-Job als Erstes wieder einrichten** — nicht als Letztes
 
@@ -119,7 +127,8 @@ Eine Wiederherstellungsstrategie ist so gut wie die Antworten auf diese Fragen:
 
 - [ ] Wenn die SD-Karte heute ausfällt — wie lange dauert es, bis Pi-hole wieder DNS macht?
 - [ ] Wurde jemals ein Backup zurückgespielt, oder wird angenommen, dass es funktioniert?
-- [ ] Sind die WireGuard-Schlüssel irgendwo außerhalb des Pi vorhanden?
+- [ ] Ist das GitHub-Konto `qsimonbrn` mit Zwei-Faktor-Anmeldung gesichert? Es ist seit
+      der Tailscale-Umstellung der Schlüssel zum Heimnetz.
 - [ ] Ist das Bichon-Master-Passwort im Passwortmanager? (Es ist nachträglich nicht änderbar.)
 - [ ] Existiert eine Liste der Paperless-Zugangsdaten und der PostgreSQL-Konfiguration?
 - [ ] Weiß außer dir jemand, wie das Netz wieder zum Laufen kommt?

@@ -1,6 +1,6 @@
 # 04 — Systemdienste
 
-*Erfasst: 13.08.2026*
+*Erfasst: 18.08.2026*
 
 Dienste, die **direkt auf dem Betriebssystem** laufen — nicht in Containern.
 Container siehe [05 — Docker](05-docker.md).
@@ -63,36 +63,64 @@ abgesichert (Bindung nur auf localhost).
 
 ---
 
-## WireGuard — VPN-Fernzugriff
+## Tailscale — VPN-Fernzugriff
+
+Seit dem 18.08.2026 läuft der Fernzugriff über Tailscale. Es ersetzt die vorherige
+WireGuard-Installation, die von außen nie erreichbar war — die Begründung steht
+weiter unten.
 
 | | |
 |---|---|
-| Schnittstelle | `wg0` |
-| Server-IP | `10.66.66.1/24` |
-| Port | **51820/UDP** |
-| Autostart | `wg-quick@wg0` — aktiviert |
-| Konfiguration | `/etc/wireguard/` |
-| Server Public Key | `wFxaG88cs8vWlDQLDt52NXFUVRc6pHG15OCtC7rPVEg=` |
+| Version | 1.102.2 |
+| Dienst | `tailscaled` — aktiviert, läuft |
+| Tailnet | `tailf372ec.ts.net` |
+| Konto | GitHub (`qsimonbrn`) |
+| Schnittstelle | `tailscale0` |
+| Adresse des Pi | `100.108.219.87` · `fd7a:115c:a1e0::aa01:dbd5` |
+| Name im Tailnet | `raspberrypi.tailf372ec.ts.net` (MagicDNS) |
+| Zustand und Schlüssel | `/var/lib/tailscale/` (Modus 700) |
+| Schlüsselablauf | **deaktiviert** — der Pi meldet sich nicht selbsttätig ab |
 
-### Peers
+### Rolle des Pi im Tailnet
 
-| Peer Public Key | Erlaubte IPs |
-|---|---|
-| `H5gftIdvDz1dg+wKldntyQOBTMgStGT7s24372X9D3Q=` | `10.66.66.2/32` |
+| Funktion | Zustand | Wirkung |
+|---|---|---|
+| Subnetz-Router | aktiv für `192.168.178.0/24` | Verbundene Geräte erreichen das ganze Heimnetz, nicht nur den Pi — etwa die FRITZ!Box unter `192.168.178.1` |
+| Exit Node | angeboten und freigegeben | Auf Wunsch läuft der **gesamte** Verkehr eines Clients über den Anschluss zuhause. Am Client einzeln zuschaltbar, im Alltag aus |
+| DNS-Server | `100.108.219.87` als Global Nameserver | Alle Geräte im Tailnet nutzen Pi-hole, auch unterwegs |
+| `--accept-dns` | **false** | Der Pi darf sein eigenes DNS nicht überschreiben lassen — er *ist* der Resolver |
 
-Ein einzelner Client ist eingerichtet.
+### Verbundene Geräte
 
-**Bewertung:** Der richtige Ansatz für Fernzugriff. Statt einzelne Dienste per
-Portfreigabe ins Internet zu stellen, gibt es genau einen verschlüsselten Eingang.
-WireGuard antwortet auf unauthentifizierte Pakete überhaupt nicht — ein Portscan von
-außen sieht den Dienst nicht.
+| Gerät | Tailnet-Adresse | System |
+|---|---|---|
+| `raspberrypi` | `100.108.219.87` | Linux |
+| `iphone-sibr` | `100.94.181.68` | iOS |
 
-### ⚠️ Die WireGuard-Schlüssel sind nicht gesichert
+### Warum WireGuard ersetzt wurde
 
-`/etc/wireguard/` ist in keinem Backup enthalten. Geht der Pi verloren, muss der Tunnel
-komplett neu aufgesetzt und **jedes Client-Gerät neu konfiguriert** werden. Die Dateien
-sind wenige Kilobyte groß — es gibt keinen Grund, sie nicht zu sichern.
-Siehe [11 — Notfallwiederherstellung](11-disaster-recovery.md).
+Der Anschluss läuft über eine FRITZ!Box 6660 Cable an Vodafone Kabel — und damit über
+**DS-Lite**. Die öffentliche IPv4-Adresse `92.208.222.35` gehört dem Provider und wird
+von vielen Kunden geteilt; die FRITZ!Box meldet über UPnP gar keine eigene externe
+IPv4-Adresse. Eine Portfreigabe für 51820/UDP war damit technisch unmöglich. Die
+Messung bestätigte das: Der eingerichtete Peer hatte **null Bytes und keinen einzigen
+Handshake** — es hat nie eine Verbindung gegeben.
+
+Tailscale löst das, weil beide Geräte die Verbindung von innen nach außen aufbauen. Es
+muss nichts von außen hereinkommen, und DS-Lite spielt keine Rolle mehr. Als Verschlüsselung
+kommt weiterhin WireGuard zum Einsatz — nur die Verbindungsvermittlung ist eine andere.
+
+**Preis dieser Lösung:** Die Vermittlung läuft über Server von Tailscale (US-Unternehmen).
+Diese kennen Metadaten — welche Geräte wann online sind und über welche IP-Adressen sie
+sprechen. Die übertragenen Inhalte sind zwischen den eigenen Geräten Ende zu Ende
+verschlüsselt und für Tailscale auch dann nicht lesbar, wenn der Verkehr über deren
+Relays läuft. Der Zugang zum Heimnetz hängt zusätzlich am GitHub-Konto: Wer dieses
+übernimmt, kommt auf den Pi. Zwei-Faktor-Anmeldung bei GitHub ist deshalb Pflicht.
+
+**Bewertung:** Sachlich die richtige Entscheidung, weil sie die einzige war, die am
+DS-Lite-Anschluss ohne fremden Server überhaupt funktioniert. Die Abhängigkeit von einem
+Anbieter ist der bewusst in Kauf genommene Preis. Anders als zuvor ist der Fernzugriff
+jetzt nachweislich in Betrieb.
 
 ---
 

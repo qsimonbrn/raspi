@@ -17,7 +17,7 @@ Ein Raspberry Pi 4B als Heimserver mit drei Rollen:
 | **Dokumentenarchiv** | Paperless-ngx mit OCR, PostgreSQL, Redis |
 | **Dateiablage** | Samba + Filebrowser auf einer 1-TB-SSD |
 
-Dazu WireGuard für den Fernzugriff, Portainer zur Container-Verwaltung und Homepage als
+Dazu Tailscale für den Fernzugriff, Portainer zur Container-Verwaltung und Homepage als
 Einstiegsseite. Zehn Docker-Container in sieben Stacks, Compose-Dateien versioniert in
 einem separaten Repository — seit dem 16.08.2026 durchgängig auf feste Image-Versionen
 gepinnt.
@@ -31,7 +31,7 @@ gepinnt.
 | [01 — Hardware](docs/01-hardware.md) | Modell, CPU, RAM, Temperatur, Datenträger |
 | [02 — Betriebssystem](docs/02-betriebssystem.md) | Debian-Version, Kernel, Updates, Timer |
 | [03 — Netzwerk](docs/03-netzwerk.md) | IP-Adressen, IPv6, Routing, Docker-Bridges |
-| [04 — Systemdienste](docs/04-dienste-system.md) | Pi-hole, unbound, WireGuard, Samba, SSH |
+| [04 — Systemdienste](docs/04-dienste-system.md) | Pi-hole, unbound, Tailscale, Samba, SSH |
 | [05 — Docker](docs/05-docker.md) | Container, Images, Volumes, Netze, Compose |
 | [06 — Daten & Speicher](docs/06-daten-und-speicher.md) | SSD-Belegung, Verzeichnisse, Backup-Lage |
 | [07 — Sicherheit](docs/07-sicherheit.md) | Firewall, SSH-Härtung, Angriffsfläche |
@@ -42,6 +42,7 @@ gepinnt.
 | [12 — Backup](docs/12-backup.md) | Strategie, Umfang, Wiederherstellung, Grenzen |
 | [13 — Paperless-ngx](docs/13-paperless.md) | Dokumentenarchiv: Einwurf, OCR, Zuordnung, KI-Optionen |
 | [14 — Benachrichtigungen](docs/14-benachrichtigungen.md) | ntfy: Push aufs Handy, Anbindung ans Backup |
+| [15 — Änderungshistorie](docs/15-aenderungshistorie.md) | Betriebstagebuch: was wann am System geändert wurde und warum |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 
@@ -51,15 +52,16 @@ gepinnt.
 
 | | |
 |---|---|
-| Uptime | 19 Tage |
-| Load (1/5/15 min) | 0,92 / 1,31 / 1,86 bei 4 Kernen — erhöht durch die Updates |
-| Temperatur | 51,6 °C — nie gedrosselt (`throttled=0x0`) |
-| RAM verfügbar | 2,1 von 3,7 GiB |
+| Uptime | 20 Stunden |
+| Load (1/5/15 min) | 1,39 / 0,77 / 0,52 bei 4 Kernen |
+| Temperatur | 49,1 °C — nie gedrosselt (`throttled=0x0`) |
+| RAM verfügbar | 2,0 von 3,7 GiB |
 | Systemdatenträger | 6 % belegt (14 G von 235 G) |
 | Datenspeicher SSD | 36 % belegt (310 G von 916 G) |
 | Ausstehende OS-Updates | 0 |
 | Fehlgeschlagene Dienste | 0 |
 | Container-Images | **alle auf feste Versionen gepinnt** (16.08.2026) |
+| Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 
