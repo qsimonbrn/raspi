@@ -164,7 +164,7 @@ Konten und auch als `root`.
 
 | Ort | Betroffen |
 |---|---|
-| `raspi-doku/inventar/collect.sh` | 12 Aufrufe |
+| `inventar/collect.sh` | 12 Aufrufe |
 | `raspi/pi_wartung.sh` | 4 Aufrufe |
 | `stacks/paperless/kategorisieren.py` | Aufrufhinweis im Kopf |
 | `claude-skills` — beide SKILL.md, `backup-paperless.sh`, `pruefen.sh` | 27 Stellen, dazu ein Hinweis am Anfang beider Skills |
