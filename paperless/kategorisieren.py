@@ -1,6 +1,6 @@
 """
 Einmalige Erstsortierung des Paperless-Bestands.
-Aufruf:  docker exec -i paperless python3 manage.py shell < kategorisieren.py
+Aufruf:  sudo docker exec -i paperless python3 manage.py shell < kategorisieren.py
 """
 import re, datetime
 from collections import Counter

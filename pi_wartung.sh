@@ -16,8 +16,8 @@ pihole -g
 echo "== 3) Docker Checks =="
 if systemctl is-active --quiet docker; then
   echo "[OK] Docker läuft"
-  docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
-  docker system df
+  sudo docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
+  sudo docker system df
 else
   echo "[WARN] Docker läuft nicht"
 fi
@@ -26,14 +26,14 @@ echo "== 4) Docker Compose Stacks updaten (optional) =="
 for d in /opt/stacks/*; do
   if [ -f "$d/compose.yml" ] || [ -f "$d/docker-compose.yml" ]; then
     echo "==> Updating $d"
-    (cd "$d" && docker compose pull && docker compose up -d)
+    (cd "$d" && sudo docker compose pull && sudo docker compose up -d)
   fi
 done
 
 echo "== 5) Docker Cleanup (optional) =="
 if [ "$DOCKER_PRUNE" = "1" ]; then
-  docker image prune -f
-  docker system prune -f
+  sudo docker image prune -f
+  sudo docker system prune -f
 fi
 
 echo "== 6) Logs aufräumen (letzte 7 Tage) =="
