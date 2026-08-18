@@ -19,6 +19,70 @@ Backup.
 
 ---
 
+## 18.08.2026 (abends) — Repositories zusammengeführt
+
+| | |
+|---|---|
+| Betroffen | Ablage sämtlicher Konfiguration und Dokumentation, Backup, alle Systemdateien |
+| Kapitel | [12](12-backup.md), [17](17-wo-was-liegt.md), README |
+
+**Anlass.** Am selben Tag war Kapitel 17 eine Stunde lang falsch: Es behauptete, es
+gebe kein Werkzeug für den Abgleich zwischen Repository und System — während das
+Werkzeug bereits lief. Der Grund war strukturell und nicht menschlich: Werkzeug und
+Dokumentation lagen in zwei Repositories und wurden nacheinander gepusht. Zwischen
+den beiden Pushes kann die Doku gar nicht anders, als falsch zu sein.
+
+**Umgesetzt.** `docker-stacks` und `raspi-doku` sind zu **`qsimonbrn/raspi`**
+zusammengeführt, beide Verläufe vollständig erhalten (`merge
+--allow-unrelated-histories`, 51 Commits, `git log --follow` findet jede Datei über
+die Verschiebung hinweg).
+
+```
+raspi/
+├── docs/        Kapitel, CHANGELOG, README
+├── inventar/    Sammelskript und Snapshots
+├── stacks/      Compose-Dateien — laufen DIREKT von hier
+└── system/      Systemkonfiguration — nur Kopie, läuft aus /etc, /usr/local, /boot
+```
+
+Der Unterschied zwischen `stacks/` und `system/` ist der wichtigste Teil des
+Aufbaus: Er macht im Verzeichnisbaum sichtbar, was vorher nur in einer Tabelle stand.
+
+**Was mitgezogen werden musste**, und wie es geprüft wurde:
+
+| Betroffen | Nachweis |
+|---|---|
+| 6 installierte Systemdateien (Backup, Firewall, Wartung, Aliase) | `pi-abgleich.sh install`, danach 20 von 20 Paaren identisch |
+| Manifest des Abgleichs, `sync.sh` | Werkzeug erfasst sich selbst weiterhin |
+| Backup-Pfade | Snapshot `29b44d40`, 5747 Dateien, `restic ls` zeigt `/home/simon/raspi` |
+| Label `com.docker.compose.project.config_files` aller 8 Container | zeigt auf `/home/simon/raspi/stacks/…`, für sechs Container war `--force-recreate` nötig |
+| Aliase `wartung` und `abgleich` | in beiden Shell-Arten geprüft |
+
+**Zwei Funde nebenbei:**
+
+- **`claude-skills` lag in keinem einzigen Snapshot.** Darin liegen die beiden Skills
+  und der `pi-ssh`-MCP-Server — also genau das Werkzeug, über das die Automatisierung
+  auf den Pi kommt. Auf GitHub gesichert, lokal nicht. Jetzt im Backup.
+- **In `raspi-doku` lag unter `.claude/skills/` eine veraltete Kopie des
+  `raspi-doku`-Skills** — älter als die maßgebliche Fassung in `claude-skills`, ohne
+  den `sudo docker`-Hinweis und ohne die Job-Werkzeuge. Entfernt.
+
+**Entschieden.**
+
+- **`claude-skills` bleibt getrennt.** Es wird von Claude Desktop gelesen, hat eine
+  eigene Lebensdauer, und ein fehlerhafter Commit darin nähme der Automatisierung das
+  Werkzeug, mit dem sie den Fehler beheben müsste.
+- **`CHANGELOG.md` und dieses Kapitel wurden von der Pfadumstellung ausgenommen.** Sie
+  beschreiben, wie es damals war; alte Pfade sind dort richtig, nicht veraltet.
+- **Die alten Arbeitskopien bleiben vorerst liegen** als
+  `docker-stacks.alt-20260818` und `raspi-doku.alt-20260818`. Die GitHub-Repositories
+  sollen archiviert statt gelöscht werden, damit alte Verweise nicht ins Leere zeigen.
+
+**Rückfallebene.** `/mnt/usb-hdd/backups-manuell/vor-repo-umbau-20260818.tar.gz`
+(1 MB, alle drei Repositories samt Verlauf und `.env`), Modus 600.
+
+---
+
 ## 18.08.2026 (nachmittags) — Docker-Durchsicht: Logrotation, Pinning, Speicher-Cgroup
 
 | | |

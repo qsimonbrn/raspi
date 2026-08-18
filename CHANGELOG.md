@@ -9,6 +9,42 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.0.0] — 2026-08-18
+
+Major-Sprung, weil sich die Ablage der gesamten Dokumentation geändert hat.
+
+### Geändert am System
+
+- **`docker-stacks` und `raspi-doku` zu `qsimonbrn/raspi` zusammengeführt.** Beide
+  Verläufe erhalten. Neuer Aufbau: `docs/`, `inventar/`, `stacks/`, `system/`.
+  Ausschlaggebend war kein Aufräumdrang, sondern ein struktureller Fehler: Eine
+  Systemänderung brauchte zwei Commits in zwei Repositories, und zwischen den Pushes
+  konnte die Doku von der Realität abweichen — was am selben Tag passiert ist.
+- **`/mnt/usb-hdd/claude-skills` ins Backup aufgenommen.** Es lag in **keinem**
+  Snapshot, obwohl darin die Skills und der `pi-ssh`-MCP-Server liegen.
+- **Alle acht Container neu erstellt**, damit
+  `com.docker.compose.project.config_files` auf den neuen Pfad zeigt. Für sechs von
+  ihnen war `--force-recreate` nötig: Ein einfaches `up -d` ändert das Label nicht,
+  weil die Dienstkonfiguration selbst unverändert bleibt.
+- **Veraltete Skill-Kopie entfernt**, die unter `.claude/skills/` im Doku-Repository
+  lag.
+
+### Geändert an der Dokumentation
+
+- **README**: Aufbau neu, mit dem Hinweis auf den Unterschied zwischen `stacks/`
+  (läuft direkt von hier) und `system/` (nur Kopie).
+- **[17 — Wo was liegt](docs/17-wo-was-liegt.md)**: aus drei Repositories wurden zwei.
+- **[12 — Backup](docs/12-backup.md)**: `claude-skills` in der Pfadliste.
+- **[15 — Änderungshistorie](docs/15-aenderungshistorie.md)**: Eintrag zum Umbau.
+
+### Nicht geändert
+
+- `CHANGELOG.md` und `docs/15-aenderungshistorie.md` sind von der maschinellen
+  Pfadumstellung **ausgenommen** geblieben. Sie beschreiben vergangene Zustände; ein
+  Pfad, der damals galt, ist dort richtig und nicht veraltet.
+
+---
+
 ## [1.13.0] — 2026-08-18
 
 ### Geändert am System
