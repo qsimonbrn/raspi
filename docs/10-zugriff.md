@@ -80,7 +80,7 @@ Umgesetzt über `pi-guard`, siehe [07 — Sicherheit](07-sicherheit.md). Die Hom
 zeigen bereits auf die richtigen Adressen.
 
 **Abgeschaltet am 18.08.2026:** Filebrowser (Port 8082) und Dashy (Port 8080). Begründung
-in [05 — Docker](05-docker.md), Compose-Dateien unter `docker-stacks/_archiviert/`.
+in [05 — Docker](05-docker.md), Compose-Dateien unter `stacks/_archiviert/`.
 
 ---
 

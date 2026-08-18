@@ -8,7 +8,7 @@
 #  Gesichert werden ausschliesslich Daten, die sich NICHT wiederbeschaffen
 #  lassen. Bewusst NICHT gesichert: Docker-Images, Pi-hole-Query-Datenbank,
 #  Blocklisten, Trainingsdaten, alte Backup-Kopien. Begruendung siehe
-#  raspi-doku/docs/12-backup.md
+#  docs/12-backup.md
 # =============================================================================
 
 set -uo pipefail
@@ -138,8 +138,8 @@ restic backup \
   /mnt/usb-hdd/paperless/export \
   /mnt/usb-hdd/paperless/media \
   /var/lib/docker/volumes/portainer_portainer_data/_data \
-  /home/simon/docker-stacks \
-  /home/simon/raspi-doku
+  /mnt/usb-hdd/claude-skills \
+  /home/simon/raspi
 RC=$?
 
 if [ $RC -ne 0 ]; then

@@ -114,16 +114,36 @@ der bestehenden Dokumentation ist die Grundlage jeder Aktualisierung.
 
 ## Aufbau dieses Repositories
 
+Konfiguration und Dokumentation lagen bis zum 18.08.2026 in zwei getrennten
+Repositories. Seither hier zusammen, damit eine Systemänderung und ihre
+Dokumentation in **einem** Commit liegen und nicht auseinanderlaufen können.
+
 ```
-raspi-doku/
+raspi/
 ├── README.md              Diese Seite — Einstieg und Überblick
-├── CHANGELOG.md           Was wann an der Doku geändert wurde
-├── docs/                  Die eigentliche Dokumentation, thematisch getrennt
+├── CHANGELOG.md           Was wann an der Dokumentation geändert wurde
+├── docs/                  Die Kapitel, thematisch getrennt
 ├── inventar/
-│   ├── collect.sh         Sammelskript (read-only)
-│   └── snapshots/         Zeitstempel-Momentaufnahmen des Ist-Zustands
-└── .claude/skills/        Skill zur automatisierten Pflege dieser Doku
+│   ├── collect.sh         Sammelskript (nur lesend)
+│   └── snapshots/         Momentaufnahmen des Ist-Zustands mit Zeitstempel
+├── stacks/                Compose-Dateien je Dienst — laufen DIREKT von hier
+│   ├── bichon/  homepage/  ntfy/  paperless/  portainer/
+│   └── _archiviert/       abgeschaltete Dienste, Konfiguration bleibt nachvollziehbar
+└── system/                Systemkonfiguration — läuft NICHT von hier, siehe docs/17
+    ├── abgleich/          prüft täglich, ob Repository und System übereinstimmen
+    ├── backup/            restic nach OneDrive
+    ├── firewall/          pi-guard
+    ├── messung/           befristete Speichermessung
+    ├── sudoers/           Regeln für das Konto claude
+    ├── updates/           unattended-upgrades, daemon.json, cmdline.txt
+    └── wartung/           Wartungslauf und Aliase
 ```
+
+> **Der Unterschied zwischen `stacks/` und `system/` ist wichtig.** Was unter
+> `stacks/` liegt, wird direkt von hier gelesen — eine Änderung wirkt sofort. Was
+> unter `system/` liegt, ist nur eine **Kopie**; die laufende Fassung steht in `/etc`,
+> `/usr/local/bin`, `/usr/local/sbin` oder `/boot`. Eine Änderung nur hier ist dort
+> wirkungslos. `sudo pi-abgleich.sh check` prüft das, täglich automatisch.
 
 ---
 

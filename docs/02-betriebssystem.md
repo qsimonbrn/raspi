@@ -98,7 +98,7 @@ Der Vorgänger `pi-maintenance.sh` hatte vier Defekte, gegen die der bekannte
 
 **Aliase.** `wartung`, `abgleich`, `temp`, `throttled` und `bootcheck` standen von Hand
 in `/etc/bash.bashrc` und waren damit unversioniert und beim Wiederaufbau nicht
-auffindbar. Sie liegen jetzt in `docker-stacks/wartung/pi-aliase.sh`, installiert nach
+auffindbar. Sie liegen jetzt in `system/wartung/pi-aliase.sh`, installiert nach
 `/etc/profile.d/pi-aliase.sh`. Weil `/etc/profile.d` **nur von Login-Shells** gelesen
 wird, lädt `/etc/bash.bashrc` dieselbe Datei zusätzlich nach — sonst fehlten die Aliase
 in interaktiven Nicht-Login-Shells. Nachgemessen in beiden Shell-Arten und für beide

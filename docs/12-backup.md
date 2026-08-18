@@ -102,7 +102,7 @@ und damit auch die bestehende OneDrive-Anmeldung.
 | `/root/.restic-password` | Repository-Passwort, Modus 600 |
 | `/mnt/usb-hdd/backup-stage` | Temporäre Ablage, wird nach jedem Lauf gelöscht |
 
-Skript und Unit-Dateien liegen versioniert unter `docker-stacks/backup/` und werden von
+Skript und Unit-Dateien liegen versioniert unter `system/backup/` und werden von
 dort nach `/usr/local/bin` bzw. `/etc/systemd/system` installiert. Die Kopien im System
 sind also reproduzierbar.
 
@@ -146,8 +146,8 @@ Wiederaufbau.
 /mnt/usb-hdd/paperless/export    Dokumentenexport
 /mnt/usb-hdd/paperless/media     Originaldateien
 /var/lib/docker/volumes/portainer_portainer_data/_data
-/home/simon/docker-stacks        Compose-Dateien
-/home/simon/raspi-doku           diese Dokumentation
+/home/simon/raspi        Compose-Dateien
+/home/simon/raspi           diese Dokumentation
 ```
 
 **Geändert am 18.08.2026.** `/mnt/usb-hdd/ntfy` und das Portainer-Volume kamen dazu,
@@ -408,7 +408,7 @@ sudo-Konfiguration liegen außerhalb der gesicherten Pfade:
 | Pfad | Inhalt | Folge bei Verlust |
 |---|---|---|
 | `/home/claude/.ssh/` | Anmeldeschlüssel und GitHub-Schlüssel | Beide neu erzeugen, öffentlichen Teil bei GitHub austauschen |
-| `/etc/sudoers.d/010-claude` | Rechte samt Aufzeichnungskonfiguration | Aus `docker-stacks` zurückspielen, sobald dort abgelegt |
+| `/etc/sudoers.d/010-claude` | Rechte samt Aufzeichnungskonfiguration | Aus `raspi` zurückspielen, sobald dort abgelegt |
 | `/var/log/sudo-io/` | Sitzungsaufzeichnungen | **Beweismittel verloren** — und genau das würde ein Angreifer zuerst löschen |
 
 Der Aufwand für eine Wiederherstellung ist gering, die Schlüssel sind in Minuten neu

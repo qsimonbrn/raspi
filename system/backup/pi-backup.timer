@@ -1,6 +1,6 @@
 [Unit]
 Description=Taegliches Backup des Raspberry Pi
-Documentation=https://github.com/qsimonbrn/raspi-doku/blob/main/docs/12-backup.md
+Documentation=https://github.com/qsimonbrn/raspi/blob/main/docs/12-backup.md
 
 [Timer]
 # Taeglich um 03:17 -- bewusst nicht zur vollen Stunde, damit der Lauf

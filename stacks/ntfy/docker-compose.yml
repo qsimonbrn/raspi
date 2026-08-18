@@ -5,7 +5,7 @@
 #  jemand bemerkt. ntfy schliesst diese Luecke.
 #
 #  Zugangsdaten stehen in .env (ueber .gitignore ausgeschlossen).
-#  Dokumentation: raspi-doku/docs/14-benachrichtigungen.md
+#  Dokumentation: docs/14-benachrichtigungen.md
 # =============================================================================
 
 # --- Logrotation -------------------------------------------------------------

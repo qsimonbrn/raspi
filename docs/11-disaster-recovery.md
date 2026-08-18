@@ -10,7 +10,7 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 
 | # | Baustein | Gesichert? | Wo liegt es? |
 |---|---|---|---|
-| 1 | **Compose-Dateien** aller Stacks | ✅ **ja** | GitHub: `qsimonbrn/docker-stacks` |
+| 1 | **Compose-Dateien** aller Stacks | ✅ **ja** | GitHub: `qsimonbrn/raspi` |
 | 2 | **Paperless-Dokumente + Datenbank** | ✅ **ja** | restic-Backup, täglich |
 | 3 | **Bichon-E-Mail-Archiv** | ✅ **ja** | restic-Backup, täglich |
 | 4 | **Pi-hole-Konfiguration** (Blocklisten, lokale DNS-Einträge, Anpassungen) | ✅ **ja** | Teleporter-Export im Backup |
@@ -106,16 +106,16 @@ Punkt 2 und 3 — Paperless und Bichon — sind der Kern von Stufe 1 in
 2. Statische IP `192.168.178.80` setzen — **wichtig**, weil die FRITZ!Box diese Adresse
    als DNS-Server verteilt
 3. Docker installieren
-4. `docker-stacks` aus GitHub klonen
+4. `raspi` aus GitHub klonen
 5. SSD einbinden (`/etc/fstab` mit `nofail`)
 6. Nutzdaten aus dem Backup zurückspielen — **vor** dem Start der Container
 7. Container starten, Stack für Stack, mit Prüfung dazwischen
 8. Pi-hole und unbound aufsetzen, Konfiguration importieren
-9. Konto `claude` neu anlegen, Gruppe `pi-admin`, sudo-Datei aus `docker-stacks` zurückspielen, Schlüssel neu erzeugen und bei GitHub austauschen — siehe [16](16-konten-und-rechte.md)
+9. Konto `claude` neu anlegen, Gruppe `pi-admin`, sudo-Datei aus `raspi` zurückspielen, Schlüssel neu erzeugen und bei GitHub austauschen — siehe [16](16-konten-und-rechte.md)
 10. Tailscale installieren, `tailscale up` mit Subnetz-Route ausführen, in der
    Verwaltungsoberfläche Route, Exit Node und DNS-Eintrag wieder setzen
 11. Samba einrichten, Freigabe prüfen
-12. `pi-guard` aus `docker-stacks/firewall/` zurückspielen und aktivieren
+12. `pi-guard` aus `system/firewall/` zurückspielen und aktivieren
 13. **Backup-Job als Erstes wieder einrichten** — nicht als Letztes
 
 > **Zu Schritt 2:** Solange der Pi nicht läuft, funktioniert im Haushalt keine

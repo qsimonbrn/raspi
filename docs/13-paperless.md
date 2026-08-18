@@ -196,7 +196,7 @@ Für iOS und Android gibt es zusätzlich Apps aus der Community (etwa *Swift Pap
 
 ## 5. Konfiguration im Einzelnen
 
-Alle Werte stehen in `docker-stacks/paperless/docker-compose.yml`. Geheimnisse liegen
+Alle Werte stehen in `stacks/paperless/docker-compose.yml`. Geheimnisse liegen
 in `.env` und sind über `.gitignore` ausgeschlossen.
 
 ### Sprache und Erkennung
@@ -357,7 +357,7 @@ sudo docker exec paperless-paperless-db-1 \
   psql -U paperless -d paperless -tAc "select count(*) from documents_document;"
 
 # Nach Konfigurationsänderung
-cd ~/docker-stacks/paperless && sudo docker compose up -d
+cd ~/stacks/paperless && sudo docker compose up -d
 ```
 
 ### Wenn ein Dokument nicht eingelesen wird

@@ -43,7 +43,7 @@ ausgewertet wird.
 |---|---|
 | Skript | `/usr/local/sbin/pi-guard.sh` |
 | Dienst | `pi-guard.service`, startet nach `docker.service` |
-| Versioniert unter | `docker-stacks/firewall/` |
+| Versioniert unter | `system/firewall/` |
 | Ketten | `PI-GUARD` in `DOCKER-USER` (weitergeleiteter Verkehr) und `PI-GUARD-IN` in `INPUT` (Verkehr, den der `userland-proxy` annimmt), jeweils für IPv4 und IPv6 |
 
 Zwei Ketten sind nötig, weil ein Paket auf zwei Wegen zu einem Container gelangen kann:
@@ -168,7 +168,7 @@ abgeschottet.
 
 ## 🟠 Schwache Standardpasswörter bei Paperless
 
-In `docker-stacks/paperless/docker-compose.yml` stehen unveränderte Beispielwerte:
+In `stacks/paperless/docker-compose.yml` stehen unveränderte Beispielwerte:
 
 | Variable | Wert |
 |---|---|

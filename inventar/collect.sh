@@ -119,9 +119,9 @@ r "ls /etc/cron.d/"
 r "ls -la /mnt/usb-hdd/rclone_bak/ 2>/dev/null | head"
 
 s "COMPOSE-REPO"
-r "ls -la /home/simon/docker-stacks/"
-r "cd /home/simon/docker-stacks && git status -sb"
-r "cd /home/simon/docker-stacks && git log --oneline -5"
+r "ls -la /home/simon/raspi/"
+r "cd /home/simon/raspi && git status -sb"
+r "cd /home/simon/raspi && git log --oneline -5"
 
 s "LOGS"
 LIMIT=30 r "sudo journalctl -p err -b --no-pager | tail -30"
@@ -201,7 +201,7 @@ echo ""
 echo "## Compose-Repository"
 echo ""
 echo '```'
-cd /home/simon/docker-stacks 2>/dev/null && git status -sb 2>/dev/null
+cd /home/simon/raspi 2>/dev/null && git status -sb 2>/dev/null
 echo '```'
 } > "$FACTS" 2>&1
 

@@ -23,13 +23,13 @@
 #  "Muster" filtert auf den Repo-Pfad, z. B. "backup" oder "pi_wartung".
 #  Ohne Nachfrage laeuft install/pull nur mit --ja (noetig ohne Terminal).
 #
-#  Dokumentation: raspi-doku/docs/17-wo-was-liegt.md
+#  Dokumentation: docs/17-wo-was-liegt.md
 # =============================================================================
 
 set -uo pipefail
 
-REPO="${ABGLEICH_REPO:-/home/simon/docker-stacks}"
-MANIFEST="$REPO/abgleich/manifest.tsv"
+REPO="${ABGLEICH_REPO:-/home/simon/raspi}"
+MANIFEST="$REPO/system/abgleich/manifest.tsv"
 
 [ -r "$MANIFEST" ] || { echo "FEHLER: Manifest nicht lesbar: $MANIFEST" >&2; exit 2; }
 

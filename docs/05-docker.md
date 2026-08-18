@@ -40,7 +40,7 @@ alle acht laufen mit `no-new-privileges`.
 | **filebrowser** | Lief in Version 2.51.2 und ist von **CVE-2026-32759** betroffen — Remote Code Execution über den TUS-Upload, **kein Patch verfügbar**. Das Projekt wird zum 01.09.2026 archiviert. Erschwerend: Der Container hatte die gesamte SSD unter `/srv` eingebunden. Ein Nachfolger wird gesucht; aktiv gepflegt wird der Fork **FileBrowser Quantum** (`gtsteffaniak/filebrowser`) |
 | **Dashy** | Durch Homepage abgelöst, Image neun Monate alt auf `:latest` |
 
-Die Compose-Dateien liegen weiterhin versioniert unter `docker-stacks/_archiviert/`
+Die Compose-Dateien liegen weiterhin versioniert unter `stacks/_archiviert/`
 samt Begründung. Sie haben bewusst **keinen** Logrotations-Anker bekommen — eine
 Einstellung in einer Datei zu pflegen, die nichts startet, würde den Eindruck
 erwecken, der Dienst sei betriebsbereit.
@@ -126,7 +126,7 @@ Pi ungebremst in den OOM-Killer fahren können.
 
 Behoben durch Ergänzung der Parameter und einen Neustart (Sicherungskopie:
 `/boot/firmware/cmdline.txt.bak-20260818`, versionierte Kopie:
-`docker-stacks/updates/cmdline.txt`). Nachgemessen: `cgroup.controllers` enthält
+`system/updates/cmdline.txt`). Nachgemessen: `cgroup.controllers` enthält
 jetzt `memory`, `docker info` meldet keine Warnung mehr.
 
 ## Ressourcenverbrauch
@@ -153,7 +153,7 @@ gemessen ist Paperless mit Abstand der größte Posten, bichon liegt bei 1,4 %.
 **Speicher-Limits sind noch nicht gesetzt.** Ein Timer schreibt seit dem 18.08.2026
 alle fünf Minuten nach `/mnt/usb-hdd/messungen/docker-speicher.csv`, damit die
 Werte auf einer Messung über 24 Stunden beruhen statt auf einer Schätzung. Skript,
-Unit und Anleitung zum Entfernen liegen unter `docker-stacks/messung/`.
+Unit und Anleitung zum Entfernen liegen unter `system/messung/`.
 
 **Bewertung:** Der Pi ist von seiner Kapazitätsgrenze entfernt, aber nicht mehr
 komfortabel weit: 38 % Speicher im Leerlauf lassen für einen schweren zusätzlichen
@@ -300,11 +300,11 @@ unterscheidet nicht zwischen „leer" und „wichtig".
 
 ## Compose-Dateien
 
-Alle Stacks liegen unter `/home/simon/docker-stacks/` und sind in einem **Git-Repository**
-versioniert (`git@github.com:qsimonbrn/docker-stacks.git`).
+Alle Stacks liegen unter `/home/simon/raspi/` und sind in einem **Git-Repository**
+versioniert (`git@github.com:qsimonbrn/raspi.git`).
 
 ```
-/home/simon/docker-stacks/
+/home/simon/raspi/
 ├── .git/
 ├── .gitignore              # schliesst .env, *.db, **/data/, *.log, secrets/ aus
 ├── _archiviert/            # abgeschaltete Dienste, Konfiguration bleibt nachvollziehbar
@@ -340,7 +340,7 @@ Arbeitsstand ist committet, das Repository sauber.
 
 ✅ **Der frühere Befund „Pfad-Drift beim Paperless-Stack" ist erledigt.** Das Label
 `com.docker.compose.project.config_files` zeigt korrekt auf
-`/home/simon/docker-stacks/paperless/docker-compose.yml` — nachgeprüft am 18.08.2026.
+`/home/simon/raspi/stacks/paperless/docker-compose.yml` — nachgeprüft am 18.08.2026.
 
 ---
 

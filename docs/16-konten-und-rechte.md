@@ -40,7 +40,7 @@ sudo rm /etc/sudoers.d/010-claude         # erhöhte Rechte entziehen
 ```
 
 Rückgängig: `sudo usermod -U claude` und die Datei aus dem Repository
-`docker-stacks/sudoers/` zurückspielen.
+`system/sudoers/` zurückspielen.
 
 Härtere Variante, falls der Verdacht besteht, dass der Schlüssel abhandengekommen ist:
 
@@ -165,10 +165,10 @@ Konten und auch als `root`.
 | Ort | Betroffen |
 |---|---|
 | `raspi-doku/inventar/collect.sh` | 12 Aufrufe |
-| `docker-stacks/pi_wartung.sh` | 4 Aufrufe |
-| `docker-stacks/paperless/kategorisieren.py` | Aufrufhinweis im Kopf |
+| `raspi/pi_wartung.sh` | 4 Aufrufe |
+| `stacks/paperless/kategorisieren.py` | Aufrufhinweis im Kopf |
 | `claude-skills` — beide SKILL.md, `backup-paperless.sh`, `pruefen.sh` | 27 Stellen, dazu ein Hinweis am Anfang beider Skills |
-| `raspi-doku` — Beispielbefehle in sechs Kapiteln | 25 Stellen |
+| `raspi` — Beispielbefehle in sechs Kapiteln | 25 Stellen |
 
 Geprüft mit einem negativen Lookbehind (`grep -P '(?<!sudo )docker …'`), damit
 `sudo docker` nicht mitgezählt wird — eine erste, naivere Zählung hatte genau diesen

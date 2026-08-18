@@ -1,23 +1,39 @@
-# Vollstaendige Rohausgaben der Bestandsaufnahme werden nicht versioniert:
-# sie sind gross, aendern sich bei jedem Lauf komplett und koennen
-# unbeabsichtigt sensible Details enthalten.
-inventar/snapshots/*-voll.txt
+# =============================================================================
+#  Zusammengefuehrt am 18.08.2026 aus den .gitignore-Dateien von
+#  docker-stacks und raspi-doku.
+# =============================================================================
 
-# Betriebssystem-Beiwerk
-.DS_Store
-._*
-Thumbs.db
-
-# Editor
-*.swp
-*~
-.vscode/
-.idea/
-
-# Niemals versionieren
+# --- Niemals versionieren ----------------------------------------------------
+.env
 *.key
 *.pem
 *_rsa
 *_ed25519
-.env
 secrets*
+secrets/
+
+# --- Daten und Laufzeit ------------------------------------------------------
+*.db
+*.log
+*.pid
+logs/
+**/data/
+
+# --- Vollstaendige Rohausgaben der Bestandsaufnahme --------------------------
+# Gross, aendern sich bei jedem Lauf komplett und koennen unbeabsichtigt
+# sensible Details enthalten. Die Kennzahlen daneben werden versioniert.
+inventar/snapshots/*-voll.txt
+
+# --- Sicherungskopien --------------------------------------------------------
+*.bak
+*.bak-*
+*.old
+
+# --- Betriebssystem und Editor -----------------------------------------------
+.DS_Store
+._*
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/

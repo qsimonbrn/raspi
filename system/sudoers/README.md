@@ -17,4 +17,4 @@ sudo install -o root -g root -m 440 sudoers/010-claude /etc/sudoers.d/010-claude
 Eine fehlerhafte Datei unter `/etc/sudoers.d/` kann `sudo` systemweit unbrauchbar machen.
 Deshalb **nie** direkt kopieren, sondern immer erst `visudo -c` laufen lassen.
 
-Hintergrund und Begründung des Rechtemodells: `raspi-doku/docs/16-konten-und-rechte.md`.
+Hintergrund und Begründung des Rechtemodells: `docs/16-konten-und-rechte.md`.

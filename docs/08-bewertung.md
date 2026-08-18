@@ -94,7 +94,7 @@ Ausfallpunkt ist die SD-Karte — und für genau diesen Fall gibt es kein Backup
 | ~~Pfad-Drift beim Paperless-Stack~~ | ✅ **erledigt** | [05](05-docker.md) |
 | Anonyme Docker-Volumes ohne klare Zuordnung | [05](05-docker.md) |
 | ~~Verwaistes `filebrowser-data/`-Verzeichnis~~ | ✅ **erledigt am 18.08.2026** | [06](06-daten-und-speicher.md) |
-| ~~Offene, nicht committete Änderungen im `docker-stacks`-Repo~~ | ✅ **erledigt am 18.08.2026** | [05](05-docker.md) |
+| ~~Offene, nicht committete Änderungen im `raspi`-Repo~~ | ✅ **erledigt am 18.08.2026** | [05](05-docker.md) |
 | `smartmontools` fehlt — keine SSD-Gesundheitsdaten | [01](01-hardware.md) |
 
 ---

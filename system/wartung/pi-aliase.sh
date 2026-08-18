@@ -3,7 +3,7 @@
 #
 #  Lagen bis zum 18.08.2026 von Hand in /etc/bash.bashrc und waren damit weder
 #  versioniert noch beim Wiederaufbau auffindbar. Jetzt hier, versioniert unter
-#  docker-stacks/wartung/pi-aliase.sh und ueber den taeglichen Abgleich geprueft.
+#  system/wartung/pi-aliase.sh und ueber den taeglichen Abgleich geprueft.
 #
 #  Wirkt fuer alle Benutzer, sobald eine neue Anmeldung oder Shell startet.
 #  Sofort uebernehmen:  . /etc/profile.d/pi-aliase.sh

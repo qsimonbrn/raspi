@@ -9,21 +9,33 @@ nichts anders ist.
 
 ---
 
-## Die drei Repositories
+## Die zwei Repositories
 
 | Repository auf GitHub | Auf dem Pi | Inhalt |
 |---|---|---|
-| `qsimonbrn/docker-stacks` | `/home/simon/docker-stacks` | Compose-Dateien, Backup, Firewall, Wartung, Systemkonfiguration |
-| `qsimonbrn/raspi-doku` | `/home/simon/raspi-doku` | diese Dokumentation |
+| `qsimonbrn/raspi` | `/home/simon/raspi` | Konfiguration **und** Dokumentation |
 | `qsimonbrn/claude-skills` | `/mnt/usb-hdd/claude-skills` | Skills und MCP-Server |
 
-Alle drei pushen direkt vom Pi über einen SSH-Schlüssel, der am GitHub-Konto hinterlegt
-ist. Der GitHub-Connector aus Claude darf in diese Repositories **nicht** schreiben
-(403) — er taugt nur zum Lesen öffentlicher Repositories.
+Bis zum 18.08.2026 waren es drei: `docker-stacks` und `raspi-doku` sind an diesem Tag
+zu `raspi` zusammengeführt worden, beide Verläufe vollständig erhalten. Der Grund war
+kein Aufräumdrang, sondern ein wiederkehrender Fehler: Jede Systemänderung brauchte
+zwei Commits in zwei Repositories, und zwischen den beiden Pushes konnte die
+Dokumentation von der Realität abweichen. Genau das passierte am selben Tag — Kapitel
+17 behauptete eine Stunde lang, es gebe kein Abgleich-Werkzeug, das bereits lief.
+Jetzt trägt ein Commit beides.
 
-**Rechte.** Alle drei gehören `simon:pi-admin`, Verzeichnisse `2775` (setgid,
+`claude-skills` bleibt getrennt: Es wird von Claude Desktop gelesen, hat eine eigene
+Lebensdauer, und ein fehlerhafter Commit darin nimmt der Automatisierung genau das
+Werkzeug, mit dem sie den Fehler beheben müsste. Seit dem 18.08.2026 ist es
+immerhin im Backup — vorher war es das nicht.
+
+Beide pushen direkt vom Pi über einen SSH-Schlüssel, der am GitHub-Konto hinterlegt
+ist. Der GitHub-Connector aus Claude darf in diese Repositories **nicht** schreiben
+(403, nachgemessen) — er taugt zum Lesen und kann keine Repositories anlegen.
+
+**Rechte.** Beide gehören `simon:pi-admin`, Verzeichnisse `2775` (setgid,
 gruppenschreibbar). Beide Konten — `simon` und `claude` — sind in `pi-admin` und können
-darin arbeiten und committen. Nachgemessen am 18.08.2026 für alle drei.
+darin arbeiten und committen. Nachgemessen am 18.08.2026.
 
 > **Nicht mit `chown` „aufräumen".** Wer die Dateien einem einzelnen Benutzer zuschlägt,
 > nimmt dem anderen Konto das Schreibrecht auf Teile von `.git` — der Fehler lautet dann
@@ -41,9 +53,9 @@ Diese Dateien werden **direkt aus dem Repository** gelesen. Eine Änderung wirkt
 
 | Was | Wo |
 |---|---|
-| Alle `docker-compose.yml` | `docker-stacks/<dienst>/` |
-| Dashboard-Konfiguration | `docker-stacks/homepage/config/` |
-| ntfy-Serverkonfiguration | `docker-stacks/ntfy/server.yml` |
+| Alle `docker-compose.yml` | `raspi/<dienst>/` |
+| Dashboard-Konfiguration | `stacks/homepage/config/` |
+| ntfy-Serverkonfiguration | `stacks/ntfy/server.yml` |
 | Skills und MCP-Server | `/mnt/usb-hdd/claude-skills/` |
 
 ### Sorte B — das Repository ist nur eine Kopie
@@ -115,7 +127,7 @@ vereinheitlicht und installiert. Die alten Fassungen liegen unter
 ## Der Abgleich prüft sich seit 18.08.2026 selbst
 
 Die Tabelle oben ist nicht mehr nur Prosa: Sie steht maschinenlesbar in
-`docker-stacks/abgleich/manifest.tsv` — eine Zeile je Paar, mit Systempfad,
+`system/abgleich/manifest.tsv` — eine Zeile je Paar, mit Systempfad,
 Besitzer, Rechten und dem, was nach dem Installieren zu tun ist (`daemon-reload`,
 `visudo -c`, nichts). Alle Werte sind mit `stat` gemessen, nicht angenommen.
 
@@ -145,7 +157,7 @@ Deshalb meldet der Timer nur. Kopiert wird auf Ansage, mit vorherigem `diff`.
 ### Von Hand, falls das Werkzeug einmal ausfällt
 
 ```bash
-sudo diff /home/simon/docker-stacks/backup/pi-backup.sh /usr/local/bin/pi-backup.sh
+sudo diff /home/simon/raspi/system/backup/pi-backup.sh /usr/local/bin/pi-backup.sh
 sudo install -o root -g root -m 750 backup/pi-backup.sh /usr/local/bin/pi-backup.sh
 sudo systemctl daemon-reload      # nur bei .service und .timer
 ```

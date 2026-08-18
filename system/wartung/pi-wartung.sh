@@ -20,7 +20,7 @@
 #    * Neustarten. Am Pi haengt der DNS des ganzen Haushalts.
 #
 #  Hervorgegangen aus pi-maintenance.sh (12/2025), ueberarbeitet am 18.08.2026.
-#  Dokumentation: raspi-doku/docs/02-betriebssystem.md
+#  Dokumentation: docs/02-betriebssystem.md
 # =============================================================================
 
 set -uo pipefail

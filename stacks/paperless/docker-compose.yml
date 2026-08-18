@@ -10,7 +10,7 @@
 #  Datenverzeichnis unlesbar machen, bei Paperless setzt v3 einen Zwischen-
 #  schritt ueber 2.20.15 voraus. Updates werden von Hand nachgezogen.
 #
-#  Dokumentation: raspi-doku/docs/13-paperless.md
+#  Dokumentation: docs/13-paperless.md
 # =============================================================================
 
 # --- Logrotation -------------------------------------------------------------

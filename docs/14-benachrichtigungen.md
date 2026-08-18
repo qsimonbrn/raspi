@@ -25,7 +25,7 @@ Arbeitsspeicher), der Nachrichten entgegennimmt und an Apps ausliefert.
 | Weboberfläche | `http://192.168.178.80:2586` |
 | Benutzer | `simon` (Rolle `admin`) |
 | Thema | `raspberrypi` |
-| Passwort ausgeben | `grep NTFY_PASSWORD ~/docker-stacks/ntfy/.env` |
+| Passwort ausgeben | `grep NTFY_PASSWORD ~/stacks/ntfy/.env` |
 
 ---
 
@@ -142,7 +142,7 @@ Nachrichten einschleusen.
 
 | Zugangsdaten | Ablage |
 |---|---|
-| Passwort für Handy und Browser | `docker-stacks/ntfy/.env` (Modus 600, nicht im Git) |
+| Passwort für Handy und Browser | `stacks/ntfy/.env` (Modus 600, nicht im Git) |
 | Token für das Backup-Skript | `/root/.ntfy-token` (Modus 600) |
 
 Das Token steht bewusst **nicht** in `/etc/pi-backup.env`, sondern in einer eigenen
@@ -181,7 +181,7 @@ sudo docker logs ntfy
 |---|---|
 | Container | `ntfy` (`binwiederhier/ntfy`) |
 | Port | 2586 → 80 im Container |
-| Konfiguration | `docker-stacks/ntfy/server.yml` |
+| Konfiguration | `stacks/ntfy/server.yml` |
 | Daten | `/mnt/usb-hdd/ntfy/` (Nachrichten-Zwischenspeicher, Benutzerdatenbank) |
 
 Der Nachrichten-Zwischenspeicher wird **nicht** gesichert — er enthält nur

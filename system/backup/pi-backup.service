@@ -1,6 +1,6 @@
 [Unit]
 Description=Backup des Raspberry Pi nach OneDrive (restic)
-Documentation=https://github.com/qsimonbrn/raspi-doku/blob/main/docs/12-backup.md
+Documentation=https://github.com/qsimonbrn/raspi/blob/main/docs/12-backup.md
 # Erst starten, wenn Netzwerk und Docker bereit sind
 After=network-online.target docker.service
 Wants=network-online.target

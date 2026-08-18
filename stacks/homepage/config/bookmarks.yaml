@@ -7,12 +7,12 @@
 
     - Doku:
         - abbr: DOC
-          href: https://github.com/qsimonbrn/raspi-doku
+          href: https://github.com/qsimonbrn/raspi
           description: Infrastruktur-Dokumentation
 
     - Compose-Stacks:
         - abbr: GIT
-          href: https://github.com/qsimonbrn/docker-stacks
+          href: https://github.com/qsimonbrn/raspi
           description: Alle docker-compose-Dateien
 
 - Handbuecher:
