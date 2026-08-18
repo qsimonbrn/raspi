@@ -44,6 +44,7 @@ gepinnt.
 | [14 — Benachrichtigungen](docs/14-benachrichtigungen.md) | ntfy: Push aufs Handy, Anbindung ans Backup |
 | [15 — Änderungshistorie](docs/15-aenderungshistorie.md) | Betriebstagebuch: was wann am System geändert wurde und warum |
 | [16 — Konten und Rechte](docs/16-konten-und-rechte.md) | Wer darf was, Sitzungsaufzeichnung, Überwachungsbefehle, Notausschalter |
+| [17 — Wo was liegt](docs/17-wo-was-liegt.md) | Welche Datei ist Original, welche Kopie — Repositories, installierte Fassungen, Rechte |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 

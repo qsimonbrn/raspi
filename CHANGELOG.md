@@ -9,6 +9,37 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.11.0] — 2026-08-18
+
+### Hinzugefügt
+
+- **[17 — Wo was liegt](docs/17-wo-was-liegt.md)** — neues Kapitel. Beantwortet die
+  Frage, welche Datei das Original ist und welche nur eine Kopie. Enthält die
+  vollständige, gemessene Zuordnung aller 16 Dateipaare zwischen Repository und
+  installierter Fassung, die Rechtekonvention der drei Repositories und die zwei
+  Fallen, die sich darin verstecken: unterschiedliche Zielverzeichnisse
+  (`/usr/local/bin` gegen `/usr/local/sbin`) und ein abweichender Dateiname
+  (`pi_wartung.sh` gegen `pi-maintenance.sh`).
+
+### Befund
+
+- **`/usr/local/sbin/pi-maintenance.sh` ist nicht nachgezogen.** Der Eintrag 1.9.0
+  vermerkt, alle Docker-Aufrufe seien systemweit auf `sudo docker` umgestellt worden,
+  `pi_wartung.sh` ausdrücklich genannt. Geändert wurde nur die Kopie im Repository; die
+  installierte Fassung ruft an sechs Stellen weiterhin `docker` ohne `sudo` auf. Das
+  Skript wird von keinem Timer aufgerufen, der Schaden ist begrenzt — der Befund zeigt
+  aber, dass der Abgleich von Hand nicht verlässlich passiert.
+
+### Richtiggestellt
+
+- Der Rechtehinweis in 1.10.0 war unvollständig. Nicht der Besitzer entscheidet, ob
+  beide Konten in einem Repository arbeiten können, sondern die **Gruppe** `pi-admin`
+  samt Gruppenschreibrecht auf den Verzeichnissen. Schreibgeschützte Objektdateien in
+  `.git/objects` (`444`) sind normales Git-Verhalten und **kein** Rechteproblem — der
+  Blocker waren Verzeichnisse mit `2755` statt `2775`.
+
+---
+
 ## [1.10.0] — 2026-08-18
 
 ### Richtiggestellt

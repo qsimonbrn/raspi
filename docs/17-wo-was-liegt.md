@@ -1,0 +1,145 @@
+# 17 — Wo was liegt
+
+*Erfasst: 18.08.2026*
+
+Dieses Kapitel beantwortet eine Frage, die sich sonst über ein halbes Dutzend Kapitel
+verteilt: **Welche Datei ist das Original, welche nur eine Kopie?** Wer das verwechselt,
+ändert etwas, committet es, sieht es auf GitHub — und wundert sich, warum am System
+nichts anders ist.
+
+---
+
+## Die drei Repositories
+
+| Repository auf GitHub | Auf dem Pi | Inhalt |
+|---|---|---|
+| `qsimonbrn/docker-stacks` | `/home/simon/docker-stacks` | Compose-Dateien, Backup, Firewall, Wartung, Systemkonfiguration |
+| `qsimonbrn/raspi-doku` | `/home/simon/raspi-doku` | diese Dokumentation |
+| `qsimonbrn/claude-skills` | `/mnt/usb-hdd/claude-skills` | Skills und MCP-Server |
+
+Alle drei pushen direkt vom Pi über einen SSH-Schlüssel, der am GitHub-Konto hinterlegt
+ist. Der GitHub-Connector aus Claude darf in diese Repositories **nicht** schreiben
+(403) — er taugt nur zum Lesen öffentlicher Repositories.
+
+**Rechte.** Alle drei gehören `simon:pi-admin`, Verzeichnisse `2775` (setgid,
+gruppenschreibbar). Beide Konten — `simon` und `claude` — sind in `pi-admin` und können
+darin arbeiten und committen. Nachgemessen am 18.08.2026 für alle drei.
+
+> **Nicht mit `chown` „aufräumen".** Wer die Dateien einem einzelnen Benutzer zuschlägt,
+> nimmt dem anderen Konto das Schreibrecht auf Teile von `.git` — der Fehler lautet dann
+> `insufficient permission for adding an object to repository database`. Entscheidend
+> ist die **Gruppe** `pi-admin` samt Gruppenschreibrecht, nicht der Besitzer.
+
+---
+
+## Zwei Sorten von Dateien
+
+### Sorte A — das Repository ist das Original
+
+Diese Dateien werden **direkt aus dem Repository** gelesen. Eine Änderung wirkt sofort
+(bei Compose nach `sudo docker compose up -d`).
+
+| Was | Wo |
+|---|---|
+| Alle `docker-compose.yml` | `docker-stacks/<dienst>/` |
+| Dashboard-Konfiguration | `docker-stacks/homepage/config/` |
+| ntfy-Serverkonfiguration | `docker-stacks/ntfy/server.yml` |
+| Skills und MCP-Server | `/mnt/usb-hdd/claude-skills/` |
+
+### Sorte B — das Repository ist nur eine Kopie
+
+Diese Dateien laufen von einem anderen Ort. Eine Änderung **nur** im Repository ist
+wirkungslos. Der Grund ist banal: systemd startet nichts aus einem Home-Verzeichnis,
+Docker liest ausschließlich `/etc/docker`, der Kernel ausschließlich `/boot`, `sudo`
+ausschließlich `/etc/sudoers.d`.
+
+| Im Repository | Läuft von hier | Stand 18.08.2026 |
+|---|---|---|
+| `backup/pi-backup.sh` | `/usr/local/bin/pi-backup.sh` | identisch |
+| `backup/pi-backup.service` | `/etc/systemd/system/` | identisch |
+| `backup/pi-backup.timer` | `/etc/systemd/system/` | identisch |
+| `firewall/pi-guard.sh` | `/usr/local/sbin/pi-guard.sh` | identisch |
+| `firewall/pi-guard.service` | `/etc/systemd/system/` | identisch |
+| `messung/docker-stats-messung.sh` | `/usr/local/bin/` | identisch |
+| `messung/docker-stats-messung.service` | `/etc/systemd/system/` | identisch |
+| `messung/docker-stats-messung.timer` | `/etc/systemd/system/` | identisch |
+| `updates/pi-reboot-check.sh` | `/usr/local/sbin/pi-reboot-check.sh` | identisch |
+| `updates/pi-reboot-check.service` | `/etc/systemd/system/` | identisch |
+| `updates/pi-reboot-check.timer` | `/etc/systemd/system/` | identisch |
+| `updates/docker-daemon.json` | `/etc/docker/daemon.json` | identisch |
+| `updates/cmdline.txt` | `/boot/firmware/cmdline.txt` | identisch |
+| `updates/52unattended-upgrades-lokal` | `/etc/apt/apt.conf.d/` | identisch |
+| `sudoers/010-claude` | `/etc/sudoers.d/010-claude` | identisch |
+| `pi_wartung.sh` | `/usr/local/sbin/**pi-maintenance.sh**` | ⚠️ **abweichend** |
+
+**Zwei Fallen stecken allein in dieser Tabelle:**
+
+1. Die Skripte liegen teils in `/usr/local/bin`, teils in `/usr/local/sbin`. Welches wo,
+   ist nicht zu erraten — man muss es nachsehen (`systemctl show <unit> -p ExecStart`).
+2. `pi_wartung.sh` heißt installiert **anders**: `pi-maintenance.sh`. Ein Abgleich, der
+   den Dateinamen fortschreibt, findet dieses Paar nicht und meldet fälschlich „fehlt".
+
+---
+
+## ⚠️ Befund: `pi-maintenance.sh` ist nicht nachgezogen
+
+Der CHANGELOG-Eintrag 1.9.0 vom 18.08.2026 vermerkt, alle Docker-Aufrufe seien
+systemweit auf `sudo docker` umgestellt worden, `pi_wartung.sh` ausdrücklich genannt.
+Geändert wurde jedoch **nur die Kopie im Repository**. Die installierte Fassung
+`/usr/local/sbin/pi-maintenance.sh` ruft weiterhin `docker` ohne `sudo` auf — an sechs
+Stellen, darunter `docker compose pull && docker compose up -d` und
+`docker image prune -f`.
+
+**Warum das zählt:** Ausgeführt von `simon` oder `claude` scheitern diese Aufrufe mit
+`permission denied` — und zwar **still**. Das Skript läuft scheinbar durch und liefert
+leere Ergebnisse. Genau dieses Muster hat schon `inventar/collect.sh` betroffen, das
+374 statt 650 Zeilen erzeugte.
+
+Das Skript wird derzeit von **keinem** Timer und **keinem** Cronjob aufgerufen; es ist
+reine Handarbeit. Der Schaden ist damit begrenzt, der Befund aber lehrreich: Er zeigt,
+dass der Abgleich zwischen Repository und System nicht verlässlich von Hand passiert.
+
+---
+
+## Was bewusst **nicht** im Git liegt
+
+| Was | Wo | Warum |
+|---|---|---|
+| `bichon/.env`, `ntfy/.env`, `paperless/.env` | bei den Stacks, Modus 660 | Geheimnisse, über `.gitignore` ausgeschlossen |
+| Nutzdaten | `/mnt/usb-hdd/{paperless,bichon,ntfy}` | zu groß, im restic-Backup |
+| `/mnt/usb-hdd/messungen/` | dort | laufende Messwerte, keine Konfiguration |
+| `/mnt/usb-hdd/backups-manuell/` | dort, Modus 600 | Rückfallebene vom 18.08.2026, **enthält `.env` im Klartext** |
+| `/mnt/usb-hdd/_to_delete/` | dort | zum Löschen vorgemerkt |
+
+---
+
+## Abgleich von Hand
+
+Solange es kein Werkzeug dafür gibt, prüft man ein Paar so:
+
+```bash
+sudo diff /home/simon/docker-stacks/backup/pi-backup.sh /usr/local/bin/pi-backup.sh
+```
+
+Und installiert die Repository-Fassung so — `install` setzt Rechte und Besitzer in
+einem Schritt, `cp` vergisst sie:
+
+```bash
+sudo install -o root -g root -m 750 backup/pi-backup.sh /usr/local/bin/pi-backup.sh
+sudo systemctl daemon-reload      # nur bei .service und .timer
+```
+
+---
+
+## Reste, die noch herumliegen
+
+| Datei | Größe | Anmerkung |
+|---|---|---|
+| `/usr/local/bin/pi-backup.sh.bak-20260818` | 7,2 KB | Sicherungskopie vor der Backup-Änderung |
+| `/usr/local/sbin/pi-maintenance.sh.old` | 292 B | Vorgängerfassung |
+| `/boot/firmware/cmdline.txt.bak-20260818` | — | Sicherungskopie vor dem Cgroup-Eintrag |
+
+Alle drei sind bewusst stehen geblieben, bis die jeweiligen Änderungen sich bewährt
+haben. Sie gehören beim nächsten Aufräumen weg — und sie sind ein Grund mehr, einen
+Abgleich nicht stumpf über Dateinamen laufen zu lassen: `*.bak-*` und `*.old` dürfen
+dabei nicht als Kandidaten gelten.
