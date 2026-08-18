@@ -1,0 +1,31 @@
+// Lokale Einstellungen fuer unattended-upgrades — eingerichtet 18.08.2026
+//
+// Grundsatz: Sicherheitsupdates werden automatisch eingespielt, aber der Pi
+// startet NIE von selbst neu. An diesem Geraet haengt der DNS des gesamten
+// Haushalts — ein unbemerkt fehlgeschlagener Neustart um drei Uhr nachts
+// bedeutet, dass morgens im ganzen Haus nichts mehr geht.
+//
+// Wird ein Neustart faellig, meldet sich der Pi ueber ntfy und wartet auf
+// eine Entscheidung. Siehe pi-reboot-check.service.
+
+Unattended-Upgrade::Origins-Pattern {
+    "origin=Debian,codename=${distro_codename},label=Debian-Security";
+    "origin=Debian,codename=${distro_codename}-security,label=Debian-Security";
+    "origin=Raspbian,codename=${distro_codename},label=Raspbian";
+    "origin=Raspberry Pi Foundation,codename=${distro_codename},label=Raspberry Pi Foundation";
+};
+
+// Kein selbsttaetiger Neustart — bewusste Entscheidung.
+Unattended-Upgrade::Automatic-Reboot "false";
+
+// Nicht mehr benoetigte Abhaengigkeiten entfernen.
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+
+// Bei fehlgeschlagenem Update erneut versuchen.
+Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+Unattended-Upgrade::MinimalSteps "true";
+
+// Protokoll, damit nachvollziehbar bleibt, was wann installiert wurde.
+Unattended-Upgrade::SyslogEnable "true";
+Unattended-Upgrade::SyslogFacility "daemon";

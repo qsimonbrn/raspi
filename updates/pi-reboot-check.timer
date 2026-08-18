@@ -1,0 +1,12 @@
+[Unit]
+Description=Taegliche Pruefung, ob ein Neustart faellig ist
+
+[Timer]
+# Kurz nach der taeglichen Update-Ausfuehrung, aber zu einer Zeit,
+# zu der die Meldung auch gelesen wird.
+OnCalendar=*-*-* 08:30
+RandomizedDelaySec=15m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

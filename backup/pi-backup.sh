@@ -98,6 +98,17 @@ cp -a /etc/pi-backup.env      "$STAGE/etc/"       2>/dev/null
 # Samba-Zugaenge neu angelegt werden.
 cp -a /var/lib/samba/private/passdb.tdb "$STAGE/etc/" 2>/dev/null
 
+# --- Konten, Rechte und Protokolle (seit 18.08.2026) --------------------------
+# Schluessel und sudo-Regeln des Automatisierungskontos "claude". Die Schluessel
+# waeren im Notfall in Minuten neu erzeugt -- entscheidend sind die
+# Sitzungsaufzeichnungen: Protokolle, die nur auf dem betroffenen System liegen,
+# sind wertlos, weil ein Angreifer sie zuerst loescht.
+mkdir -p "$STAGE/konten"
+cp -a /home/claude/.ssh       "$STAGE/konten/claude-ssh"  2>/dev/null || warn "Schluessel des Kontos claude fehlen"
+cp -a /etc/sudoers.d          "$STAGE/konten/"            2>/dev/null || warn "sudo-Regeln fehlen"
+cp -a /var/log/sudo-io        "$STAGE/konten/"            2>/dev/null || warn "Sitzungsaufzeichnungen fehlen"
+cp -a /var/log/sudo-claude.log "$STAGE/konten/"           2>/dev/null
+
 # --- 4. Systemzustand fuer den Wiederaufbau ----------------------------------
 log "Systemzustand dokumentieren"
 apt-mark showmanual                    > "$STAGE/system/pakete-manuell.txt"   2>/dev/null
