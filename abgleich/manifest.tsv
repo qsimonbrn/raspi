@@ -30,7 +30,8 @@ updates/docker-daemon.json	/etc/docker/daemon.json	root:root	644	keiner
 updates/cmdline.txt	/boot/firmware/cmdline.txt	root:root	755	keiner
 updates/52unattended-upgrades-lokal	/etc/apt/apt.conf.d/52unattended-upgrades-lokal	root:root	644	keiner
 sudoers/010-claude	/etc/sudoers.d/010-claude	root:root	440	sudoers
-pi_wartung.sh	/usr/local/sbin/pi-maintenance.sh	root:root	755	keiner
+wartung/pi-wartung.sh	/usr/local/sbin/pi-wartung.sh	root:root	750	keiner
+wartung/pi-aliase.sh	/etc/profile.d/pi-aliase.sh	root:root	644	keiner
 abgleich/sync.sh	/usr/local/sbin/pi-abgleich.sh	root:root	750	keiner
 abgleich/pi-abgleich.service	/etc/systemd/system/pi-abgleich.service	root:root	644	systemd
 abgleich/pi-abgleich.timer	/etc/systemd/system/pi-abgleich.timer	root:root	644	systemd
