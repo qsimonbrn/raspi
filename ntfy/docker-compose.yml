@@ -8,10 +8,25 @@
 #  Dokumentation: raspi-doku/docs/14-benachrichtigungen.md
 # =============================================================================
 
+# --- Logrotation -------------------------------------------------------------
+#  Docker dreht Logdateien NUR, wenn es beim Erstellen des Containers gesetzt
+#  ist. Die Vorgabe in /etc/docker/daemon.json greift erst nach einem echten
+#  Daemon-Neustart (ein reload uebernimmt log-opts nicht) -- deshalb steht sie
+#  hier ausdruecklich und ueberlebt jede Aenderung am Daemon.
+# -----------------------------------------------------------------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   ntfy:
     image: binwiederhier/ntfy:v2.27.0
     container_name: ntfy
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
 
     # "serve" startet den Server mit der Konfiguration aus server.yml

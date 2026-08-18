@@ -13,11 +13,26 @@
 #  Dokumentation: raspi-doku/docs/13-paperless.md
 # =============================================================================
 
+# --- Logrotation -------------------------------------------------------------
+#  Docker dreht Logdateien NUR, wenn es beim Erstellen des Containers gesetzt
+#  ist. Die Vorgabe in /etc/docker/daemon.json greift erst nach einem echten
+#  Daemon-Neustart (ein reload uebernimmt log-opts nicht) -- deshalb steht sie
+#  hier ausdruecklich und ueberlebt jede Aenderung am Daemon.
+# -----------------------------------------------------------------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
 
   paperless:
     image: ghcr.io/paperless-ngx/paperless-ngx:3.0.5
     container_name: paperless
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
     restart: always
 
     depends_on:
@@ -126,6 +141,9 @@ services:
   paperless-db:
     image: postgres:15.19
     container_name: paperless-paperless-db-1
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
     restart: always
 
     volumes:
@@ -147,6 +165,9 @@ services:
   paperless-redis:
     image: redis:7.4
     container_name: paperless-paperless-redis-1
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
     restart: always
     volumes:
       - paperless_redis:/data

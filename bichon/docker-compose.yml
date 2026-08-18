@@ -1,16 +1,38 @@
+# --- Logrotation -------------------------------------------------------------
+#  Docker dreht Logdateien NUR, wenn es beim Erstellen des Containers gesetzt
+#  ist. Die Vorgabe in /etc/docker/daemon.json greift erst nach einem echten
+#  Daemon-Neustart (ein reload uebernimmt log-opts nicht) -- deshalb steht sie
+#  hier ausdruecklich und ueberlebt jede Aenderung am Daemon.
+# -----------------------------------------------------------------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   bichon:
-    image: rustmailer/bichon:latest
+    # Bichon veroeffentlicht keine Versions-Tags. Festgenagelt auf den Digest des
+    # Standes vom 07.12.2025, der hier laeuft -- damit ein Pull nichts austauscht.
+    image: rustmailer/bichon@sha256:576670754c9902b256af8fe8ff5d64f4c49318442d112809ee2bc7bb697145a4
     container_name: bichon
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
+
+    # Geheimnis steht in .env (Modus 660, ueber .gitignore ausgeschlossen).
+    env_file:
+      - .env
 
     environment:
       BICHON_LOG_LEVEL: info
       BICHON_ROOT_DIR: /data
       BICHON_ENABLE_ACCESS_TOKEN: "true"
-      # WICHTIG: Ein langes, geheimes Passwort – kann später NICHT geändert werden,
-      # ohne das Archiv zu zerstören.
-      BICHON_ENCRYPT_PASSWORD: "${BICHON_ENCRYPT_PASSWORD}"
+      # BICHON_ENCRYPT_PASSWORD kommt aus .env (siehe env_file oben) und wird
+      # deshalb hier nicht mehr aufgefuehrt. Der Wert kann NICHT geaendert
+      # werden, ohne das Archiv unlesbar zu machen -- Herstellerdoku:
+      # "Once the password is set, it cannot be changed."
 
       # Optional: CORS einschränken (empfohlen für „richtigen“ Betrieb)
       # Wenn du NUR lokal zugreifst, kannst du es erstmal weglassen.
