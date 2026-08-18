@@ -15,10 +15,10 @@ Ein Raspberry Pi 4B als Heimserver mit drei Rollen:
 |---|---|
 | **Netzwerk-DNS & Werbeblocker** | Pi-hole + unbound (eigener rekursiver Resolver) |
 | **Dokumentenarchiv** | Paperless-ngx mit OCR, PostgreSQL, Redis |
-| **Dateiablage** | Samba + Filebrowser auf einer 1-TB-SSD |
+| **Dateiablage** | Samba auf einer 1-TB-SSD |
 
 Dazu Tailscale für den Fernzugriff, Portainer zur Container-Verwaltung und Homepage als
-Einstiegsseite. Zehn Docker-Container in sieben Stacks, Compose-Dateien versioniert in
+Einstiegsseite. Acht Docker-Container in fünf Stacks, Compose-Dateien versioniert in
 einem separaten Repository — seit dem 16.08.2026 durchgängig auf feste Image-Versionen
 gepinnt.
 
@@ -43,6 +43,7 @@ gepinnt.
 | [13 — Paperless-ngx](docs/13-paperless.md) | Dokumentenarchiv: Einwurf, OCR, Zuordnung, KI-Optionen |
 | [14 — Benachrichtigungen](docs/14-benachrichtigungen.md) | ntfy: Push aufs Handy, Anbindung ans Backup |
 | [15 — Änderungshistorie](docs/15-aenderungshistorie.md) | Betriebstagebuch: was wann am System geändert wurde und warum |
+| [16 — Konten und Rechte](docs/16-konten-und-rechte.md) | Wer darf was, Sitzungsaufzeichnung, Überwachungsbefehle, Notausschalter |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 
@@ -52,16 +53,19 @@ gepinnt.
 
 | | |
 |---|---|
-| Uptime | 20 Stunden |
-| Load (1/5/15 min) | 1,39 / 0,77 / 0,52 bei 4 Kernen |
+| Uptime | 22 Stunden |
+| Load (1/5/15 min) | 0,47 / 0,22 / 0,15 bei 4 Kernen |
 | Temperatur | 49,1 °C — nie gedrosselt (`throttled=0x0`) |
-| RAM verfügbar | 2,0 von 3,7 GiB |
+| RAM verfügbar | 2,1 von 3,7 GiB |
 | Systemdatenträger | 6 % belegt (14 G von 235 G) |
 | Datenspeicher SSD | 36 % belegt (310 G von 916 G) |
 | Ausstehende OS-Updates | 0 |
 | Fehlgeschlagene Dienste | 0 |
 | Container-Images | **alle auf feste Versionen gepinnt** (16.08.2026) |
+| Container | **8** (Filebrowser und Dashy am 18.08.2026 abgeschaltet) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
+| Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
+| Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 
@@ -72,12 +76,17 @@ gepinnt.
    nicht. → [Kapitel 12](docs/12-backup.md)
 2. **Wurzeldateisystem liegt auf einer SD-Karte von 02/2023.** Ausfallrisiko nach
    3,5 Jahren Dauerbetrieb, während eine SSD zu 64 % leer danebenliegt. → [Kapitel 01](docs/01-hardware.md)
-3. **Keine Firewall, SSH-Passwortlogin aktiv, schwache Standardpasswörter bei
-   Paperless.** → [Kapitel 07](docs/07-sicherheit.md)
+3. **`simon` ist in der Gruppe `docker`.** Damit ist das Konto faktisch Administrator —
+   ohne sudo, ohne Passwort, ohne Protokoll. Solange das so ist, bleibt jede Verschärfung
+   der sudo-Regeln wirkungslos. → [Kapitel 16](docs/16-konten-und-rechte.md)
 
-Neu hinzugekommen: **`filebrowser` wird eingestellt.** Das Repository wird am
-**01.09.2026** archiviert, danach erscheinen keine Sicherheitsupdates mehr für einen
-Dienst, der Dateizugriff über HTTP anbietet. → [Kapitel 05](docs/05-docker.md)
+Ebenfalls offen: **keine automatischen Sicherheitsupdates** (`unattended-upgrades` ist
+nicht installiert) und die **SSH-Passwortanmeldung**, die in 60 Tagen sechsmal genutzt
+wurde — gegenüber 414 Schlüsselanmeldungen. → [Kapitel 07](docs/07-sicherheit.md)
+
+Am 18.08.2026 erledigt: Verwaltungsoberflächen aus dem Heimnetz genommen, Filebrowser
+(CVE ohne Patch) und Dashy abgeschaltet, Automatisierung auf ein eigenes, aufgezeichnetes
+Konto umgestellt. → [Kapitel 15](docs/15-aenderungshistorie.md)
 
 Das automatisierte Backup der unersetzlichen Daten läuft seit dem 13.08.2026 täglich.
 → [Kapitel 12](docs/12-backup.md)

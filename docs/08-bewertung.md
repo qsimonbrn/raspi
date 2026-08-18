@@ -34,6 +34,12 @@ das Betreiben.
   Weboberflächen. Seit dem 18.08.2026; der Vorgänger WireGuard war am DS-Lite-Anschluss
   von außen nie erreichbar (siehe [04](04-dienste-system.md)).
 - **unbound nur auf localhost.** Kein missbrauchbarer offener Resolver.
+- **Verwaltungsoberflächen nicht im Heimnetz.** Seit 18.08.2026 sind Portainer, Bichon
+  und Paperless nur noch über Tailscale erreichbar — nachgemessen an den Trefferzählern
+  der Firewall. Siehe [07](07-sicherheit.md).
+- **Automatisierung mit eigenem, aufgezeichnetem Konto.** Seit 18.08.2026 läuft sie als
+  `claude` statt als `simon`; jede erhöhte Sitzung ist abspielbar. Siehe
+  [16](16-konten-und-rechte.md).
 - **Getrennte Docker-Netze pro Stack.** Dienste sind gegeneinander isoliert.
 - **Keine privilegierten Container, kein `network_mode: host`.**
 
@@ -73,7 +79,7 @@ Ausfallpunkt ist die SD-Karte — und für genau diesen Fall gibt es kein Backup
 |---|---|---|
 | Keine Firewall auf dem Host | Nur eine Schutzschicht (FRITZ!Box), keine Tiefenverteidigung | [07](07-sicherheit.md) |
 | SSH-Passwortanmeldung aktiv, kein `fail2ban` | Unbegrenzte Brute-Force-Versuche möglich | [07](07-sicherheit.md) |
-| `filebrowser` wird eingestellt (Archivierung 01.09.2026) | Danach keine Sicherheitsupdates mehr für einen Dienst mit Dateizugriff | [05](05-docker.md) |
+| ~~`filebrowser` wird eingestellt~~ | ✅ **erledigt am 18.08.2026 — abgeschaltet.** Zusätzlich kam CVE-2026-32759 ohne Patch hinzu. Nachfolger noch offen | [05](05-docker.md) |
 | Öffentliche IPv6-Adresse ohne lokale Firewall | Eine Fehlkonfiguration in der FRITZ!Box legt alle Dienste offen | [03](03-netzwerk.md) |
 | Keine automatischen Sicherheitsupdates | Patch-Prozess hängt an einer einzelnen Person | [02](02-betriebssystem.md) |
 
@@ -81,7 +87,7 @@ Ausfallpunkt ist die SD-Karte — und für genau diesen Fall gibt es kein Backup
 
 | Befund | Kapitel |
 |---|---|
-| Dashy-Konfiguration nicht persistent — geht bei jedem Update verloren | [05](05-docker.md) |
+| ~~Dashy-Konfiguration nicht persistent~~ | ✅ **erledigt am 18.08.2026 — Dienst abgeschaltet** | [05](05-docker.md) |
 | `dhcpcd` und `NetworkManager` laufen parallel, stündliche Journal-Fehler | [02](02-betriebssystem.md) |
 | Ungenutzte Dienste: `ModemManager`, `triggerhappy`, `wpa_supplicant` | [02](02-betriebssystem.md) |
 | 1,18 GB verwaiste Docker-Images | [05](05-docker.md) |

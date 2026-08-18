@@ -13,11 +13,9 @@ Alle Zugangswege zum System auf einen Blick.
 | **Pi-hole** | `http://192.168.178.80/admin` | DNS-Statistiken, Blocklisten, lokale DNS-Einträge |
 | **Homepage** | `http://192.168.178.80:3000` | **Dashboard — Einstieg zu allen Diensten** |
 | **ntfy** | `http://192.168.178.80:2586` | Benachrichtigungen, Verlauf der Meldungen |
-| **Paperless-ngx** | `http://192.168.178.80:8000` | Dokumentenarchiv, Suche, OCR |
-| **Dashy** | `http://192.168.178.80:8080` | Dashboard / Startseite |
-| **Filebrowser** | `http://192.168.178.80:8082` | Dateizugriff auf die SSD im Browser |
-| **Portainer** | `http://192.168.178.80:9000`<br>`https://192.168.178.80:9443` | Container-Verwaltung |
-| **Bichon** | `http://192.168.178.80:15630` | E-Mail-Archiv |
+| **Paperless-ngx** | `http://100.108.219.87:8000` 🔒 | Dokumentenarchiv, Suche, OCR |
+| **Portainer** | `http://100.108.219.87:9000`<br>`https://100.108.219.87:9443` 🔒 | Container-Verwaltung |
+| **Bichon** | `http://100.108.219.87:15630` 🔒 | E-Mail-Archiv |
 
 > Alle Weboberflächen laufen unverschlüsselt über HTTP (Ausnahme: Portainer auf 9443).
 > Im Heimnetz vertretbar. Empfehlung zur Umstellung auf Namen mit HTTPS über einen
@@ -65,18 +63,37 @@ Tailscale baut die Verbindung deshalb von innen nach außen auf. Siehe
 
 ---
 
+## 🔒 Nur über Tailscale erreichbar
+
+Seit dem 18.08.2026 sind drei Dienste aus dem Heimnetz **nicht mehr** erreichbar. Sie
+antworten ausschließlich auf der Tailscale-Adresse `100.108.219.87`. Die alten
+Lesezeichen auf `192.168.178.80` funktionieren für diese drei nicht mehr — auch nicht
+vom Mac, weil der im Heimnetz den direkten Weg nimmt statt den Tunnel.
+
+| Dienst | Warum gesperrt |
+|---|---|
+| Portainer | Der Docker-Socket ist schreibend eingebunden — wer die Oberfläche übernimmt, hat Systemrechte |
+| Bichon | E-Mail-Archiv, Image acht Monate alt |
+| Paperless | Dokumentenarchiv |
+
+Umgesetzt über `pi-guard`, siehe [07 — Sicherheit](07-sicherheit.md). Die Homepage-Kacheln
+zeigen bereits auf die richtigen Adressen.
+
+**Abgeschaltet am 18.08.2026:** Filebrowser (Port 8082) und Dashy (Port 8080). Begründung
+in [05 — Docker](05-docker.md), Compose-Dateien unter `docker-stacks/_archiviert/`.
+
+---
+
 ## Zugriffsmatrix
 
-| Dienst | Aus dem LAN | Über Tailscale | Aus dem Internet |
+| Dienst | Aus dem Heimnetz | Über Tailscale | Aus dem Internet |
 |---|---|---|---|
 | Homepage | ✅ | ✅ | ❌ |
 | ntfy | ✅ | ✅ | ❌ |
 | Pi-hole Web | ✅ | ✅ | ❌ |
-| Paperless | ✅ | ✅ | ❌ |
-| Portainer | ✅ | ✅ | ❌ |
-| Filebrowser | ✅ | ✅ | ❌ |
-| Bichon | ✅ | ✅ | ❌ |
-| Dashy | ✅ | ✅ | ❌ |
+| Paperless | ❌ 🔒 | ✅ | ❌ |
+| Portainer | ❌ 🔒 | ✅ | ❌ |
+| Bichon | ❌ 🔒 | ✅ | ❌ |
 | Samba | ✅ | ✅ | ❌ |
 | SSH | ✅ | ✅ | ❌ |
 | Tailscale | ✅ | — | ❌ (kein eingehender Port) |
@@ -100,11 +117,11 @@ Benutzernamen und öffentliche Schlüssel.
 Checkliste dessen, was im Passwortmanager hinterlegt sein sollte:
 
 - [ ] Systembenutzer `simon` (Passwort)
+- [ ] SSH-Schlüssel `pi-claude` des Automatisierungskontos (auf dem Mac, ohne Passphrase) — siehe [16 — Konten und Rechte](16-konten-und-rechte.md)
 - [ ] SSH-Schlüssel (privat) — inkl. Speicherort
 - [ ] Pi-hole Web-Oberfläche
 - [ ] Paperless-ngx Administratorkonto
 - [ ] Portainer Administratorkonto
-- [ ] Filebrowser Administratorkonto
 - [ ] Bichon Master-Passwort — ⚠️ laut Compose-Datei **nachträglich nicht änderbar**, ohne das Archiv zu zerstören
 - [ ] Samba-Passwort für `simon`
 - [ ] GitHub-Konto `qsimonbrn` — ⚠️ **Schlüssel zum Heimnetz**, seit der Tailscale-Anmeldung. Zwei-Faktor-Anmeldung zwingend

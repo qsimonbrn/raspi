@@ -109,10 +109,12 @@ Punkt 2 und 3 — Paperless und Bichon — sind der Kern von Stufe 1 in
 6. Nutzdaten aus dem Backup zurückspielen — **vor** dem Start der Container
 7. Container starten, Stack für Stack, mit Prüfung dazwischen
 8. Pi-hole und unbound aufsetzen, Konfiguration importieren
-9. Tailscale installieren, `tailscale up` mit Subnetz-Route ausführen, in der
+9. Konto `claude` neu anlegen, Gruppe `pi-admin`, sudo-Datei aus `docker-stacks` zurückspielen, Schlüssel neu erzeugen und bei GitHub austauschen — siehe [16](16-konten-und-rechte.md)
+10. Tailscale installieren, `tailscale up` mit Subnetz-Route ausführen, in der
    Verwaltungsoberfläche Route, Exit Node und DNS-Eintrag wieder setzen
-10. Samba einrichten, Freigabe prüfen
-11. **Backup-Job als Erstes wieder einrichten** — nicht als Letztes
+11. Samba einrichten, Freigabe prüfen
+12. `pi-guard` aus `docker-stacks/firewall/` zurückspielen und aktivieren
+13. **Backup-Job als Erstes wieder einrichten** — nicht als Letztes
 
 > **Zu Schritt 2:** Solange der Pi nicht läuft, funktioniert im Haushalt keine
 > Namensauflösung. Für die Dauer des Wiederaufbaus sollte in der FRITZ!Box

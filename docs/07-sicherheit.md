@@ -9,46 +9,81 @@ Portfreigaben, der rekursive DNS-Resolver ist auf localhost beschränkt, kein Co
 läuft privilegiert, die Samba-Freigabe ist auf einen Benutzer begrenzt, und das
 Betriebssystem ist vollständig gepatcht.
 
-Was fehlt, ist die **Tiefenverteidigung**. Aktuell schützt genau eine Schicht — die
-FRITZ!Box. Fällt die aus oder wird sie fehlkonfiguriert, gibt es dahinter nichts mehr.
+**Am 18.08.2026 wurde die erste Härtungsstufe umgesetzt.** Bis dahin schützte genau eine
+Schicht — die FRITZ!Box. Seitdem gibt es dahinter eine zweite: Die
+Verwaltungsoberflächen sind aus dem Heimnetz nicht mehr erreichbar, zwei verwundbare
+Dienste wurden abgeschaltet, und die Automatisierung läuft unter einem eigenen,
+aufgezeichneten Konto.
+
+Das Bedrohungsmodell dieses Systems ist dabei ungewöhnlich, und das prägt die
+Prioritäten: **Von außen ist der Pi kaum angreifbar** — der Anschluss läuft über DS-Lite
+und hat nicht einmal eine eigene öffentliche IPv4-Adresse, es gibt keine Portfreigabe,
+und Tailscale benötigt keinen eingehenden Port. In 30 Tagen gab es genau **einen**
+fehlgeschlagenen Anmeldeversuch. Die Arbeit gehört deshalb ins Innere des Netzes, wo
+**33 Geräte** stehen, von denen viele niemand patcht.
 
 ---
 
-## 🔴 Keine Firewall auf dem Host
+## 🟠 Firewall — teilweise umgesetzt
 
-```
-iptables  INPUT  policy ACCEPT   (keine einzige Regel)
-ip6tables INPUT  policy ACCEPT   (keine einzige Regel)
-ufw       nicht installiert
-```
+**Stand seit 18.08.2026:** Es gibt keine vollständige Firewall, aber eine gezielte
+Zugriffsbegrenzung für die Dienste mit dem größten Schadenspotenzial.
 
-Jeder Dienst auf dem Pi ist von jedem Gerät im Heimnetz erreichbar — und über IPv6
-grundsätzlich auch von außerhalb, sofern die FRITZ!Box es zuließe.
+### Warum kein `ufw`
 
-**Warum das im Heimnetz trotzdem relevant ist:** Ein Heimnetz ist kein vertrauenswürdiger
-Raum. Darin hängen typischerweise Geräte, die niemand patcht: Smart-TVs, Drucker,
-IoT-Steckdosen, Saugroboter, Kameras, Spielekonsolen, dazu Notebooks von Gästen. Wird
-eines davon kompromittiert, steht die Portainer-Oberfläche — also die vollständige
-Kontrolle über alle Container — ohne weitere Hürde offen.
+Docker schreibt eigene iptables-Regeln, die `ufw` **umgehen**. Eine mit `ufw`
+eingerichtete Sperre für Container-Ports sieht aus, als würde sie wirken, tut es aber
+nicht — das ist eine der häufigsten Fehlannahmen bei Docker-Hosts. Der vom Hersteller
+vorgesehene Einhängepunkt ist die Kette `DOCKER-USER`, die vor allen Docker-Regeln
+ausgewertet wird.
 
-**Empfehlung:** `ufw` installieren mit einem Regelwerk in dieser Richtung:
+### `pi-guard`
 
-| Regel | Zweck |
+| | |
 |---|---|
-| `allow from 192.168.178.0/24 to any port 22,80,53,445,139` | LAN-Dienste |
-| `allow from 100.64.0.0/10` | Tailscale-Geräte bekommen vollen Zugriff |
-| `allow in on tailscale0` | Verkehr aus dem Tailnet |
-| `deny` für Verwaltungsoberflächen aus dem LAN, nur über VPN | Portainer (9000/9443) |
-| `default deny incoming` | alles Übrige |
+| Skript | `/usr/local/sbin/pi-guard.sh` |
+| Dienst | `pi-guard.service`, startet nach `docker.service` |
+| Versioniert unter | `docker-stacks/firewall/` |
+| Ketten | `PI-GUARD` in `DOCKER-USER` (weitergeleiteter Verkehr) und `PI-GUARD-IN` in `INPUT` (Verkehr, den der `userland-proxy` annimmt), jeweils für IPv4 und IPv6 |
 
-Der Gedanke dahinter: Was nur du brauchst (Portainer, Filebrowser), erreichbar nur über
-VPN. Was das Netz braucht (DNS, Samba), erreichbar im LAN.
+Zwei Ketten sind nötig, weil ein Paket auf zwei Wegen zu einem Container gelangen kann:
+per DNAT direkt (dann greift `FORWARD`) oder über den `userland-proxy` auf dem Host
+(dann greift `INPUT`, vor allem bei IPv6). Nur eine der beiden zu belegen, ließe ein Loch
+offen.
 
-**Wichtig:** `ufw` und Docker vertragen sich nicht selbstverständlich — Docker schreibt
-eigene iptables-Regeln, die `ufw` umgehen. Container-Ports müssen zusätzlich über
-`DOCKER-USER` oder durch Binden an `127.0.0.1` plus Reverse Proxy abgesichert werden.
-Das ist der Grund, warum ein Reverse Proxy (siehe [09](09-empfehlungen.md)) hier doppelt
-sinnvoll ist.
+**Gesperrt aus dem Heimnetz:**
+
+| Port | Dienst | Warum |
+|---|---|---|
+| 9000, 9443 | Portainer | Der Docker-Socket ist schreibend eingebunden — ein erratenes Passwort bedeutet vollständige Systemrechte |
+| 15630 | Bichon | E-Mail-Archiv, Image acht Monate alt |
+| 8000 | Paperless | Dokumentenarchiv |
+
+**Bewusst offen gelassen:**
+
+| Port | Dienst | Begründung |
+|---|---|---|
+| 22 | SSH | Rettungsanker, falls Tailscale ausfällt. Ohne ihn käme man nur noch mit Tastatur und Monitor an den Pi |
+| 53 | Pi-hole DNS | Das ganze Haus hängt daran |
+| 80, 443 | Pi-hole-Web | Vorerst im Heimnetz belassen, hat ein eigenes Passwort |
+| 139, 445 | Samba | Dateizugriff im Heimnetz, eigene Anmeldung |
+| 2586 | ntfy | Mit `auth-default-access: deny-all` abgesichert — unauthentifiziertes Veröffentlichen wird mit HTTP 403 abgewiesen, nachgemessen |
+| 3000 | Homepage | Reines Linkverzeichnis, der Socket-Proxy dahinter ist streng lesend konfiguriert |
+
+> **Wichtig zu verstehen:** Die gesperrten Dienste lauschen weiterhin auf `0.0.0.0` — in
+> der Portliste sieht es deshalb unverändert aus. Die Sperre erfolgt in der Firewall,
+> nicht durch die Bindung. `sudo /usr/local/sbin/pi-guard.sh status` zeigt die Regeln
+> samt Trefferzählern.
+
+**Nachgemessen am 18.08.2026:** 101 Pakete aus dem Heimnetz verworfen, 305 über Tailscale
+durchgelassen. Die Regel wirkt nachweislich, nicht nur auf dem Papier.
+
+### Was weiterhin fehlt
+
+Eine vollständige Firewall mit `default deny incoming` für die übrigen Ports. Angesichts
+dessen, dass die verbleibenden offenen Dienste entweder gebraucht werden (DNS, Samba,
+SSH) oder geringes Schadenspotenzial haben (ntfy, Homepage), ist das kein dringender
+Punkt mehr.
 
 ---
 
@@ -62,8 +97,20 @@ sinnvoll ist.
 | `PermitEmptyPasswords` | `no` | `no` ✅ |
 | Port | 22 | 22 (unkritisch) |
 
-Der Schlüssel-Login funktioniert nachweislich. Die Passwortanmeldung ist damit reine
-zusätzliche Angriffsfläche.
+**Nachgemessen am 18.08.2026 über 60 Tage: 414 Schlüsselanmeldungen gegen 6 per
+Passwort.** Kein Skript und kein Dienst meldet sich per Passwort an — die sechs Fälle
+waren durchweg manuelle Anmeldungen. Die Passwortanmeldung ist damit ein Notausgang,
+den praktisch niemand nutzt, aber zusätzliche Angriffsfläche für jeden im Heimnetz.
+
+> **Am 18.08.2026 wurde diese Härtung eingerichtet und auf Wunsch wieder
+> zurückgenommen** — sie soll gemeinsam und mit Vorlauf umgesetzt werden, nicht
+> nebenbei. Die Konfiguration lag als `/etc/ssh/sshd_config.d/99-haertung.conf` vor und
+> funktionierte nachweislich: Eine neue Verbindung nach dem Neuladen kam per Schlüssel
+> zustande. Sie umfasste zusätzlich `PermitRootLogin no`, `AllowUsers simon`,
+> `MaxAuthTries 3`, `LoginGraceTime 30`, `X11Forwarding no` und `LogLevel VERBOSE`.
+>
+> **Zu bedenken bei der Wiederaufnahme:** `AllowUsers` müsste jetzt `simon claude`
+> lauten, sonst sperrt es das Automatisierungskonto aus.
 
 **Vor der Umstellung prüfen:** Von *jedem* Gerät, das SSH-Zugang braucht, einmal
 verbinden und sicherstellen, dass es ohne Passwortabfrage klappt. Danach:
@@ -86,6 +133,10 @@ in `/etc/ssh/sshd_config.d/99-hardening.conf` (nicht direkt in der Hauptdatei �
 Es gibt keinerlei Begrenzung fehlgeschlagener Anmeldeversuche. In Kombination mit der
 aktiven Passwortanmeldung bedeutet das: Ein Angreifer im LAN kann beliebig oft Passwörter
 durchprobieren, ohne dass etwas passiert.
+
+Zur Einordnung: In 30 Tagen gab es genau **einen** fehlgeschlagenen Anmeldeversuch. Das
+ist kein Zufall, sondern die Folge davon, dass von außen niemand klopfen kann. Die
+Dringlichkeit ist entsprechend gering — die Lücke bleibt trotzdem eine.
 
 Wird `PasswordAuthentication` deaktiviert, sinkt die Dringlichkeit deutlich — sinnvoll
 bleibt `fail2ban` trotzdem, unter anderem für Samba.
@@ -155,6 +206,14 @@ keine Rückfallebene, wenn du einmal mehrere Wochen nicht dazu kommst.
 Zwischen 8 und 17 Monate ohne Update. Ausführlich in [05 — Docker](05-docker.md),
 inklusive der Begründung, warum ein pauschales Auto-Update hier die falsche Antwort wäre.
 
+**Am 18.08.2026 entschärft:** Zwei der drei ungepinnten Dienste wurden abgeschaltet.
+
+| Dienst | Entscheidung |
+|---|---|
+| `filebrowser` | **abgeschaltet.** Lief in Version 2.51.2 und ist von CVE-2026-32759 betroffen (Remote Code Execution über den TUS-Upload, kein Patch verfügbar). Das Projekt wird zum 01.09.2026 archiviert. Der Container hatte die gesamte SSD unter `/srv` eingebunden |
+| `Dashy` | **abgeschaltet.** Durch Homepage abgelöst, Image neun Monate alt |
+| `bichon` | läuft weiter, Image acht Monate alt. **Verbleibender Befund** — der Dienst verarbeitet E-Mails, also fremdgestaltete Inhalte, und ist damit die exponierteste Stelle. Seit dem 18.08.2026 immerhin nur noch über Tailscale erreichbar |
+
 ---
 
 ## 🟢 Samba: kleinere Härtungsmöglichkeiten
@@ -183,22 +242,47 @@ unnötige Fläche.
 | **Getrennte Docker-Netze je Stack** | Seitwärtsbewegung zwischen Diensten ist erschwert. |
 | **`PermitRootLogin without-password`** | Root ist nur per Schlüssel erreichbar. |
 | **OS vollständig gepatcht** | 0 ausstehende Updates. |
+| **Verwaltungsoberflächen nicht im Heimnetz** | Seit 18.08.2026. Portainer, Bichon und Paperless sind nur noch über Tailscale erreichbar — nachgemessen an den Trefferzählern der Firewall. |
+| **Automatisierung mit eigenem Konto** | Seit 18.08.2026 arbeitet die Automatisierung als `claude`, nicht mehr als `simon`. Jede erhöhte Sitzung wird vollständig aufgezeichnet und ist abspielbar. Siehe [16 — Konten und Rechte](16-konten-und-rechte.md). |
+| **Docker-Socket-Proxy vorbildlich konfiguriert** | Nur `CONTAINERS` und `INFO` erlaubt, `POST` und `EXEC` ausdrücklich verboten, Socket nur lesend eingebunden. |
+| **ntfy mit `deny-all`** | Unauthentifiziertes Veröffentlichen wird mit HTTP 403 abgewiesen, nachgemessen. |
+| **Geheimnisse sauber getrennt** | `.gitignore` greift, keine `.env` je committet, Dateirechte `600`. |
 
 ---
 
 ## Priorisierte Maßnahmenliste
 
-| # | Maßnahme | Aufwand | Wirkung |
-|---|---|---|---|
-| 1 | `PasswordAuthentication no` | 5 min | hoch |
-| 2 | IPv6-Freigaben in der FRITZ!Box prüfen | 5 min | hoch |
-| 3 | `unattended-upgrades` (nur Security) aktivieren | 5 min | hoch |
-| 4 | `fail2ban` installieren | 10 min | mittel |
-| 5 | `ufw` mit Regelwerk | 30 min | hoch |
-| 6 | Container-Updates einspielen (nach Backup!) | 1–2 h | hoch |
-| 7 | Diun für Update-Benachrichtigungen | 20 min | mittel |
-| 8 | Samba-Härtung | 15 min | niedrig |
+Stand 18.08.2026. Die Reihenfolge folgt der Wirkung pro Aufwand, nicht streng der
+Kritikalität.
 
-> **Reihenfolge beachten:** Punkt 6 gehört *hinter* ein funktionierendes Backup
-> (siehe [06 — Daten & Speicher](06-daten-und-speicher.md)). Ein Container-Update ohne
-> Rückfallebene ist selbst ein Risiko.
+### Erledigt
+
+| Maßnahme | Datum |
+|---|---|
+| Verwaltungsoberflächen aus dem Heimnetz nehmen (`pi-guard`) | 18.08.2026 |
+| Filebrowser abschalten (CVE ohne Patch, Projekt wird archiviert) | 18.08.2026 |
+| Dashy abschalten | 18.08.2026 |
+| Automatisierungskonto mit Sitzungsaufzeichnung | 18.08.2026 |
+
+### Offen
+
+| # | Maßnahme | Aufwand | Wirkung | Anmerkung |
+|---|---|---|---|---|
+| 1 | `simon` aus der Gruppe `docker` nehmen | 30 min | **sehr hoch** | Solange diese Mitgliedschaft besteht, ist das Konto faktisch Administrator ohne sudo und ohne Protokoll — jede sudo-Härtung bleibt wirkungslos |
+| 2 | `PasswordAuthentication no` | 10 min | hoch | Vorbereitet, gemeinsam umzusetzen. `AllowUsers simon claude` beachten |
+| 3 | `unattended-upgrades` einrichten | 20 min | hoch | Nicht installiert — es gibt derzeit **keine** automatischen Sicherheitsupdates |
+| 4 | Alarmierung über ntfy | 1–2 h | hoch | Anmeldungen, sudo-Nutzung, Änderungen an `/etc/passwd` und `/etc/sudoers` |
+| 5 | IPv6-Freigaben in der FRITZ!Box prüfen | 5 min | hoch | Manuell, nicht vom Pi aus feststellbar |
+| 6 | Docker-Log-Rotation (`daemon.json`) | 10 min | mittel | Ohne Grenze kann ein fehlerhafter Container die SD-Karte volllaufen lassen |
+| 7 | `fail2ban` | 30 min | mittel | Dringlichkeit sinkt mit Punkt 2 |
+| 8 | Bichon aktualisieren und pinnen | 30 min | mittel | Update-Pfad vorher prüfen |
+| 9 | `auditd` mit gezielten Regeln | 1 h | mittel | Zugriffe auf Benutzerdatenbank, sudo-Regeln, SSH-Konfiguration |
+| 10 | Protokolle ins Backup | 30 min | mittel | Ein Angreifer mit Systemrechten löscht als Erstes die Spuren |
+| 11 | Samba härten | 15 min | niedrig | `map to guest`, Mindestprotokoll SMB3 |
+| 12 | Obsolete Schlüssel unter `/root` entfernen | 2 min | niedrig | `iphone_private.key`, Modus 644, seit der Tailscale-Umstellung wertlos |
+
+> **Reihenfolge beachten:** Punkt 8 gehört *hinter* ein geprüftes Backup. Ein
+> Container-Update ohne Rückfallebene ist selbst ein Risiko.
+
+Das vollständige Sicherheitskonzept mit Bedrohungsmodell und Begründungen liegt im
+Claude-Projekt unter `claude/sicherheitskonzept.md`.

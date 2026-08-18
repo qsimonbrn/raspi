@@ -9,6 +9,58 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.8.0] — 2026-08-18
+
+### Geändert am System
+
+- **Filebrowser abgeschaltet.** Version 2.51.2, betroffen von CVE-2026-32759 (Remote Code
+  Execution über den TUS-Upload) — **kein Patch verfügbar**, Projekt wird zum 01.09.2026
+  archiviert. Der Container hatte die gesamte SSD unter `/srv` eingebunden. Daten nicht
+  gelöscht, Compose-Datei nach `_archiviert/` verschoben.
+- **Dashy abgeschaltet.** Durch Homepage abgelöst, Image neun Monate alt auf `:latest`.
+- **`pi-guard` eingerichtet.** Portainer (9000/9443), Bichon (15630) und Paperless (8000)
+  sind aus dem Heimnetz nicht mehr erreichbar. Regeln in `DOCKER-USER` und `INPUT`, je für
+  IPv4 und IPv6 — `ufw` allein würde von Dockers eigenen Regeln umgangen. Nachgemessen:
+  101 Pakete verworfen, 305 über Tailscale durchgelassen.
+- **Automatisierungskonto `claude`.** Eigener herkunftsgebundener Schlüssel, kein
+  Passwort, **nicht** in der Gruppe `docker` — dadurch laufen Docker-Befehle über sudo und
+  werden protokolliert. Jede erhöhte Sitzung wird vollständig aufgezeichnet und ist mit
+  `sudoreplay` abspielbar.
+- **Gruppe `pi-admin`**, `/home/simon` auf `710` — das Automatisierungskonto darf
+  durchqueren, aber nicht auflisten.
+- **`inventar/collect.sh` auf `sudo docker` umgestellt.** Ohne diese Korrektur lieferte
+  die Bestandsaufnahme unter dem neuen Konto nur 374 statt 650 Zeilen mit leeren
+  Container-Tabellen.
+
+### Zurückgenommen
+
+- **SSH-Härtung und Sperrung des root-Passworts.** Eingerichtet, erfolgreich getestet und
+  auf Wunsch wieder entfernt — die Umstellung soll gemeinsam und mit Vorlauf erfolgen.
+  Ausgangszustand vollständig wiederhergestellt und geprüft.
+
+### Hinzugefügt
+
+- **Kapitel [16 — Konten und Rechte](docs/16-konten-und-rechte.md).** Konten,
+  Rechtemodell, Sitzungsaufzeichnung, die Befehle zur Überwachung und der Notausschalter.
+  Enthält auch die Begründung, warum volle sudo-Rechte mit Aufzeichnung hier mehr bringen
+  als ein Katalog erlaubter Befehle.
+- **Befund in [12 — Backup](docs/12-backup.md):** Konten, sudo-Regeln und
+  Sitzungsaufzeichnungen liegen außerhalb der gesicherten Pfade. Besonders die Protokolle
+  wiegen schwer — sie sind genau das, was ein Angreifer zuerst löscht.
+- **`docker-stacks/firewall/`** und **`docker-stacks/sudoers/`** als versionierte Kopien
+  mit Erklärung.
+
+### Geändert
+
+- **Kapitel 03, 04, 05, 07, 08, 09, 10, 11, 12 und README** auf den neuen Stand gebracht.
+- **Kapitel 07 grundlegend überarbeitet:** Der Befund „keine Firewall" ist zu „Firewall —
+  teilweise umgesetzt" geworden, die Maßnahmenliste ist in Erledigtes und Offenes
+  getrennt, und das Bedrohungsmodell steht jetzt in der Zusammenfassung.
+- **Zugriffsmatrix in Kapitel 10** um die Spalte „nur über Tailscale" ergänzt, Kacheln und
+  Adressen auf `100.108.219.87` umgestellt.
+
+---
+
 ## [1.7.0] — 2026-08-18
 
 ### Hinzugefügt

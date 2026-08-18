@@ -23,7 +23,7 @@ SD-Karte. Zum Risiko des Systemdatenträgers siehe [01 — Hardware](01-hardware
 |---|---|---|
 | `paperless/` | **Dokumentenarchiv**, Thumbnails, Datenbankdaten | 🔴 sehr hoch |
 | `bichon/` | **E-Mail-Archiv** | 🔴 sehr hoch |
-| `filebrowser-data/` | Filebrowser-Datenbank (Benutzer, Einstellungen) | 🟡 mittel |
+| `filebrowser-data/` | Filebrowser-Datenbank (Benutzer, Einstellungen) — **Dienst am 18.08.2026 abgeschaltet**, Verzeichnis bewusst behalten (44 KB) | 🟢 gering |
 | `rclone_bak/` | Backup-Ablage Dropbox + OneDrive | 🟡 mittel |
 | `trainings_bilder/` | Bilddatensätze | 🟢 ersetzbar |
 | `Abschlussprojekt_DeepLearning/` | Projektdaten | 🟡 mittel |

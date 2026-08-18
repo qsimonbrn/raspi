@@ -1,6 +1,6 @@
 # 05 — Docker
 
-*Erfasst: 16.08.2026*
+*Erfasst: 18.08.2026*
 
 ## Überblick
 
@@ -16,18 +16,30 @@
 
 | Container | Image | Port (Host) | Zweck | Restart-Policy |
 |---|---|---|---|---|
-| **Dashy** | `lissy93/dashy` | 8080 | Dashboard / Startseite | `unless-stopped` |
-| **paperless** | `…/paperless-ngx:3.0.5` | 8000 | Dokumentenarchiv mit OCR | `always` |
+| **paperless** | `…/paperless-ngx:3.0.5` | 8000 🔒 | Dokumentenarchiv mit OCR | `always` |
 | paperless-paperless-db-1 | `postgres:15.19` | — (intern) | Datenbank für Paperless | `always` |
 | paperless-paperless-redis-1 | `redis:7.4` | — (intern) | Task-Queue für Paperless | `always` |
-| **filebrowser** | `filebrowser/filebrowser` | 8082 | Dateizugriff im Browser | `unless-stopped` |
-| **bichon** | `rustmailer/bichon` | 15630 | E-Mail-Archivierung | `unless-stopped` |
-| **portainer** | `portainer/portainer-ce:2.39.6` | 9000, 9443 | Docker-Verwaltung | `always` |
+| **bichon** | `rustmailer/bichon` | 15630 🔒 | E-Mail-Archivierung | `unless-stopped` |
+| **portainer** | `portainer/portainer-ce:2.39.6` | 9000, 9443 🔒 | Docker-Verwaltung | `always` |
 | **homepage** | `ghcr.io/gethomepage/homepage` | 3000 | Dashboard mit Live-Status | `unless-stopped` |
 | **ntfy** | `binwiederhier/ntfy:v2.27.0` | 2586 | Push-Benachrichtigungen | `unless-stopped` |
 | homepage-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Homepage | `unless-stopped` |
 
+**Acht Container** (zuvor zehn). 🔒 markiert Dienste, die seit dem 18.08.2026 nur noch
+über Tailscale erreichbar sind — siehe [07 — Sicherheit](07-sicherheit.md).
+
 Kein Container läuft mit `privileged`, kein Container nutzt `network_mode: host`.
+
+### Abgeschaltet am 18.08.2026
+
+| Dienst | Grund |
+|---|---|
+| **filebrowser** | Lief in Version 2.51.2 und ist von **CVE-2026-32759** betroffen — Remote Code Execution über den TUS-Upload, **kein Patch verfügbar**. Das Projekt wird zum 01.09.2026 archiviert. Erschwerend: Der Container hatte die gesamte SSD unter `/srv` eingebunden. Ein Nachfolger wird gesucht |
+| **Dashy** | Durch Homepage abgelöst, Image neun Monate alt auf `:latest` |
+
+Die Compose-Dateien liegen weiterhin versioniert unter `docker-stacks/_archiviert/`
+samt Begründung. Daten wurden nicht gelöscht: `/mnt/usb-hdd/filebrowser-data` (44 KB)
+und die Docker-Volumes sind unverändert.
 Beides ist gut — es bedeutet, dass kein Dienst mehr Rechte hat als nötig.
 
 ### Restart-Policies
@@ -44,12 +56,10 @@ zeigt sich nur beim manuellen Stoppen — `always` startet den Container auch na
 | paperless | 3,96 % |
 | paperless-redis-1 | 1,89 % |
 | bichon | 0,09 % |
-| Dashy | 0,04 % |
 | paperless-db-1 | 0,02 % |
-| filebrowser | 0,00 % |
 | portainer | 0,00 % |
 
-Zusammen unter 6 % CPU im Leerlauf. Beim RAM ist **bichon** mit rund 11,7 % des
+Zusammen unter 6 % CPU im Leerlauf (Messung vom 16.08.2026, noch mit zehn Containern). Beim RAM ist **bichon** mit rund 11,7 % des
 Systemspeichers der größte Einzelverbraucher (`/opt/bichon/bichon`), gefolgt von den
 Celery-Workern von Paperless.
 
@@ -118,11 +128,14 @@ keine reinen Updates.
 | Stack | Lage | Zu entscheiden |
 |---|---|---|
 | **homepage** | läuft auf 1.13.2; **v2.0.0** (14.08.2026) bringt einen Breaking Change bei der Authentifizierung | Release Notes lesen, dann gezielt umstellen. Zwei Tage alt — noch nicht abgehangen. |
-| **filebrowser** | 🟠 **Das Projekt wird eingestellt.** Letztes Release v2.63.23, Repository wird am **01.09.2026** archiviert. Danach keine Sicherheitsupdates mehr. | Ersatz suchen oder abschalten. Samba deckt den Dateizugriff im Heimnetz bereits ab. |
-| **Dashy** | Altbestand. Drei Image-Tags liegen im System (`:latest` 9 Monate, `:3.0.1` 2 Jahre, `:arm64v8` 4 Jahre) | Homepage hat Dashy als Einstiegsseite abgelöst. Naheliegend: abschalten und die drei Images entfernen. |
+| ~~**filebrowser**~~ | ✅ **erledigt am 18.08.2026 — abgeschaltet.** Zusätzlich zur Einstellung des Projekts kam CVE-2026-32759 ohne Patch hinzu | Nachfolger wird gesucht |
+| ~~**Dashy**~~ | ✅ **erledigt am 18.08.2026 — abgeschaltet.** Die drei Image-Tags liegen noch im System und können beim nächsten Aufräumen weg | — |
 
-`bichon` bleibt ebenfalls auf `:latest` — das Projekt veröffentlicht keine
-nachvollziehbaren Versions-Tags.
+`bichon` bleibt auf `:latest` — das Projekt veröffentlicht keine nachvollziehbaren
+Versions-Tags. Das Image ist acht Monate alt und damit der letzte verbleibende Dienst
+auf altem Stand. Da Bichon E-Mails verarbeitet, also fremdgestaltete Inhalte, ist es
+zugleich die exponierteste Stelle. Seit dem 18.08.2026 immerhin nur noch über Tailscale
+erreichbar.
 
 ### 🟡 Aufräumen: 20 Images für 10 Container
 
@@ -196,9 +209,15 @@ versioniert (`git@github.com:qsimonbrn/docker-stacks.git`).
 /home/simon/docker-stacks/
 ├── .git/
 ├── .gitignore
+├── _archiviert/            # abgeschaltete Dienste, Konfiguration bleibt nachvollziehbar
+│   ├── README.md
+│   ├── dashy/docker-compose.yml
+│   └── filebrowser/docker-compose.yml
+├── backup/                 # restic-Backup: Skript, Service, Timer
 ├── bichon/docker-compose.yml
-├── dashy/docker-compose.yml
-├── filebrowser/docker-compose.yml
+├── firewall/               # pi-guard: Zugriffsbegrenzung, siehe 07
+├── homepage/
+├── ntfy/
 ├── paperless/docker-compose.yml
 └── portainer/docker-compose.yml
 ```
@@ -207,26 +226,12 @@ versioniert (`git@github.com:qsimonbrn/docker-stacks.git`).
 Versionskontrolle bedeuten, dass die Konfiguration jedes Dienstes nachvollziehbar und
 reproduzierbar ist — und im Ernstfall aus GitHub zurückgeholt werden kann.
 
-### ⚠️ Befund: Offene Änderungen im Repository
+✅ **Der frühere Befund „offene Änderungen im Repository" ist erledigt** — der
+Arbeitsstand ist seit dem 18.08.2026 committet, das Repository sauber.
 
-```
- D dashy/config/conf.yml      (gelöscht, nicht committet)
- M dashy/docker-compose.yml   (geändert, nicht committet)
-```
-
-Der Arbeitsstand weicht vom letzten Commit (`a1f8986 latest dashy test`) ab. Die
-Dashy-Konfigurationsdatei wurde gelöscht — siehe Befund unten.
-
-### ⚠️ Befund: Pfad-Drift beim Paperless-Stack
-
-Die Paperless-Container tragen im Label `com.docker.compose.project.config_files` den
-Pfad `/home/simon/paperless/docker-compose.yml`. **Dieses Verzeichnis existiert nicht
-mehr** — der Stack wurde nach `docker-stacks/paperless/` verschoben, ohne die Container
-neu zu erzeugen.
-
-Solange die Container laufen, ist das folgenlos. Sobald jemand aber `docker compose`
-aus dem Verzeichnis heraus bedienen will, oder Portainer den Stack anhand des Labels
-sucht, führt der Weg ins Leere.
+✅ **Der frühere Befund „Pfad-Drift beim Paperless-Stack" ist erledigt.** Das Label
+`com.docker.compose.project.config_files` zeigt seit dem Update vom 16.08.2026 korrekt auf
+`/home/simon/docker-stacks/paperless/docker-compose.yml` — nachgeprüft am 18.08.2026.
 
 **Behebung:** Einmal `docker compose up -d` aus `docker-stacks/paperless/` heraus
 ausführen. Die Container werden dabei neu erstellt und tragen anschließend den

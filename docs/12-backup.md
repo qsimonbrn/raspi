@@ -47,7 +47,8 @@ wie viel Daten vorhanden sind, sondern **wie viel davon unwiederbringlich** ist:
 | Bichon E-Mail-Archiv | 689 MB | ❌ nein |
 | Paperless (Export + Datenbank) | ~25 MB | ❌ nein |
 | Systemkonfiguration (Tailscale, Samba, Pi-hole, SSH) | ~5 MB | ❌ nein — nur mit erheblichem Aufwand |
-| Filebrowser-Datenbank | 44 KB | ❌ nein |
+| Konten und Rechte (`/home/claude/.ssh`, `/etc/sudoers.d/`) | wenige KB | ⚠️ **derzeit nicht gesichert** — siehe Befund unten |
+| Filebrowser-Datenbank | 44 KB | ❌ nein — Dienst am 18.08.2026 abgeschaltet, Daten bleiben vorerst liegen |
 | Compose-Dateien und Doku | ~1 MB | ✅ liegt auch auf GitHub |
 | Docker-Images | 3,8 GB | ✅ jederzeit neu ladbar |
 | Pi-hole Query-Datenbank | 424 MB | ✅ reine Statistik |
@@ -385,3 +386,24 @@ wirkungslos.
 | Wie weit zurück? | 7 Tage, 4 Wochen, 6 Monate |
 | Wo? | OneDrive, verschlüsselt vor dem Upload |
 | Was ist zu tun? | Repository-Passwort in den Passwortmanager übertragen |
+
+---
+
+## ⚠️ Befund: Konten und Rechte sind nicht im Backup
+
+Seit dem 18.08.2026 gibt es das Automatisierungskonto `claude`. Dessen Schlüssel und
+sudo-Konfiguration liegen außerhalb der gesicherten Pfade:
+
+| Pfad | Inhalt | Folge bei Verlust |
+|---|---|---|
+| `/home/claude/.ssh/` | Anmeldeschlüssel und GitHub-Schlüssel | Beide neu erzeugen, öffentlichen Teil bei GitHub austauschen |
+| `/etc/sudoers.d/010-claude` | Rechte samt Aufzeichnungskonfiguration | Aus `docker-stacks` zurückspielen, sobald dort abgelegt |
+| `/var/log/sudo-io/` | Sitzungsaufzeichnungen | **Beweismittel verloren** — und genau das würde ein Angreifer zuerst löschen |
+
+Der Aufwand für eine Wiederherstellung ist gering, die Schlüssel sind in Minuten neu
+erzeugt. Schwerer wiegt der letzte Punkt: Protokolle, die nur auf dem betroffenen System
+liegen, sind im Ernstfall wertlos. Sie gehören ins Backup, wo sie durch das
+restic-Passwort geschützt und außerhalb der Reichweite eines Angreifers sind.
+
+**Empfehlung:** `/home/claude/.ssh`, `/etc/sudoers.d/` und `/var/log/sudo-io/` in
+`pi-backup.sh` aufnehmen. Aufwand etwa 30 Minuten.

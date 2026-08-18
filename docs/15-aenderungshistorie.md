@@ -19,6 +19,67 @@ Backup.
 
 ---
 
+## 18.08.2026 — Erste Härtungsstufe und eigenes Automatisierungskonto
+
+| | |
+|---|---|
+| Betroffen | Erreichbarkeit der Dienste, Konten und Rechte, zwei abgeschaltete Dienste |
+| Kapitel | [03](03-netzwerk.md), [04](04-dienste-system.md), [05](05-docker.md), [07](07-sicherheit.md), [09](09-empfehlungen.md), [10](10-zugriff.md), [11](11-disaster-recovery.md), [12](12-backup.md), **[16](16-konten-und-rechte.md) neu** |
+
+**Anlass.** Der Pi hat immer mehr wichtige Aufgaben übernommen — Dokumente, E-Mail-Archiv,
+Dateien, seit dem Vortag ein VPN-Zugang ins gesamte Heimnetz. Der Schutz war mit dieser
+Bedeutung nicht mitgewachsen. Eine vollständige Sicherheitsprüfung sollte den Ist-Zustand
+erheben und eine priorisierte Maßnahmenliste liefern.
+
+**Befund.** Das vollständige Konzept mit Bedrohungsmodell liegt im Claude-Projekt unter
+`claude/sicherheitskonzept.md`. Die Kurzfassung:
+
+*Von außen ist der Pi solide* — kein eingehender Port, DS-Lite, **ein einziger**
+fehlgeschlagener Anmeldeversuch in 30 Tagen. *Von innen war er weit offen* — **33 Geräte**
+im Heimnetz erreichten ohne jede Hürde die Portainer-Oberfläche, und wer Portainer
+übernimmt, ist Administrator auf dem Pi.
+
+Der schwerwiegendste Einzelbefund: **Die Gruppe `docker` ist ein Generalschlüssel ohne
+Passwort.** Wer Docker steuern darf, startet einen Container mit eingebundenem
+Wurzeldateisystem und ist damit `root` — ohne sudo, ohne Protokoll. Solange `simon` in
+dieser Gruppe ist, bleibt jede Verschärfung der sudo-Regeln wirkungslos.
+
+**Durchgeführt.**
+
+| # | Maßnahme | Nachweis |
+|---|---|---|
+| 1 | **Filebrowser abgeschaltet** — CVE-2026-32759 (RCE über TUS-Upload) ohne verfügbaren Patch, Projekt wird zum 01.09.2026 archiviert. Der Container hatte die gesamte SSD unter `/srv` eingebunden | Port 8082 geschlossen, Daten unangetastet |
+| 2 | **Dashy abgeschaltet** — durch Homepage abgelöst, Image neun Monate alt | Port 8080 geschlossen |
+| 3 | **`pi-guard`** — Portainer, Bichon und Paperless nur noch über Tailscale | 101 Pakete aus dem Heimnetz verworfen, 305 über Tailscale durchgelassen |
+| 4 | **Konto `claude`** mit eigenem Schlüssel und vollständiger sudo-Sitzungsaufzeichnung | Anmeldung protokolliert samt Fingerabdruck, Wiedergabe mit `sudoreplay` geprüft |
+| 5 | Gruppe `pi-admin`, `/home/simon` auf `710` | Gegenprobe: `claude` kann durchqueren, aber nicht auflisten |
+| 6 | Eigener GitHub-Schlüssel, Git-Identität „Claude (Raspberry Pi)" | Commit und Push getestet, in der Historie sichtbar |
+
+**Zwei Dinge zurückgenommen.** Die SSH-Härtung (`PasswordAuthentication no`,
+`PermitRootLogin no`, `AllowUsers`, `MaxAuthTries 3`) und die Sperrung des
+root-Passworts wurden eingerichtet, erfolgreich getestet und **auf Wunsch wieder
+entfernt** — sie sollen gemeinsam und mit Vorlauf umgesetzt werden, nicht nebenbei. Der
+Ausgangszustand wurde vollständig wiederhergestellt und geprüft.
+
+**Nebenwirkung, die auffiel.** Weil `claude` nicht in der Gruppe `docker` ist, laufen
+Docker-Befehle über sudo — und werden protokolliert. Das ist gewollt, brach aber sofort
+`inventar/collect.sh`: Die erste Bestandsaufnahme unter dem neuen Konto lieferte 374
+statt 650 Zeilen mit leeren Container-Tabellen, weil zehn Docker-Aufrufe an
+`permission denied` scheiterten. Das Skript ist seitdem auf `sudo docker` umgestellt.
+**Für neue Skripte gilt: immer `sudo docker` schreiben** — das funktioniert unter beiden
+Konten.
+
+**Nachgemessen.** Bestandsaufnahme nach der Korrektur vollständig (650 Zeilen, keine
+Rechtefehler), acht statt zehn Container, Ports 8080 und 8082 geschlossen,
+Firewall-Trefferzähler belegen die Wirkung, Sitzungsaufzeichnung abspielbar, Push unter
+der neuen Identität erfolgreich.
+
+**Offen geblieben.** `simon` in der Gruppe `docker`, SSH-Passwortanmeldung, fehlende
+automatische Sicherheitsupdates, Alarmierung über ntfy, Docker-Log-Rotation. Vollständig
+in [07 — Sicherheit](07-sicherheit.md).
+
+---
+
 ## 18.08.2026 — WireGuard durch Tailscale ersetzt
 
 | | |

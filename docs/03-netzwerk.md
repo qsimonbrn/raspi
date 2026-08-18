@@ -35,7 +35,7 @@ fehlende zweite Verteidigungslinie: Auf dem Pi selbst läuft **keine Firewall**
 (siehe [07 — Sicherheit](07-sicherheit.md)). Wenn in der FRITZ!Box versehentlich
 „Selbstständige Portfreigaben für IPv6-Geräte erlauben" aktiviert wird oder eine
 Freigabe zu weit gefasst ist, stehen Pi-hole-Oberfläche, Portainer, Paperless und
-Filebrowser **sofort und ungeschützt im Internet**.
+Paperless **sofort und ungeschützt im Internet**.
 
 **Zu prüfen (manuell, in der FRITZ!Box):**
 *Internet → Freigaben → Portfreigaben* — dort die IPv6-Einstellungen des Geräts
@@ -79,15 +79,18 @@ Die Ablösung von WireGuard und ihre Begründung stehen in
 | Bridge | Netz | Stack |
 |---|---|---|
 | `br-5b3f94d4d9ce` | `172.20.0.0/16` | bichon |
-| `br-0c5104073e48` | `172.22.0.0/16` | dashy |
+| `br-cc867486ae27` | `172.23.0.0/16` | homepage |
+| `br-f56477634ea2` | `172.24.0.0/16` | ntfy |
 | `br-3a32f2228553` | `172.18.0.0/16` | paperless |
 | `br-4123f2bc2193` | `172.19.0.0/16` | portainer |
-| `br-46c78dafdfb7` | `172.21.0.0/16` | filebrowser |
 | `docker0` | `172.17.0.0/16` | **DOWN**, ungenutzt |
+
+Die Netze von Dashy (`172.22.0.0/16`) und Filebrowser (`172.21.0.0/16`) sind mit den
+Diensten am 18.08.2026 entfallen.
 
 **Bewertung:** Jeder Compose-Stack hat sein eigenes Netz — das ist die saubere Variante.
 Container können nur die Dienste im eigenen Stack direkt erreichen. Paperless kann so
-etwa nicht auf die Filebrowser-Datenbank zugreifen, obwohl beide auf demselben Host
+etwa nicht auf die Bichon-Datenbank zugreifen, obwohl beide auf demselben Host
 laufen.
 
 Der ungenutzte `docker0` ist der Standard-Bridge, den Compose-Projekte nicht verwenden.
@@ -104,12 +107,15 @@ Dass er DOWN ist, bestätigt: Es läuft kein Container außerhalb eines Compose-
 | 139 / 445 | Samba | `0.0.0.0` + `[::]` |
 | 2586 | ntfy (Benachrichtigungen) | `0.0.0.0` + `[::]` |
 | 3000 | Homepage (Dashboard) | `0.0.0.0` + `[::]` |
-| 8000 | Paperless-ngx | `0.0.0.0` + `[::]` |
-| 8080 | Dashy | `0.0.0.0` + `[::]` |
-| 8082 | Filebrowser | `0.0.0.0` + `[::]` |
-| 9000 / 9443 | Portainer | `0.0.0.0` + `[::]` |
-| 15630 | Bichon | `0.0.0.0` + `[::]` |
+| 8000 | Paperless-ngx | `0.0.0.0` + `[::]` — 🔒 per Firewall auf Tailscale begrenzt |
+| 9000 / 9443 | Portainer | `0.0.0.0` + `[::]` — 🔒 per Firewall auf Tailscale begrenzt |
+| 15630 | Bichon | `0.0.0.0` + `[::]` — 🔒 per Firewall auf Tailscale begrenzt |
 | zufällig (UDP) | Tailscale (`tailscaled`) | `100.108.219.87` + Tailnet-IPv6 |
+
+> **🔒 bedeutet nicht „nicht gebunden".** Diese Dienste lauschen weiterhin auf allen
+> Adressen — die Begrenzung erfolgt in der Firewall (`pi-guard`), nicht in der Bindung.
+> Die Portliste sieht deshalb unverändert aus, obwohl aus dem Heimnetz nichts mehr
+> durchkommt. Siehe [07 — Sicherheit](07-sicherheit.md).
 
 ### Nur lokal gebunden
 

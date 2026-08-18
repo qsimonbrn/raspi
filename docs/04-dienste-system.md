@@ -242,16 +242,31 @@ entfallen.
 | **`PasswordAuthentication`** | **`yes`** | ⚠️ siehe unten |
 | `PermitRootLogin` | `without-password` | ✅ nur mit Schlüssel |
 | `PermitEmptyPasswords` | `no` | ✅ |
+| `MaxAuthTries` | 6 | Standard |
+| `LogLevel` | `INFO` | protokolliert keine Schlüssel-Fingerabdrücke |
+
+### Wer sich anmeldet
+
+| Konto | Verfahren | Zweck |
+|---|---|---|
+| `simon` | Schlüssel (`pi-zugriff`, `macbook-simon`) und Passwort | persönliches Konto |
+| `claude` | ausschließlich Schlüssel (`pi-claude`), herkunftsgebunden | Automatisierung über den MCP-Server |
+
+Vollständige Beschreibung in [16 — Konten und Rechte](16-konten-und-rechte.md).
 
 ### ⚠️ Befund: Passwort-Anmeldung ist aktiv
 
-Der Schlüssel-Login funktioniert nachweislich. Damit ist die Passwort-Authentifizierung
-nur noch zusätzliche Angriffsfläche: Sie erlaubt Brute-Force-Versuche gegen das
-Benutzerpasswort. In Verbindung mit dem fehlenden `fail2ban` gibt es dagegen keinerlei
-Bremse.
+**Nachgemessen über 60 Tage: 414 Schlüsselanmeldungen gegen 6 per Passwort.** Kein Skript
+und kein Dienst meldet sich per Passwort an. Die Passwort-Authentifizierung ist damit ein
+Notausgang, den praktisch niemand nutzt — aber zusätzliche Angriffsfläche für jedes Gerät
+im Heimnetz. In Verbindung mit dem fehlenden `fail2ban` gibt es dagegen keinerlei Bremse.
 
-**Empfehlung:** `PasswordAuthentication no`. Vorher unbedingt sicherstellen, dass der
-Schlüssel-Login von allen benötigten Geräten funktioniert — sonst sperrt man sich aus.
+**Empfehlung:** `PasswordAuthentication no`, als eigene Datei unter
+`/etc/ssh/sshd_config.d/`. Am 18.08.2026 wurde das eingerichtet, erfolgreich getestet und
+auf Wunsch wieder zurückgenommen — die Umstellung soll gemeinsam und mit Vorlauf
+erfolgen. Bei der Wiederaufnahme ist zu beachten: Eine `AllowUsers`-Zeile müsste
+**beide** Konten nennen (`simon claude`), sonst sperrt sie die Automatisierung aus.
+
 Details in [07 — Sicherheit](07-sicherheit.md).
 
 ---

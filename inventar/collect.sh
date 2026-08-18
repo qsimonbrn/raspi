@@ -72,29 +72,29 @@ r "systemctl --failed --no-pager"
 LIMIT=20 r "systemctl list-timers --no-pager --no-legend"
 
 s "DOCKER"
-r "docker --version"
-LIMIT=60 r "docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'"
-LIMIT=60 r "docker images --format 'table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}'"
-r "docker volume ls"
-r "docker network ls"
-r "docker system df"
-r "docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}'"
+r "sudo docker --version"
+LIMIT=60 r "sudo docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'"
+LIMIT=60 r "sudo docker images --format 'table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}'"
+r "sudo docker volume ls"
+r "sudo docker network ls"
+r "sudo docker system df"
+r "sudo docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}'"
 
 echo "--- Container-Details (ENV nur mit Namen, ohne Werte) ---"
-for c in $(docker ps -a --format '{{.Names}}' 2>/dev/null); do
+for c in $(sudo docker ps -a --format '{{.Names}}' 2>/dev/null); do
   echo ""
   echo ">>> $c"
-  docker inspect "$c" --format '  Image: {{.Config.Image}}
+  sudo docker inspect "$c" --format '  Image: {{.Config.Image}}
   Status: {{.State.Status}} (Restarts: {{.RestartCount}})
   RestartPolicy: {{.HostConfig.RestartPolicy.Name}}
   Privileged: {{.HostConfig.Privileged}}
   NetworkMode: {{.HostConfig.NetworkMode}}
   Compose: {{index .Config.Labels "com.docker.compose.project"}} | {{index .Config.Labels "com.docker.compose.project.config_files"}}' 2>&1
   echo "  Mounts:"
-  docker inspect "$c" --format '{{range .Mounts}}    {{.Source}} => {{.Destination}}
+  sudo docker inspect "$c" --format '{{range .Mounts}}    {{.Source}} => {{.Destination}}
 {{end}}' 2>&1
   echo "  ENV (nur Namen):"
-  docker inspect "$c" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | cut -d= -f1 | sed 's/^/    /'
+  sudo docker inspect "$c" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | cut -d= -f1 | sed 's/^/    /'
 done
 
 s "DIENSTE"
@@ -161,13 +161,13 @@ echo "## Container"
 echo ""
 echo "| Name | Image | Status | Ports |"
 echo "|---|---|---|---|"
-docker ps -a --format '| {{.Names}} | {{.Image}} | {{.Status}} | {{.Ports}} |' 2>/dev/null
+sudo docker ps -a --format '| {{.Names}} | {{.Image}} | {{.Status}} | {{.Ports}} |' 2>/dev/null
 echo ""
 echo "## Image-Alter"
 echo ""
 echo "| Image | Alter |"
 echo "|---|---|"
-docker images --format '| {{.Repository}}:{{.Tag}} | {{.CreatedSince}} |' 2>/dev/null
+sudo docker images --format '| {{.Repository}}:{{.Tag}} | {{.CreatedSince}} |' 2>/dev/null
 echo ""
 echo "## Offene Ports"
 echo ""
