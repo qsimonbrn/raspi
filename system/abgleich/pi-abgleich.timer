@@ -1,0 +1,10 @@
+[Unit]
+Description=Taeglicher Abgleich Repository <-> System
+
+[Timer]
+OnCalendar=*-*-* 09:15
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,35 @@
+# =============================================================================
+#  ntfy-Serverkonfiguration
+# =============================================================================
+
+# Adresse, unter der der Server erreichbar ist. Die App braucht sie, um sich
+# zu verbinden -- sie muss exakt zur tatsaechlichen Adresse passen.
+base-url: "http://192.168.178.80:2586"
+
+# Zwischenspeicher fuer Nachrichten. 24 Stunden reichen: Wer eine Meldung
+# laenger nicht gesehen hat, hat ohnehin ein anderes Problem.
+cache-file: "/var/cache/ntfy/cache.db"
+cache-duration: "24h"
+
+# Anhaenge werden nicht gebraucht, aber der Pfad muss gesetzt sein.
+attachment-cache-dir: "/var/cache/ntfy/attachments"
+attachment-total-size-limit: "100M"
+attachment-file-size-limit: "10M"
+
+# --- Zugriffsschutz ---------------------------------------------------------
+# deny-all heisst: Ohne Anmeldung geht gar nichts -- weder lesen noch schreiben.
+# Ohne diese Zeile koennte jedes Geraet im Heimnetz mitlesen und Nachrichten
+# einschleusen.
+auth-file: "/var/lib/ntfy/user.db"
+auth-default-access: "deny-all"
+
+# --- Verhalten --------------------------------------------------------------
+behind-proxy: false
+enable-signup: false
+enable-login: true
+enable-reservations: true
+
+# Aufbewahrung des Verlaufs in der Weboberflaeche
+web-root: "app"
+
+log-level: "info"

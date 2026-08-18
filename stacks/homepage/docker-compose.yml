@@ -1,0 +1,100 @@
+# --- Logrotation -------------------------------------------------------------
+#  Docker dreht Logdateien NUR, wenn es beim Erstellen des Containers gesetzt
+#  ist. Die Vorgabe in /etc/docker/daemon.json greift erst nach einem echten
+#  Daemon-Neustart (ein reload uebernimmt log-opts nicht) -- deshalb steht sie
+#  hier ausdruecklich und ueberlebt jede Aenderung am Daemon.
+# -----------------------------------------------------------------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+
+  # ---------------------------------------------------------------------------
+  #  Socket-Proxy
+  #
+  #  Warum nicht der Docker-Socket direkt im Dashboard?
+  #  Ein Bind-Mount mit ":ro" macht NUR die Socket-Datei schreibgeschuetzt --
+  #  die Docker-API dahinter bleibt voll beschreibbar. Wer den Socket erreicht,
+  #  kann Container starten, Volumes mounten und damit faktisch Root auf dem
+  #  Host werden. Der Proxy laesst per Allowlist ausschliesslich lesende
+  #  Container-Abfragen durch; alles andere wird mit 403 abgewiesen.
+  # ---------------------------------------------------------------------------
+  dockerproxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:v0.5.0
+    container_name: homepage-dockerproxy
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+    environment:
+      CONTAINERS: 1        # erlaubt: Container auflisten und Stats lesen
+      INFO: 1              # erlaubt: Docker-Version und Systeminfo
+      POST: 0              # verboten: jede schreibende Anfrage
+      SERVICES: 0
+      TASKS: 0
+      IMAGES: 0
+      VOLUMES: 0
+      NETWORKS: 0
+      EXEC: 0
+      SECRETS: 0
+      CONFIGS: 0
+      NODES: 0
+      SWARM: 0
+      SYSTEM: 0
+      AUTH: 0
+      BUILD: 0
+      COMMIT: 0
+      DISTRIBUTION: 0
+      PLUGINS: 0
+      SESSION: 0
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    # Bewusst KEIN ports-Eintrag: der Proxy ist nur im Stack-Netz erreichbar,
+    # nicht aus dem Heimnetz.
+
+  # ---------------------------------------------------------------------------
+  #  Dashboard
+  # ---------------------------------------------------------------------------
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v1.13.2
+    container_name: homepage
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+    depends_on:
+      - dockerproxy
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      PUID: 1000                 # simon
+      PGID: 1000
+      # Ab Homepage v1.0 Pflicht: erlaubte Hostnamen, sonst wird der Zugriff
+      # mit "Host validation failed" abgewiesen.
+      HOMEPAGE_ALLOWED_HOSTS: >-
+        192.168.178.80:3000,raspberrypi.local:3000,10.66.66.1:3000,localhost:3000
+
+    volumes:
+      # Konfiguration liegt IM REPO und ist damit persistent und versioniert.
+      # Genau das hat bei Dashy gefehlt.
+      - ./config:/app/config
+      # Nur lesend eingebunden, damit das Speicher-Widget die SSD-Belegung
+      # anzeigen kann. Ohne diesen Mount meldet Homepage "Drive not found".
+      - /mnt/usb-hdd:/mnt/usb-hdd:ro
+      # Kein Docker-Socket hier -- der Zugriff laeuft ueber den Proxy oben.
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 40s

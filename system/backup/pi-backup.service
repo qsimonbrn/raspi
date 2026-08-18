@@ -1,0 +1,36 @@
+[Unit]
+Description=Backup des Raspberry Pi nach OneDrive (restic)
+Documentation=https://github.com/qsimonbrn/raspi-doku/blob/main/docs/12-backup.md
+# Erst starten, wenn Netzwerk und Docker bereit sind
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pi-backup.sh
+
+# restic legt einen lokalen Cache an, der Folgelaeufe erheblich beschleunigt.
+# Wegen ProtectHome=read-only ist /root schreibgeschuetzt -- systemd stellt
+# deshalb /var/cache/restic bereit.
+CacheDirectory=restic
+Environment=RESTIC_CACHE_DIR=/var/cache/restic
+
+# Rechte: root wird gebraucht fuer /var/lib/tailscale, passdb.tdb und den
+# Docker-Socket. Die Ausfuehrung ist auf das Noetige eingeschraenkt.
+User=root
+Nice=10
+IOSchedulingClass=idle
+PrivateTmp=true
+ProtectHome=read-only
+# Ausnahme: rclone schreibt sein erneuertes OneDrive-Token nach
+# rclone.conf zurueck. Ohne diese Ausnahme scheitert das still
+# ("read-only file system") und der Zugang faellt aus, sobald
+# Microsoft das Token rotiert.
+ReadWritePaths=/home/simon/.config/rclone
+NoNewPrivileges=true
+
+# Ein haengender Lauf darf den naechsten nicht blockieren
+TimeoutStartSec=4h
+
+[Install]
+WantedBy=multi-user.target

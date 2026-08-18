@@ -1,0 +1,179 @@
+# =============================================================================
+#  Paperless-ngx — Dokumentenarchiv mit Texterkennung
+#
+#  Geheimnisse (Datenbankpasswort, Secret-Key) stehen in .env und sind ueber
+#  .gitignore vom Repository ausgeschlossen. Diese Datei enthaelt bewusst
+#  keine Zugangsdaten.
+#
+#  Alle Images sind auf feste Versionen gepinnt. ":latest" ist hier bewusst
+#  nicht in Gebrauch: bei Postgres wuerde ein unbemerkter Sprung auf 16 das
+#  Datenverzeichnis unlesbar machen, bei Paperless setzt v3 einen Zwischen-
+#  schritt ueber 2.20.15 voraus. Updates werden von Hand nachgezogen.
+#
+#  Dokumentation: raspi-doku/docs/13-paperless.md
+# =============================================================================
+
+# --- Logrotation -------------------------------------------------------------
+#  Docker dreht Logdateien NUR, wenn es beim Erstellen des Containers gesetzt
+#  ist. Die Vorgabe in /etc/docker/daemon.json greift erst nach einem echten
+#  Daemon-Neustart (ein reload uebernimmt log-opts nicht) -- deshalb steht sie
+#  hier ausdruecklich und ueberlebt jede Aenderung am Daemon.
+# -----------------------------------------------------------------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:3.0.5
+    container_name: paperless
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: always
+
+    depends_on:
+      paperless-db:
+        condition: service_healthy
+      paperless-redis:
+        condition: service_started
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - /mnt/usb-hdd/paperless/data:/usr/src/paperless/data
+      - /mnt/usb-hdd/paperless/media:/usr/src/paperless/media
+      - /mnt/usb-hdd/paperless/export:/usr/src/paperless/export
+      - /mnt/usb-hdd/paperless/consume:/usr/src/paperless/consume
+
+    env_file:
+      - .env
+
+    environment:
+      # --- Anbindung ---------------------------------------------------------
+      PAPERLESS_REDIS: redis://paperless-redis:6379
+      # Ab v3 muss die Datenbank-Engine ausdruecklich benannt werden. Fehlt sie,
+      # faellt Paperless stillschweigend auf SQLite zurueck und startet mit einem
+      # leeren Archiv -- die Daten in Postgres blieben unangetastet, waeren aber
+      # nicht mehr sichtbar.
+      PAPERLESS_DBENGINE: postgresql
+      PAPERLESS_DBHOST: paperless-db
+      PAPERLESS_DBUSER: paperless
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_URL: http://192.168.178.80:8000
+
+      # --- Sprache und Zeitzone ----------------------------------------------
+      PAPERLESS_TIME_ZONE: Europe/Berlin
+      PAPERLESS_OCR_LANGUAGE: deu+eng      # Texterkennung
+      # Datum aus dem INHALT lesen. 03.05.2026 = 3. Mai, nicht 5. Maerz.
+      PAPERLESS_DATE_ORDER: DMY
+      # PAPERLESS_FILENAME_DATE_ORDER bewusst NICHT gesetzt: Scanner-Dateinamen
+      # wie "doc00451220260813032623_020" bestehen aus Ziffernketten, aus denen
+      # der Parser sinnlose Daten ableitet (hier: 10.11.2000 fuer 10 Dokumente).
+      # Ohne die Variable wird der Dateiname gar nicht erst nach Daten durchsucht.
+      PAPERLESS_ADMIN_USER: admin
+
+      # --- Einwurf-Ordner ----------------------------------------------------
+      # Dateien kommen ueber die Samba-Freigabe "scans" herein. Bei Schreibzugriffen
+      # ueber das Netz kann inotify eine Datei melden, die noch nicht vollstaendig
+      # geschrieben ist -- deshalb wird gepollt statt auf Ereignisse zu horchen.
+      #
+      # v3 hat diese Einstellungen umbenannt (frueher CONSUMER_POLLING und
+      # CONSUMER_POLLING_DELAY). CONSUMER_POLLING_RETRY_COUNT ist ersatzlos
+      # entfallen: v3 verfolgt selbst, ob eine Datei ihre Groesse noch aendert,
+      # und faengt damit ab, wofuer frueher die Wiederholungen da waren.
+      PAPERLESS_CONSUMER_POLLING_INTERVAL: 15   # alle 15 Sekunden nachsehen
+      PAPERLESS_CONSUMER_STABILITY_DELAY: 5     # 5 s warten, bis die Datei ruht
+      PAPERLESS_CONSUMER_RECURSIVE: "true"           # Unterordner mit einbeziehen
+      PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: "true"     # Unterordnername wird zum Tag
+      # Ab v3 sind Dubletten standardmaessig erlaubt. Bleibt hier auf "true",
+      # damit der Scanner beim zweiten Einwurf desselben Blattes nichts anlegt.
+      PAPERLESS_CONSUMER_DELETE_DUPLICATES: "true"
+
+      # --- Ablage ------------------------------------------------------------
+      # Ordnerstruktur im Medienverzeichnis. Macht die Dateien auch ausserhalb
+      # von Paperless auffindbar -- wichtig, falls die Anwendung mal nicht laeuft.
+      PAPERLESS_FILENAME_FORMAT: "{{ created_year }}/{{ correspondent }}/{{ created }}_{{ title }}"
+      PAPERLESS_FILENAME_FORMAT_REMOVE_NONE: "true"
+
+      # --- Leistung auf einem Raspberry Pi 4 ---------------------------------
+      # 4 Kerne, 4 GB RAM. Zwei Worker mit je zwei Threads lasten die CPU aus,
+      # ohne den uebrigen Diensten den Speicher wegzunehmen.
+      PAPERLESS_TASK_WORKERS: 2
+      PAPERLESS_THREADS_PER_WORKER: 2
+      PAPERLESS_WEBSERVER_WORKERS: 2
+
+      # --- Texterkennung -----------------------------------------------------
+      # v3 hat Texterkennung und Archivdatei voneinander getrennt.
+      #   OCR_MODE: auto             -- fruehere Bedeutung von "skip": bereits
+      #                                 durchsuchbare PDFs werden nicht erneut
+      #                                 erkannt. Spart auf dem Pi erheblich Zeit
+      #                                 bei digitalen Rechnungen.
+      #   ARCHIVE_FILE_GENERATION    -- ersetzt OCR_SKIP_ARCHIVE_FILE: never.
+      #     always                      "always" heisst: Archivdatei immer bauen.
+      PAPERLESS_OCR_MODE: auto
+      PAPERLESS_ARCHIVE_FILE_GENERATION: always
+      PAPERLESS_OCR_CLEAN: clean
+      PAPERLESS_OCR_DESKEW: "true"        # schief eingescannte Seiten geraderuecken
+      PAPERLESS_OCR_ROTATE_PAGES: "true"  # falsch herum liegende Seiten drehen
+
+      # --- Automatische Zuordnung --------------------------------------------
+      PAPERLESS_TRAIN_TASK_CRON: "5 */2 * * *"   # lernt alle 2 Stunden dazu
+
+      # --- Aufbewahrung ------------------------------------------------------
+      PAPERLESS_EMPTY_TRASH_DELAY: 30      # Papierkorb 30 Tage vorhalten
+
+      # --- Dateirechte -------------------------------------------------------
+      USERMAP_UID: 1000
+      USERMAP_GID: 1000
+
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-S", "--max-time", "2", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+  paperless-db:
+    image: postgres:15.19
+    container_name: paperless-paperless-db-1
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: always
+
+    volumes:
+      - paperless_db:/var/lib/postgresql/data
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperless -d paperless"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  paperless-redis:
+    image: redis:7.4
+    container_name: paperless-paperless-redis-1
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: always
+    volumes:
+      - paperless_redis:/data
+
+volumes:
+  paperless_db:
+    name: paperless_paperless_db     # bestehendes Volume weiterverwenden
+    external: true
+  paperless_redis:

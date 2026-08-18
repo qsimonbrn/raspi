@@ -1,0 +1,19 @@
+[Unit]
+Description=Prueft, ob Repository und installierte Fassungen deckungsgleich sind
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Nice=15
+# Prueft nur und meldet. Kopiert unter keinen Umstaenden von selbst --
+# das Repository soll festhalten, was entschieden wurde, nicht was zufaellig
+# gerade der Fall ist.
+ExecStart=/usr/local/sbin/pi-abgleich.sh check --melden
+# "check" liefert 1, wenn etwas abweicht. Das ist das erwartete Ergebnis
+# einer Meldung und kein Dienstfehler.
+SuccessExitStatus=0 1
+ProtectHome=read-only
+NoNewPrivileges=true
+PrivateTmp=true

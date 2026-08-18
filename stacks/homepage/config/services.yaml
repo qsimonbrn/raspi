@@ -1,0 +1,67 @@
+---
+# Jeder Dienst hat:
+#   href         Ziel beim Anklicken
+#   siteMonitor  Live-Erreichbarkeitspruefung (gruener/roter Punkt + Antwortzeit)
+#   server/container  Docker-Anbindung -> CPU, RAM und Laufzeit direkt an der Kachel
+#
+# Neue Container erscheinen NICHT automatisch -- sie werden hier eingetragen.
+# Wer echte Auto-Erkennung will, setzt Labels am Container (siehe README).
+
+- Netzwerk & DNS:
+    - Pi-hole:
+        href: http://192.168.178.80/admin
+        siteMonitor: http://192.168.178.80/admin
+        description: DNS, Werbeblocker, lokale Namen
+        icon: pi-hole.png
+        # Widget zeigt geblockte Anfragen direkt auf der Kachel.
+        # Aktivieren: Passwort der Weboberflaeche unter "key" eintragen
+        # und die drei Zeilen einkommentieren.
+        # widget:
+        #   type: pihole
+        #   url: http://192.168.178.80
+        #   version: 6
+        #   key: DEIN_PIHOLE_PASSWORT
+
+    - Tailscale:
+        href: https://login.tailscale.com/admin/machines
+        description: VPN-Zugang von aussen (Mesh, kein Portforward)
+        icon: tailscale.png
+
+- Dokumente & Daten:
+    - Paperless-ngx:
+        href: http://100.108.219.87:8000
+        siteMonitor: http://100.108.219.87:8000
+        description: Dokumentenarchiv mit OCR
+        icon: paperless-ngx.png
+        server: pi
+        container: paperless
+
+    - Bichon:
+        href: http://100.108.219.87:15630
+        siteMonitor: http://100.108.219.87:15630
+        description: E-Mail-Archiv
+        icon: mdi-email-multiple
+        server: pi
+        container: bichon
+
+- Verwaltung:
+    - Portainer:
+        href: http://100.108.219.87:9000
+        siteMonitor: http://100.108.219.87:9000
+        description: Container-Verwaltung
+        icon: portainer.png
+        server: pi
+        container: portainer
+
+    - ntfy:
+        href: http://192.168.178.80:2586
+        siteMonitor: http://192.168.178.80:2586/v1/health
+        description: Push-Benachrichtigungen, u. a. vom Backup
+        icon: ntfy.png
+        server: pi
+        container: ntfy
+
+    - Samba:
+        href: smb://192.168.178.80/usb-share
+        description: Netzlaufwerk usb-share
+        icon: mdi-folder-network

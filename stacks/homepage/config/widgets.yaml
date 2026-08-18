@@ -1,0 +1,35 @@
+---
+- logo:
+    icon: mdi-raspberry-pi
+
+- greeting:
+    text_size: xl
+    text: raspberrypi
+
+- datetime:
+    text_size: xl
+    format:
+      dateStyle: short
+      timeStyle: short
+      hourCycle: h23
+
+- resources:
+    label: System
+    cpu: true
+    memory: true
+    cputemp: true
+    tempmin: 20
+    tempmax: 85
+    uptime: true
+
+- resources:
+    label: SD-Karte
+    disk: /
+
+- resources:
+    label: SSD
+    disk: /mnt/usb-hdd
+
+- search:
+    provider: duckduckgo
+    target: _blank

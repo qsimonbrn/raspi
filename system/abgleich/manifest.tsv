@@ -1,0 +1,37 @@
+# Zuordnung Repository <-> installierte Fassung
+#
+# Jede Zeile beschreibt EIN Dateipaar. Ohne diese Datei muss man raten, ob ein
+# Skript nach /usr/local/bin oder /usr/local/sbin gehoert -- und pi_wartung.sh
+# heisst installiert sogar anders. Genau daran ist der Abgleich von Hand schon
+# einmal gescheitert.
+#
+# Spalten, durch TABULATOR getrennt:
+#   1 repo_pfad     relativ zu /home/simon/docker-stacks
+#   2 system_pfad   absoluter Pfad der laufenden Fassung
+#   3 besitzer      Benutzer:Gruppe der installierten Fassung
+#   4 modus         Rechte der installierten Fassung
+#   5 nachlauf      systemd | sudoers | keiner   -- was nach dem Installieren zu tun ist
+#
+# Zeilen mit # und Leerzeilen werden ignoriert.
+# Siehe raspi-doku/docs/17-wo-was-liegt.md
+
+backup/pi-backup.sh	/usr/local/bin/pi-backup.sh	root:root	750	keiner
+backup/pi-backup.service	/etc/systemd/system/pi-backup.service	root:root	644	systemd
+backup/pi-backup.timer	/etc/systemd/system/pi-backup.timer	root:root	644	systemd
+firewall/pi-guard.sh	/usr/local/sbin/pi-guard.sh	root:root	750	keiner
+firewall/pi-guard.service	/etc/systemd/system/pi-guard.service	root:root	644	systemd
+messung/docker-stats-messung.sh	/usr/local/bin/docker-stats-messung.sh	root:root	750	keiner
+messung/docker-stats-messung.service	/etc/systemd/system/docker-stats-messung.service	root:root	644	systemd
+messung/docker-stats-messung.timer	/etc/systemd/system/docker-stats-messung.timer	root:root	644	systemd
+updates/pi-reboot-check.sh	/usr/local/sbin/pi-reboot-check.sh	root:root	750	keiner
+updates/pi-reboot-check.service	/etc/systemd/system/pi-reboot-check.service	root:root	644	systemd
+updates/pi-reboot-check.timer	/etc/systemd/system/pi-reboot-check.timer	root:root	644	systemd
+updates/docker-daemon.json	/etc/docker/daemon.json	root:root	644	keiner
+updates/cmdline.txt	/boot/firmware/cmdline.txt	root:root	755	keiner
+updates/52unattended-upgrades-lokal	/etc/apt/apt.conf.d/52unattended-upgrades-lokal	root:root	644	keiner
+sudoers/010-claude	/etc/sudoers.d/010-claude	root:root	440	sudoers
+wartung/pi-wartung.sh	/usr/local/sbin/pi-wartung.sh	root:root	750	keiner
+wartung/pi-aliase.sh	/etc/profile.d/pi-aliase.sh	root:root	644	keiner
+abgleich/sync.sh	/usr/local/sbin/pi-abgleich.sh	root:root	750	keiner
+abgleich/pi-abgleich.service	/etc/systemd/system/pi-abgleich.service	root:root	644	systemd
+abgleich/pi-abgleich.timer	/etc/systemd/system/pi-abgleich.timer	root:root	644	systemd

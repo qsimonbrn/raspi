@@ -1,0 +1,10 @@
+.env
+*.db
+**/data/
+*.log
+*.pid
+secrets/
+logs/
+
+# Sicherungskopien
+*.bak

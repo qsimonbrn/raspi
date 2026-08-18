@@ -1,0 +1,8 @@
+[Unit]
+Description=Speicherverbrauch der Container mitschreiben (befristete Messung)
+After=docker.service
+[Service]
+Type=oneshot
+User=root
+Nice=15
+ExecStart=/usr/local/bin/docker-stats-messung.sh

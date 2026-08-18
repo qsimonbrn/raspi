@@ -1,0 +1,32 @@
+# Automatisierungskonto "claude" — eingerichtet am 18.08.2026
+#
+# Rechteumfang: vollstaendig. Das ist eine bewusste Entscheidung, keine Nachlaessigkeit.
+# Fuer Systemadministration gibt es keine sinnvolle Befehlsliste, die nicht zugleich
+# die Arbeit unmoeglich macht: Wer "tee", "systemctl" oder "docker" darf, hat ohnehin
+# Vollzugriff. Der Schutz liegt deshalb nicht in der Beschraenkung, sondern in
+# Zurechenbarkeit, Aufzeichnung und Widerrufbarkeit.
+#
+# Geplant: Nach 2-4 Wochen Betrieb wird aus den Aufzeichnungen eine belastbare
+# Befehlsliste abgeleitet — beruhend auf Messung statt auf Vermutung.
+#
+# Sperren des Zugangs:      sudo usermod -L claude  &&  sudo rm /etc/sudoers.d/010-claude
+# Aufzeichnungen ansehen:   sudo sudoreplay -l
+# Sitzung abspielen:        sudo sudoreplay <ID>
+
+# --- Vollstaendige Sitzungsaufzeichnung ---
+Defaults:claude log_output
+Defaults:claude log_input
+Defaults:claude iolog_dir=/var/log/sudo-io/%{user}
+Defaults:claude iolog_file=%{seq}
+
+# Obergrenze der aufbewahrten Sitzungen. Danach wird die aelteste ueberschrieben.
+# Begrenzt zugleich den Schaden, falls doch einmal ein Geheimnis mitgeschnitten wird.
+Defaults:claude maxseq=2000
+
+# --- Eigene Protokolldatei, zusaetzlich zum Journal ---
+Defaults:claude logfile=/var/log/sudo-claude.log
+Defaults:claude log_year
+Defaults:claude log_host
+
+# --- Rechte ---
+claude ALL=(ALL:ALL) NOPASSWD: ALL

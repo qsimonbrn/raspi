@@ -1,0 +1,37 @@
+---
+- Infrastruktur:
+    - FRITZ!Box:
+        - abbr: FB
+          href: http://192.168.178.1
+          description: Router, Freigaben, Heimnetz
+
+    - Doku:
+        - abbr: DOC
+          href: https://github.com/qsimonbrn/raspi-doku
+          description: Infrastruktur-Dokumentation
+
+    - Compose-Stacks:
+        - abbr: GIT
+          href: https://github.com/qsimonbrn/docker-stacks
+          description: Alle docker-compose-Dateien
+
+- Handbuecher:
+    - Paperless-Einwurf:
+        - abbr: SCN
+          href: smb://192.168.178.80/scans
+          description: Dokumente hier ablegen
+
+    - Paperless-ngx:
+        - abbr: PNX
+          href: https://docs.paperless-ngx.com/
+          description: Dokumentation
+
+    - Pi-hole:
+        - abbr: PIH
+          href: https://docs.pi-hole.net/
+          description: Dokumentation
+
+    - Homepage:
+        - abbr: HP
+          href: https://gethomepage.dev/configs/services/
+          description: Konfiguration dieses Dashboards
