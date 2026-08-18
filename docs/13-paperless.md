@@ -344,26 +344,26 @@ Wiederherstellung Schritt für Schritt in [12 — Backup, Abschnitt 7](12-backup
 
 ```bash
 # Läuft alles?
-docker ps --filter name=paperless
+sudo docker ps --filter name=paperless
 
 # Was passiert gerade?
-docker logs -f paperless
+sudo docker logs -f paperless
 
 # Wurde ein Dokument verarbeitet?
-docker logs paperless 2>&1 | grep -i consum | tail
+sudo docker logs paperless 2>&1 | grep -i consum | tail
 
 # Anzahl Dokumente
-docker exec paperless-paperless-db-1 \
+sudo docker exec paperless-paperless-db-1 \
   psql -U paperless -d paperless -tAc "select count(*) from documents_document;"
 
 # Nach Konfigurationsänderung
-cd ~/docker-stacks/paperless && docker compose up -d
+cd ~/docker-stacks/paperless && sudo docker compose up -d
 ```
 
 ### Wenn ein Dokument nicht eingelesen wird
 
 1. Liegt es noch im Ordner? `ls /mnt/usb-hdd/paperless/consume/`
-2. Was sagt das Protokoll? `docker logs paperless 2>&1 | tail -30`
+2. Was sagt das Protokoll? `sudo docker logs paperless 2>&1 | tail -30`
 3. Häufigste Ursachen: passwortgeschütztes PDF, beschädigte Datei, oder ein Dateiformat
    ohne Unterstützung
 4. Doppelte Dokumente werden absichtlich verworfen
@@ -500,7 +500,7 @@ Dokumente, 0 im Papierkorb.
 **Vorabprüfung vor jedem Export:**
 
 ```bash
-docker exec paperless python3 -c "
+sudo docker exec paperless python3 -c "
 import django, os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE','paperless.settings')
 django.setup()

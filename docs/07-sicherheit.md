@@ -191,13 +191,32 @@ in der laufenden Datenbank.
 
 ---
 
-## 🟡 Keine automatischen Sicherheitsupdates
+## ✅ Automatische Sicherheitsupdates — eingerichtet am 18.08.2026
 
-`unattended-upgrades` ist nicht aktiv. Details in
-[02 — Betriebssystem](02-betriebssystem.md).
+Bis dahin war `unattended-upgrades` **nicht installiert**. Der Timer `apt-daily-upgrade`
+lief zwar, fand aber kein Programm, das etwas hätte installieren können. Das System war
+trotzdem vollständig gepatcht — von Hand. Der Prozess funktionierte also, hatte aber
+keine Rückfallebene für Wochen, in denen niemand dazu kommt.
 
-Das System ist aktuell vollständig gepatcht — der Prozess funktioniert also. Er hat nur
-keine Rückfallebene, wenn du einmal mehrere Wochen nicht dazu kommst.
+| | |
+|---|---|
+| Paket | `unattended-upgrades` 2.9.1 |
+| Umfang | ausschließlich Sicherheitsquellen (Debian-Security, Raspbian, Raspberry Pi Foundation) |
+| Konfiguration | `/etc/apt/apt.conf.d/52unattended-upgrades-lokal` |
+| Selbsttätiger Neustart | **nein** — bewusste Entscheidung |
+| Meldung bei fälligem Neustart | über ntfy, täglich 08:30 (`pi-reboot-check.timer`) |
+
+**Warum kein automatischer Neustart:** An diesem Gerät hängt der DNS des gesamten
+Haushalts. Ein unbemerkt fehlgeschlagener Neustart um drei Uhr nachts bedeutet, dass
+morgens im ganzen Haus nichts mehr geht. Stattdessen meldet sich der Pi und wartet auf
+eine Entscheidung.
+
+Die Meldung nennt die betroffenen Pakete und die bisherige Laufzeit und kommt höchstens
+einmal pro Tag — eine Erinnerung, die dreimal täglich erscheint, wird nach einer Woche
+ignoriert.
+
+**Nachgemessen:** Ein vorgetäuschter fälliger Neustart löste die ntfy-Meldung
+nachweislich aus; der Testzustand wurde anschließend entfernt.
 
 ---
 
@@ -263,23 +282,24 @@ Kritikalität.
 | Filebrowser abschalten (CVE ohne Patch, Projekt wird archiviert) | 18.08.2026 |
 | Dashy abschalten | 18.08.2026 |
 | Automatisierungskonto mit Sitzungsaufzeichnung | 18.08.2026 |
+| **`simon` aus der Gruppe `docker` entfernt** — die Gruppe ist jetzt leer | 18.08.2026 |
+| **Automatische Sicherheitsupdates** (`unattended-upgrades`, ohne selbsttätigen Neustart, mit ntfy-Meldung) | 18.08.2026 |
+| **Docker-Log-Rotation** (`daemon.json`, 10 MB × 3) | 18.08.2026 |
+| Obsolete WireGuard-Schlüssel entfernt, darunter `/root/iphone.conf` mit privatem Schlüssel bei Modus 644 | 18.08.2026 |
+| Fehlerhaften Pi-hole-Eintrag `applovin.com` aus der Listenverwaltung entfernt | 18.08.2026 |
 
 ### Offen
 
 | # | Maßnahme | Aufwand | Wirkung | Anmerkung |
 |---|---|---|---|---|
-| 1 | `simon` aus der Gruppe `docker` nehmen | 30 min | **sehr hoch** | Solange diese Mitgliedschaft besteht, ist das Konto faktisch Administrator ohne sudo und ohne Protokoll — jede sudo-Härtung bleibt wirkungslos |
-| 2 | `PasswordAuthentication no` | 10 min | hoch | Vorbereitet, gemeinsam umzusetzen. `AllowUsers simon claude` beachten |
-| 3 | `unattended-upgrades` einrichten | 20 min | hoch | Nicht installiert — es gibt derzeit **keine** automatischen Sicherheitsupdates |
+| 1 | `PasswordAuthentication no` | 10 min | hoch | **Wichtigster offener Punkt.** Vorbereitet und am 18.08.2026 erfolgreich getestet, auf Wunsch zurückgenommen — soll gemeinsam mit Vorlauf erfolgen. `AllowUsers` müsste **beide** Konten nennen (`simon claude`) |
 | 4 | Alarmierung über ntfy | 1–2 h | hoch | Anmeldungen, sudo-Nutzung, Änderungen an `/etc/passwd` und `/etc/sudoers` |
 | 5 | IPv6-Freigaben in der FRITZ!Box prüfen | 5 min | hoch | Manuell, nicht vom Pi aus feststellbar |
-| 6 | Docker-Log-Rotation (`daemon.json`) | 10 min | mittel | Ohne Grenze kann ein fehlerhafter Container die SD-Karte volllaufen lassen |
 | 7 | `fail2ban` | 30 min | mittel | Dringlichkeit sinkt mit Punkt 2 |
 | 8 | Bichon aktualisieren und pinnen | 30 min | mittel | Update-Pfad vorher prüfen |
 | 9 | `auditd` mit gezielten Regeln | 1 h | mittel | Zugriffe auf Benutzerdatenbank, sudo-Regeln, SSH-Konfiguration |
 | 10 | Protokolle ins Backup | 30 min | mittel | Ein Angreifer mit Systemrechten löscht als Erstes die Spuren |
 | 11 | Samba härten | 15 min | niedrig | `map to guest`, Mindestprotokoll SMB3 |
-| 12 | Obsolete Schlüssel unter `/root` entfernen | 2 min | niedrig | `iphone_private.key`, Modus 644, seit der Tailscale-Umstellung wertlos |
 
 > **Reihenfolge beachten:** Punkt 8 gehört *hinter* ein geprüftes Backup. Ein
 > Container-Update ohne Rückfallebene ist selbst ein Risiko.

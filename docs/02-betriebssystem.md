@@ -1,6 +1,6 @@
 # 02 — Betriebssystem
 
-*Erfasst: 13.08.2026*
+*Erfasst: 18.08.2026*
 
 ## Basisdaten
 
@@ -29,21 +29,29 @@ Der Kernel `6.12.x` ist der aktuelle Raspberry-Pi-Foundation-Zweig für Bookworm
 
 Das ist ein gutes Zeichen: Das System wird offensichtlich regelmäßig und manuell gepflegt.
 
-## ⚠️ Befund: Keine automatischen Sicherheitsupdates
+## ✅ Automatische Sicherheitsupdates — seit 18.08.2026
 
-`unattended-upgrades` ist **nicht aktiv**, `/etc/apt/apt.conf.d/20auto-upgrades` existiert
-nicht.
+Bis dahin hing jedes Sicherheitsupdate davon ab, dass sich jemand einloggt und
+`apt upgrade` ausführt. Das funktionierte zuverlässig, war aber ein Prozess ohne
+Rückfallebene: zwei Wochen Urlaub, und ein kritischer OpenSSH- oder Samba-Patch bleibt
+liegen.
 
-Das heißt: Jedes Sicherheitsupdate hängt davon ab, dass sich jemand einloggt und
-`apt upgrade` ausführt. Aktuell funktioniert das — aber es ist ein Prozess ohne
-Rückfallebene. Zwei Wochen Urlaub oder eine stressige Phase, und ein kritischer
-OpenSSH- oder Samba-Patch bleibt liegen.
+| | |
+|---|---|
+| Paket | `unattended-upgrades` 2.9.1 |
+| Umfang | ausschließlich Sicherheitsquellen — keine Funktionsänderungen |
+| Konfiguration | `/etc/apt/apt.conf.d/52unattended-upgrades-lokal` |
+| Aktivierung | `/etc/apt/apt.conf.d/20auto-upgrades` |
+| Selbsttätiger Neustart | **nein** |
+| Meldung bei fälligem Neustart | über ntfy, täglich 08:30 (`pi-reboot-check.timer`) |
 
-**Empfehlung:** `unattended-upgrades` aktivieren, beschränkt auf den Security-Zweig. Damit
-werden ausschließlich Sicherheitsupdates automatisch eingespielt, keine
-Funktionsänderungen — das Risiko unerwarteter Nebenwirkungen bleibt klein. Automatische
-Neustarts sollten dabei **deaktiviert** bleiben, damit der Pi nicht mitten in einem
-Paperless-Import rebootet.
+**Warum kein automatischer Neustart:** An diesem Gerät hängt der DNS des gesamten
+Haushalts, und Paperless-Importe laufen unbeaufsichtigt. Ein unbemerkt fehlgeschlagener
+Neustart um drei Uhr nachts bedeutet, dass morgens im ganzen Haus nichts mehr geht.
+Stattdessen meldet sich der Pi mit den betroffenen Paketen und wartet auf eine
+Entscheidung — höchstens einmal pro Tag, damit die Erinnerung nicht zur Tapete wird.
+
+Details in [07 — Sicherheit](07-sicherheit.md).
 
 ## Aktive systemd-Timer
 
@@ -51,18 +59,21 @@ Paperless-Import rebootet.
 |---|---|---|
 | `man-db.timer` | täglich | Handbuch-Index |
 | `apt-daily.timer` | täglich | Paketlisten aktualisieren |
-| `apt-daily-upgrade.timer` | täglich | *lädt* Updates, installiert sie aber nicht |
+| `apt-daily-upgrade.timer` | täglich | installiert Sicherheitsupdates (seit 18.08.2026) |
 | `dpkg-db-backup.timer` | täglich | Paketdatenbank sichern |
 | `logrotate.timer` | täglich | Logrotation |
 | `systemd-tmpfiles-clean.timer` | täglich | Temporäre Dateien aufräumen |
 | `e2scrub_all.timer` | wöchentlich | ext4-Metadatenprüfung |
 | `fstrim.timer` | wöchentlich | TRIM für SSD |
+| `pi-reboot-check.timer` | täglich 08:30 | meldet über ntfy, wenn ein Neustart fällig ist |
+| `pi-backup.timer` | täglich 03:17 | restic-Backup nach OneDrive |
 
 `fstrim.timer` ist aktiv — das ist für die SSD wichtig und richtig so.
 
-**Zu beachten:** `apt-daily-upgrade.timer` läuft zwar, installiert ohne
-`unattended-upgrades` aber nichts. Er lädt Pakete nur herunter. Das wird leicht mit
-„automatischen Updates" verwechselt — es sind keine.
+**Früherer Befund, inzwischen erledigt:** `apt-daily-upgrade.timer` lief zwar, fand aber
+kein Programm, das etwas hätte installieren können — er lud Pakete nur herunter. Das wird
+leicht mit „automatischen Updates" verwechselt. Seit dem 18.08.2026 ist
+`unattended-upgrades` installiert, und der Timer tut, was sein Name verspricht.
 
 ## Cron
 

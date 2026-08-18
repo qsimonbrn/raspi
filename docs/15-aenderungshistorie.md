@@ -74,9 +74,32 @@ Rechtefehler), acht statt zehn Container, Ports 8080 und 8082 geschlossen,
 Firewall-Trefferzähler belegen die Wirkung, Sitzungsaufzeichnung abspielbar, Push unter
 der neuen Identität erfolgreich.
 
-**Offen geblieben.** `simon` in der Gruppe `docker`, SSH-Passwortanmeldung, fehlende
-automatische Sicherheitsupdates, Alarmierung über ntfy, Docker-Log-Rotation. Vollständig
-in [07 — Sicherheit](07-sicherheit.md).
+**Am selben Abend nachgezogen (zweiter Durchgang).**
+
+| Maßnahme | Nachweis |
+|---|---|
+| **`simon` aus der Gruppe `docker` entfernt** — die Gruppe ist jetzt leer | Gegenprobe: `docker ps` als `simon` scheitert, `sudo docker ps` funktioniert, alle acht Container laufen weiter |
+| **Alle Docker-Aufrufe systemweit auf `sudo docker`** — Skripte, beide Skills, 25 Beispielbefehle in der Doku | Geprüft mit negativem Lookbehind, damit `sudo docker` nicht mitgezählt wird |
+| **`unattended-upgrades`** ohne selbsttätigen Neustart, mit ntfy-Meldung bei fälligem Neustart | Vorgetäuschter Neustart löste die Meldung nachweislich aus |
+| **Docker-Log-Rotation** (`daemon.json`, 10 MB × 3, `live-restore`) | Übernommen per `reload`, alle Container liefen durch |
+| **Obsolete WireGuard-Schlüssel entfernt** | Dabei fiel `/root/iphone.conf` auf: enthielt `PrivateKey` bei Modus **644** — beim ersten Durchgang übersehen |
+| **Pi-hole-Eintrag `applovin.com`** aus der Listenverwaltung entfernt | Domain bleibt über eine reguläre Blockliste gesperrt, nachgeprüft |
+| `claude-skills` an die Gruppe `pi-admin` angeglichen | Voraussetzung, um die Skills überhaupt anpassen zu können |
+
+**Zwei Fehler dabei, beide bemerkt und behoben.** Die `daemon.json` wurde zunächst mit
+**0 Bytes** angelegt — eine leere Datei hätte Docker beim nächsten Start unbrauchbar
+gemacht; sie wurde vor jedem Neuladen korrigiert. Und eine erste Zählung der
+Docker-Aufrufe zählte `sudo docker` fälschlich als „ohne sudo" mit und ergab ein
+falsches Bild.
+
+**Ein Detail zur Log-Rotation:** Sie gilt nur für **neu erstellte** Container. Die acht
+laufenden zeigen weiterhin `map[]` — beim nächsten Update greift die Einstellung
+automatisch.
+
+**Offen geblieben.** SSH-Passwortanmeldung (wichtigster Punkt), Alarmierung über ntfy,
+Bichon-Passwort im Klartext in Git, Konten und Protokolle nicht im Backup, `fail2ban`,
+`auditd`, Samba-Härtung, Tailscale-Zugriffsregeln. Vollständig in
+[07 — Sicherheit](07-sicherheit.md).
 
 ---
 

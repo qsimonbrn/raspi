@@ -56,7 +56,7 @@ Damit ist auch die Anmeldung selbst unmöglich, nicht nur die Rechteausweitung.
 
 | Konto | UID | Zweck | Anmeldung | Rechte |
 |---|---|---|---|---|
-| `simon` | 1000 | Persönliches Konto | Schlüssel **und** Passwort | `NOPASSWD: ALL`, Gruppe `docker` |
+| `simon` | 1000 | Persönliches Konto | Schlüssel **und** Passwort | `NOPASSWD: ALL` |
 | `claude` | 1001 | Automatisierung über den MCP-Server | **nur** Schlüssel, kein Passwort | `NOPASSWD: ALL` **mit Sitzungsaufzeichnung**, *nicht* in Gruppe `docker` |
 | `root` | 0 | — | kein SSH-Zugang in der Praxis | — |
 
@@ -127,6 +127,23 @@ man bei AppArmor-Profilen: erst beobachten, dann einschränken.
 
 ---
 
+## Die Gruppe `docker` ist leer
+
+Am 18.08.2026 wurde `simon` aus der Gruppe entfernt — seitdem ist **niemand** mehr darin.
+
+Die Mitgliedschaft war ein Generalschlüssel: Wer Docker steuern darf, startet einen
+Container mit eingebundenem Wurzeldateisystem und ist damit `root` — ohne sudo, ohne
+Passwort, ohne Protokolleintrag. Solange sie bestand, wäre jede Verschärfung der
+sudo-Regeln Fassade gewesen.
+
+Beide Konten greifen jetzt über `sudo` auf Docker zu. Der spürbare Unterschied im Alltag
+ist ein vorangestelltes `sudo`; der Gewinn ist, dass jeder Docker-Befehl im Protokoll
+erscheint.
+
+**Nicht betroffen:** `pi-backup.sh` läuft über systemd als `root` und braucht kein sudo.
+
+---
+
 ## Folgen für Skripte
 
 Weil `claude` **nicht** in der Gruppe `docker` ist, laufen Docker-Befehle über `sudo` —
@@ -141,7 +158,21 @@ zehn Docker-Aufrufe an `permission denied` scheiterten. Das Skript ist seitdem a
 `sudo docker` umgestellt.
 
 Bei neuen Skripten deshalb immer `sudo docker` schreiben — das funktioniert unter beiden
-Konten.
+Konten und auch als `root`.
+
+**Am 18.08.2026 durchgängig umgestellt:**
+
+| Ort | Betroffen |
+|---|---|
+| `raspi-doku/inventar/collect.sh` | 12 Aufrufe |
+| `docker-stacks/pi_wartung.sh` | 4 Aufrufe |
+| `docker-stacks/paperless/kategorisieren.py` | Aufrufhinweis im Kopf |
+| `claude-skills` — beide SKILL.md, `backup-paperless.sh`, `pruefen.sh` | 27 Stellen, dazu ein Hinweis am Anfang beider Skills |
+| `raspi-doku` — Beispielbefehle in sechs Kapiteln | 25 Stellen |
+
+Geprüft mit einem negativen Lookbehind (`grep -P '(?<!sudo )docker …'`), damit
+`sudo docker` nicht mitgezählt wird — eine erste, naivere Zählung hatte genau diesen
+Fehler gemacht und ein falsches Bild ergeben.
 
 ---
 
@@ -181,7 +212,6 @@ auf `https://github.com/` und die Ablage des Tokens.
 
 | Punkt | Wirkung |
 |---|---|
-| `simon` ist in der Gruppe `docker` | Damit ist das Konto faktisch Administrator — ohne sudo, ohne Passwort, ohne Protokoll. Solange das so ist, bleibt jede Verschärfung der sudo-Regeln wirkungslos. Siehe [07 — Sicherheit](07-sicherheit.md) |
 | SSH-Passwortanmeldung für `simon` aktiv | 414 Schlüsselanmeldungen gegen 6 per Passwort in 60 Tagen — der Notausgang wird praktisch nicht genutzt |
 | `/home/claude/.ssh` nicht im Backup | Die Schlüssel des Automatisierungskontos und `/etc/sudoers.d/010-claude` fehlen in der Sicherung. Verkraftbar (neu erzeugbar), aber vermeidbar |
 | Befehlsliste aus Aufzeichnungen ableiten | Frühestens Anfang September 2026, wenn genug Betriebsdaten vorliegen |

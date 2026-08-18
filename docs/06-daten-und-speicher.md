@@ -124,7 +124,7 @@ Zwei saubere Wege:
    Dokumente *und* Metadaten in ein selbsttragendes Verzeichnis, das sich in eine neue
    Instanz importieren lässt. Der empfohlene Weg.
    ```
-   docker compose exec -T webserver document_exporter ../export
+   sudo docker compose exec -T webserver document_exporter ../export
    ```
 2. **`pg_dump`** der Datenbank plus Kopie des Medienverzeichnisses. Funktioniert, ist
    aber enger an die Paperless-Version gekoppelt.

@@ -235,7 +235,7 @@ sudo -E restic restore latest --include "*/paperless/export/*" --target /tmp/wh
 sudo cp -a /tmp/wh/mnt/usb-hdd/paperless/export/* /mnt/usb-hdd/paperless/export/
 
 # 3. In eine laufende (leere) Paperless-Instanz importieren
-docker exec paperless document_importer /usr/src/paperless/export
+sudo docker exec paperless document_importer /usr/src/paperless/export
 ```
 
 Der Importer stellt Dokumente **und** Metadaten wieder her. Der `pg_dump` aus dem Backup

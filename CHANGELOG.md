@@ -9,6 +9,46 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.9.0] — 2026-08-18
+
+### Geändert am System
+
+- **`simon` aus der Gruppe `docker` entfernt** — die Gruppe ist jetzt leer. Die
+  Mitgliedschaft war ein Generalschlüssel: Wer Docker steuern darf, wird über einen
+  Container mit eingebundenem Wurzeldateisystem zu `root` — ohne sudo, ohne Passwort,
+  ohne Protokoll. Beide Konten greifen jetzt über `sudo` zu, jeder Befehl wird
+  protokolliert. `pi-backup.sh` läuft als `root` und ist nicht betroffen.
+- **Alle Docker-Aufrufe systemweit auf `sudo docker`:** `pi_wartung.sh`,
+  `kategorisieren.py`, beide Skills samt Skripten (27 Stellen, dazu ein Hinweis am
+  Anfang) und 25 Beispielbefehle in sechs Kapiteln.
+- **`unattended-upgrades` eingerichtet** — nur Sicherheitsquellen, **kein**
+  selbsttätiger Neustart. Wird einer fällig, meldet sich der Pi über ntfy und wartet auf
+  eine Entscheidung (`pi-reboot-check.timer`, täglich 08:30, höchstens eine Meldung pro
+  Tag). Grund: Am Pi hängt der DNS des ganzen Haushalts.
+- **Docker-Log-Rotation** (`daemon.json`, 10 MB × 3, `live-restore`). Gilt für neu
+  erstellte Container; die acht laufenden greifen beim nächsten Update.
+- **Obsolete WireGuard-Schlüssel entfernt.** Dabei fiel `/root/iphone.conf` auf — sie
+  enthielt einen privaten Schlüssel bei Modus **644** und war beim ersten Durchgang
+  übersehen worden.
+- **Pi-hole:** `applovin.com` aus der `adlist`-Tabelle entfernt, wo es als vermeintliche
+  Listen-URL wirkungslos war. Die Domain bleibt über eine reguläre Blockliste gesperrt.
+- **`homepage/config/proxmox.yaml`** entfernt — ungenutzte Beispieldatei.
+- **`claude-skills` an die Gruppe `pi-admin` angeglichen**, damit beide Konten die Skills
+  pflegen können.
+
+### Geändert
+
+- **Kapitel 07:** Automatische Sicherheitsupdates von „🟡 fehlt" auf „✅ eingerichtet",
+  Maßnahmenliste um sechs erledigte Punkte ergänzt. Die SSH-Passwortanmeldung ist damit
+  der wichtigste offene Punkt.
+- **Kapitel 16** um den Abschnitt „Die Gruppe `docker` ist leer" und die vollständige
+  Liste der umgestellten Stellen erweitert.
+- **Kapitel 15** um den zweiten Durchgang des Abends ergänzt, samt der beiden Fehler, die
+  dabei passiert sind: eine zunächst leere `daemon.json` und eine fehlerhafte Zählung der
+  Docker-Aufrufe.
+
+---
+
 ## [1.8.0] — 2026-08-18
 
 ### Geändert am System

@@ -80,9 +80,9 @@ Ausführliche Begründungen in [07 — Sicherheit](07-sicherheit.md).
 | # | Maßnahme | Aufwand | Wirkung |
 |---|---|---|---|
 | 2.1 | `PasswordAuthentication no` in der SSH-Konfiguration | 10 min | hoch |
-| 2.1b | **`simon` aus der Gruppe `docker` nehmen** — solange die Mitgliedschaft besteht, ist das Konto faktisch Administrator ohne sudo und ohne Protokoll | 30 min | **sehr hoch** |
+| ~~2.1b~~ | ~~**`simon` aus der Gruppe `docker` nehmen**~~ — ✅ **erledigt am 18.08.2026.** Die Gruppe ist leer, beide Konten greifen über `sudo` zu | — | — |
 | 2.2 | IPv6-Freigaben in der FRITZ!Box prüfen | 5 min | hoch |
-| 2.3 | `unattended-upgrades` aktivieren (nur Security, ohne Auto-Reboot) | 5 min | hoch |
+| ~~2.3~~ | ~~`unattended-upgrades` aktivieren~~ — ✅ **erledigt am 18.08.2026**, ohne selbsttätigen Neustart, mit ntfy-Meldung | — | — |
 | 2.4 | `fail2ban` für SSH und Samba | 10 min | mittel |
 | ~~2.5~~ | ~~`ufw` mit LAN-/VPN-Regelwerk~~ — ✅ **erledigt am 18.08.2026** als `pi-guard`. Kein `ufw`, weil Docker dessen Regeln umgeht; stattdessen Ketten in `DOCKER-USER` und `INPUT` | — | — |
 | 2.5b | Alarmierung über ntfy: Anmeldungen, sudo-Nutzung, Änderungen an `/etc/passwd` und `/etc/sudoers` | 1–2 h | hoch |
@@ -164,7 +164,7 @@ Pi-hole der DNS-Server für den gesamten Haushalt ist — ein unbemerkter Ausfal
 |---|---|---|
 | `dhcpcd` **oder** `NetworkManager` deaktivieren | 15 min | Beendet stündliche Journal-Fehler |
 | `ModemManager`, `triggerhappy` deaktivieren | 5 min | Weniger Angriffsfläche |
-| `docker image prune -a` | 2 min | 1,18 GB frei |
+| `sudo docker image prune -a` | 2 min | 1,18 GB frei |
 | `/mnt/usb-hdd/filebrowser.db/` entfernen | 1 min | Aufräumen |
 | Paperless-Stack aus dem korrekten Pfad neu erzeugen | 15 min | Behebt Pfad-Drift |
 | Anonyme Volumes zuordnen und explizit benennen | 30 min | Verhindert versehentlichen Datenverlust beim Aufräumen |

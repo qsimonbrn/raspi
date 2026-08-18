@@ -47,7 +47,7 @@ Beides ist gut — es bedeutet, dass kein Dienst mehr Rechte hat als nötig.
 Die Aufteilung ist konsistent: Die Dienste, deren Ausfall wehtut (Paperless-Stack,
 Portainer), stehen auf `always`; die anderen auf `unless-stopped`. Der Unterschied
 zeigt sich nur beim manuellen Stoppen — `always` startet den Container auch nach einem
-`docker stop` beim nächsten Daemon-Start wieder, `unless-stopped` nicht.
+`sudo docker stop` beim nächsten Daemon-Start wieder, `unless-stopped` nicht.
 
 ## Ressourcenverbrauch
 
@@ -148,7 +148,7 @@ Aufräumen erst, wenn die neuen Versionen ein paar Tage unauffällig gelaufen si
 ein altes Image ist die schnellste Rückfallebene:
 
 ```bash
-docker image prune -a        # entfernt alles, was kein Container referenziert
+sudo docker image prune -a        # entfernt alles, was kein Container referenziert
 ```
 
 ### Was weiterhin gilt
@@ -171,13 +171,13 @@ der Paperless-Zwischenschritt über 2.20.15 ist das Lehrstück dazu.
 
 Die vier Volumes mit Hash-Namen sind **anonyme Volumes** — sie entstehen, wenn ein Image
 ein `VOLUME` deklariert, das in der Compose-Datei nicht explizit gemappt wurde. Ihr
-Inhalt ist schwer zuzuordnen und geht bei `docker compose down -v` verloren.
+Inhalt ist schwer zuzuordnen und geht bei `sudo docker compose down -v` verloren.
 
-Zwei davon sind laut `docker system df` inaktiv.
+Zwei davon sind laut `sudo docker system df` inaktiv.
 
 **Empfehlung:** Zuordnen, welche anonymen Volumes noch gebraucht werden, und die
 zugehörigen Compose-Dateien um explizite Volume-Namen ergänzen. Solange das offen ist,
-ist bei Aufräumarbeiten mit `docker volume prune` Vorsicht geboten.
+ist bei Aufräumarbeiten mit `sudo docker volume prune` Vorsicht geboten.
 
 ## Speicherbelegung
 
@@ -195,7 +195,7 @@ Die 1,18 GB entfallen auf zwei verwaiste Dashy-Tags:
 | `lissy93/dashy:3.0.1` | 504 MB | 2 Jahre |
 | `lissy93/dashy:arm64v8` | 806 MB | 4 Jahre |
 
-Beides Überbleibsel früherer Installationsversuche. `docker image prune -a` entfernt sie.
+Beides Überbleibsel früherer Installationsversuche. `sudo docker image prune -a` entfernt sie.
 Bei 214 GB freiem Speicher ist das kein dringendes Problem, aber unnötiger Ballast.
 
 ---
@@ -233,7 +233,7 @@ Arbeitsstand ist seit dem 18.08.2026 committet, das Repository sauber.
 `com.docker.compose.project.config_files` zeigt seit dem Update vom 16.08.2026 korrekt auf
 `/home/simon/docker-stacks/paperless/docker-compose.yml` — nachgeprüft am 18.08.2026.
 
-**Behebung:** Einmal `docker compose up -d` aus `docker-stacks/paperless/` heraus
+**Behebung:** Einmal `sudo docker compose up -d` aus `docker-stacks/paperless/` heraus
 ausführen. Die Container werden dabei neu erstellt und tragen anschließend den
 richtigen Pfad. **Vorher Backup anlegen** — bei dieser Gelegenheit werden auch die
 Images neu ausgewertet.
@@ -250,7 +250,7 @@ In `dashy/docker-compose.yml` ist der Volume-Block **auskommentiert**:
 ```
 
 Damit existiert die Dashy-Konfiguration ausschließlich im Container-Dateisystem. Jedes
-`docker compose pull && docker compose up -d`, jedes `docker compose down` und jeder
+`sudo docker compose pull && sudo docker compose up -d`, jedes `sudo docker compose down` und jeder
 Image-Wechsel löscht sie ersatzlos.
 
 Zusammen mit der im Git gelöschten `dashy/config/conf.yml` erklärt das, warum das
@@ -264,7 +264,7 @@ Wahl der Software.
 
 Als Nachfolger läuft **Homepage** auf Port 3000. Die Konfiguration liegt unter
 `docker-stacks/homepage/config/` — also als Volume eingebunden **und** im Git
-versioniert. Ein `docker compose pull && up -d` verliert sie nicht mehr.
+versioniert. Ein `sudo docker compose pull && up -d` verliert sie nicht mehr.
 
 Der Docker-Zugriff läuft über einen **Socket-Proxy** mit Allowlist statt über einen
 direkt eingebundenen Socket. Hintergrund: Ein Bind-Mount mit `:ro` schützt nur die

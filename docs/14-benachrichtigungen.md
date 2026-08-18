@@ -157,7 +157,7 @@ Konfigurationsdatei lesbar und teilbar, ohne Geheimnisse zu enthalten.
 
 ```bash
 # Läuft der Dienst?
-docker ps --filter name=ntfy
+sudo docker ps --filter name=ntfy
 
 # Gesundheitsprüfung
 curl http://192.168.178.80:2586/v1/health
@@ -168,11 +168,11 @@ curl -H "Authorization: Bearer $TOKEN" \
      "http://192.168.178.80:2586/raspberrypi/json?poll=1"
 
 # Benutzer und Token verwalten
-docker exec ntfy ntfy user list
-docker exec ntfy ntfy token list simon
+sudo docker exec ntfy ntfy user list
+sudo docker exec ntfy ntfy token list simon
 
 # Protokoll
-docker logs ntfy
+sudo docker logs ntfy
 ```
 
 ### Aufbau
