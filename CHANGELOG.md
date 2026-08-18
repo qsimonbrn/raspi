@@ -9,6 +9,32 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.12.0] — 2026-08-18
+
+### Geändert am System
+
+- **Abgleich zwischen Repository und installierten Fassungen als Werkzeug.**
+  `docker-stacks/abgleich/` enthält ein Manifest mit allen 19 Dateipaaren (Systempfad,
+  Besitzer, Rechte, Nachlauf — alle Werte mit `stat` gemessen) und ein Skript, das
+  prüft (`list`, `check`, `diff`) und auf Ansage in beide Richtungen kopiert
+  (`install`, `pull`, jeweils mit vorherigem `diff` und Rückfrage). Installiert als
+  `/usr/local/sbin/pi-abgleich.sh`.
+- **`pi-abgleich.timer`**, täglich 09:15, meldet über ntfy, wenn etwas abweicht.
+  Er ruft ausschließlich `check` auf und **kopiert nie von selbst** — Begründung in
+  [17](docs/17-wo-was-liegt.md).
+
+  Nachgemessen: 19 Paare erfasst, 18 identisch, die eine bekannte Abweichung
+  (`pi_wartung.sh`) korrekt erkannt, ntfy-Meldung zugestellt, das Werkzeug erfasst
+  sich selbst.
+
+### Geändert an der Dokumentation
+
+- **[17 — Wo was liegt](docs/17-wo-was-liegt.md)** um die drei neuen Dateipaare und
+  den Abschnitt zum Werkzeug ergänzt. Der Abschnitt „Abgleich von Hand" ist zur
+  Rückfallebene geworden.
+
+---
+
 ## [1.11.0] — 2026-08-18
 
 ### Hinzugefügt

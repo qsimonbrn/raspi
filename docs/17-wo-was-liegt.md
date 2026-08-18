@@ -71,6 +71,9 @@ ausschließlich `/etc/sudoers.d`.
 | `updates/52unattended-upgrades-lokal` | `/etc/apt/apt.conf.d/` | identisch |
 | `sudoers/010-claude` | `/etc/sudoers.d/010-claude` | identisch |
 | `pi_wartung.sh` | `/usr/local/sbin/**pi-maintenance.sh**` | ⚠️ **abweichend** |
+| `abgleich/sync.sh` | `/usr/local/sbin/pi-abgleich.sh` | identisch |
+| `abgleich/pi-abgleich.service` | `/etc/systemd/system/` | identisch |
+| `abgleich/pi-abgleich.timer` | `/etc/systemd/system/` | identisch |
 
 **Zwei Fallen stecken allein in dieser Tabelle:**
 
@@ -113,21 +116,45 @@ dass der Abgleich zwischen Repository und System nicht verlässlich von Hand pas
 
 ---
 
-## Abgleich von Hand
+## Der Abgleich prüft sich seit 18.08.2026 selbst
 
-Solange es kein Werkzeug dafür gibt, prüft man ein Paar so:
+Die Tabelle oben ist nicht mehr nur Prosa: Sie steht maschinenlesbar in
+`docker-stacks/abgleich/manifest.tsv` — eine Zeile je Paar, mit Systempfad,
+Besitzer, Rechten und dem, was nach dem Installieren zu tun ist (`daemon-reload`,
+`visudo -c`, nichts). Alle Werte sind mit `stat` gemessen, nicht angenommen.
+
+```bash
+sudo pi-abgleich.sh list              # alle Paare mit Inhalts- und Rechtezustand
+sudo pi-abgleich.sh check             # nur prüfen, Exit 1 bei Abweichung
+sudo pi-abgleich.sh diff pi_wartung   # Unterschiede im Klartext
+sudo pi-abgleich.sh install backup    # Repository -> System, zeigt diff und fragt
+sudo pi-abgleich.sh pull   daemon     # System -> Repository, zeigt diff und fragt
+```
+
+`pi-abgleich.timer` läuft täglich um 09:15 und meldet über ntfy, **wenn** etwas
+abweicht. Er ruft ausschließlich `check` auf und **kopiert unter keinen Umständen
+von selbst.**
+
+### Warum der Timer nicht automatisch kopiert
+
+Ein Cronjob, der System → Repository kopiert und committet, kehrt die Beweisrichtung
+um. Das Repository würde der Realität stumm hinterherlaufen — auch dann, wenn die
+Realität kaputt ist. Ersetzt ein `apt`-Update eine Konfigurationsdatei, oder verstellt
+sich jemand versehentlich etwas, wandert genau das als scheinbar gewollter Commit nach
+GitHub. Damit ginge die eine Eigenschaft verloren, wegen der sich das Repository lohnt:
+dass darin steht, was **entschieden** wurde, nicht was zufällig der Fall ist.
+
+Deshalb meldet der Timer nur. Kopiert wird auf Ansage, mit vorherigem `diff`.
+
+### Von Hand, falls das Werkzeug einmal ausfällt
 
 ```bash
 sudo diff /home/simon/docker-stacks/backup/pi-backup.sh /usr/local/bin/pi-backup.sh
-```
-
-Und installiert die Repository-Fassung so — `install` setzt Rechte und Besitzer in
-einem Schritt, `cp` vergisst sie:
-
-```bash
 sudo install -o root -g root -m 750 backup/pi-backup.sh /usr/local/bin/pi-backup.sh
 sudo systemctl daemon-reload      # nur bei .service und .timer
 ```
+
+`install` setzt Besitzer und Rechte in einem Schritt — `cp` vergisst sie.
 
 ---
 
