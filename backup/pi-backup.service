@@ -22,6 +22,11 @@ Nice=10
 IOSchedulingClass=idle
 PrivateTmp=true
 ProtectHome=read-only
+# Ausnahme: rclone schreibt sein erneuertes OneDrive-Token nach
+# rclone.conf zurueck. Ohne diese Ausnahme scheitert das still
+# ("read-only file system") und der Zugang faellt aus, sobald
+# Microsoft das Token rotiert.
+ReadWritePaths=/home/simon/.config/rclone
 NoNewPrivileges=true
 
 # Ein haengender Lauf darf den naechsten nicht blockieren

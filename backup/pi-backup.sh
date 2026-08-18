@@ -134,9 +134,10 @@ restic backup \
   --exclude '*.lock' \
   "$STAGE" \
   /mnt/usb-hdd/bichon \
+  /mnt/usb-hdd/ntfy \
   /mnt/usb-hdd/paperless/export \
   /mnt/usb-hdd/paperless/media \
-  /mnt/usb-hdd/filebrowser-data \
+  /var/lib/docker/volumes/portainer_portainer_data/_data \
   /home/simon/docker-stacks \
   /home/simon/raspi-doku
 RC=$?
