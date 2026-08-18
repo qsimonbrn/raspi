@@ -9,6 +9,48 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.13.0] — 2026-08-18
+
+### Geändert am System
+
+- **Wartungsskript überarbeitet.** `pi_wartung.sh` (12/2025, per Alias `wartung` von
+  Hand benutzt) hatte vier Defekte, gegen die der bekannte `sudo`-Unterschied harmlos
+  war: der Abschnitt „Compose-Stacks aktualisieren" lief über `/opt/stacks/*`, ein
+  Verzeichnis, das es auf diesem Pi **nie gab**; die letzte Zeile ließ das Skript unter
+  `set -e` **immer** mit Exit 1 enden, wenn kein Neustart fällig war; `apt full-upgrade`
+  und `pihole -up` liefen bedingungslos mit; und die Ausgabe bestand zu neun Zehnteln
+  aus debconf-Klagen. Neu als `pi-wartung.sh` mit acht Abschnitten, getrennten Warnungen
+  und Hinweisen, Abgleichprüfung, Backup-Alter und einer Kontrolle auf ungedrehte
+  Docker-Logs. Aktualisiert keine Container mehr und startet nicht neu.
+- **Aliase versioniert.** `wartung`, `abgleich`, `temp`, `throttled` und `bootcheck`
+  standen von Hand in `/etc/bash.bashrc`. Jetzt in `docker-stacks/wartung/pi-aliase.sh`,
+  installiert nach `/etc/profile.d/pi-aliase.sh`. Da `profile.d` nur von **Login**-Shells
+  gelesen wird, lädt `bash.bashrc` dieselbe Datei nach — sonst fehlten die Aliase in
+  interaktiven Nicht-Login-Shells.
+- **Namen vereinheitlicht** auf `pi-wartung.sh` in Repository und System. Die alten
+  Fassungen liegen unter `/mnt/usb-hdd/_to_delete/`.
+- **Sechs Pakete aktualisiert** beim ersten Testlauf, darunter `docker-compose-plugin`
+  **5.4.0 → 5.5.0**. Danach geprüft: alle fünf Stacks gültig, alle acht Container
+  `healthy`.
+
+### Richtiggestellt
+
+- Die Angabe „0 Pakete aktualisierbar" von vorhin beruhte auf **veralteten
+  Paketlisten**. Nach einem `apt-get update` waren es sechs.
+- Die Aussage, `pi_wartung.sh` werde „von nichts aufgerufen", galt nur für Timer und
+  Cron. Es wird über den Alias `wartung` von Hand benutzt.
+
+### Geändert an der Dokumentation
+
+- **[02 — Betriebssystem](docs/02-betriebssystem.md)**: neuer Abschnitt „Wartung von
+  Hand" mit den acht Abschnitten, den beiden Schaltern und den vier Befunden am
+  Vorgänger.
+- **[17 — Wo was liegt](docs/17-wo-was-liegt.md)**: Paare nachgezogen, der Befund zu
+  `pi-maintenance.sh` auf erledigt gesetzt. Das Werkzeug hat die Abweichung beim
+  **ersten** Lauf gefunden — von Hand war sie acht Monate lang unentdeckt geblieben.
+
+---
+
 ## [1.12.0] — 2026-08-18
 
 ### Geändert am System

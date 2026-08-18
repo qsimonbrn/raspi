@@ -70,7 +70,8 @@ ausschließlich `/etc/sudoers.d`.
 | `updates/cmdline.txt` | `/boot/firmware/cmdline.txt` | identisch |
 | `updates/52unattended-upgrades-lokal` | `/etc/apt/apt.conf.d/` | identisch |
 | `sudoers/010-claude` | `/etc/sudoers.d/010-claude` | identisch |
-| `pi_wartung.sh` | `/usr/local/sbin/**pi-maintenance.sh**` | ⚠️ **abweichend** |
+| `wartung/pi-wartung.sh` | `/usr/local/sbin/pi-wartung.sh` | identisch |
+| `wartung/pi-aliase.sh` | `/etc/profile.d/pi-aliase.sh` | identisch |
 | `abgleich/sync.sh` | `/usr/local/sbin/pi-abgleich.sh` | identisch |
 | `abgleich/pi-abgleich.service` | `/etc/systemd/system/` | identisch |
 | `abgleich/pi-abgleich.timer` | `/etc/systemd/system/` | identisch |
@@ -79,28 +80,23 @@ ausschließlich `/etc/sudoers.d`.
 
 1. Die Skripte liegen teils in `/usr/local/bin`, teils in `/usr/local/sbin`. Welches wo,
    ist nicht zu erraten — man muss es nachsehen (`systemctl show <unit> -p ExecStart`).
-2. `pi_wartung.sh` heißt installiert **anders**: `pi-maintenance.sh`. Ein Abgleich, der
-   den Dateinamen fortschreibt, findet dieses Paar nicht und meldet fälschlich „fehlt".
+2. Namen können auseinanderlaufen. `pi_wartung.sh` hieß installiert `pi-maintenance.sh` —
+   ein Abgleich, der den Dateinamen fortschreibt, findet so ein Paar nicht und meldet
+   fälschlich „fehlt". Am 18.08.2026 beidseitig auf `pi-wartung.sh` vereinheitlicht.
 
 ---
 
-## ⚠️ Befund: `pi-maintenance.sh` ist nicht nachgezogen
+## ✅ Behoben: `pi-maintenance.sh` war nicht nachgezogen
 
-Der CHANGELOG-Eintrag 1.9.0 vom 18.08.2026 vermerkt, alle Docker-Aufrufe seien
+Der CHANGELOG-Eintrag 1.9.0 vom 18.08.2026 vermerkte, alle Docker-Aufrufe seien
 systemweit auf `sudo docker` umgestellt worden, `pi_wartung.sh` ausdrücklich genannt.
-Geändert wurde jedoch **nur die Kopie im Repository**. Die installierte Fassung
-`/usr/local/sbin/pi-maintenance.sh` ruft weiterhin `docker` ohne `sudo` auf — an sechs
-Stellen, darunter `docker compose pull && docker compose up -d` und
-`docker image prune -f`.
+Geändert war jedoch **nur die Kopie im Repository**. Aufgefallen ist das erst, als der
+Abgleich zum ersten Mal lief — von Hand war es acht Monate lang niemandem aufgefallen.
 
-**Warum das zählt:** Ausgeführt von `simon` oder `claude` scheitern diese Aufrufe mit
-`permission denied` — und zwar **still**. Das Skript läuft scheinbar durch und liefert
-leere Ergebnisse. Genau dieses Muster hat schon `inventar/collect.sh` betroffen, das
-374 statt 650 Zeilen erzeugte.
-
-Das Skript wird derzeit von **keinem** Timer und **keinem** Cronjob aufgerufen; es ist
-reine Handarbeit. Der Schaden ist damit begrenzt, der Befund aber lehrreich: Er zeigt,
-dass der Abgleich zwischen Repository und System nicht verlässlich von Hand passiert.
+Behoben am 18.08.2026: Das Skript wurde überarbeitet (siehe
+[02 — Betriebssystem](02-betriebssystem.md)), beidseitig auf `pi-wartung.sh`
+vereinheitlicht und installiert. Die alten Fassungen liegen unter
+`/mnt/usb-hdd/_to_delete/`.
 
 ---
 
