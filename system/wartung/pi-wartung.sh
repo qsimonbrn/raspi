@@ -134,9 +134,14 @@ fi
 
 # --- 6. Backup ---------------------------------------------------------------
 log "6) Backup"
-# Die Eigenschaften des oneshot-Dienstes werden von jedem daemon-reload
-# geleert. Der Timer merkt sich den letzten Start dagegen zuverlaessig.
-LETZTER=$(systemctl show pi-backup.timer -p LastTriggerUSec --value)
+# Drei Quellen, keine davon allein verlaesslich: Die Eigenschaften des
+# oneshot-Dienstes werden von jedem daemon-reload geleert, und der Timer
+# merkt sich nur PLANMAESSIGE Starts -- ein Lauf von Hand taucht dort nicht
+# auf. Deshalb der juengste Erfolgseintrag aus dem Journal, mit dem Timer
+# als Rueckfallebene.
+LETZTER=$(journalctl -u pi-backup.service -o short-iso --no-pager 2>/dev/null \
+          | grep -F "Backup erfolgreich abgeschlossen" | tail -1 | cut -d" " -f1)
+[ -n "$LETZTER" ] || LETZTER=$(systemctl show pi-backup.timer -p LastTriggerUSec --value)
 if [ -n "$LETZTER" ]; then
   ALTER=$(( ( $(date +%s) - $(date -d "$LETZTER" +%s) ) / 3600 ))
   if [ "$ALTER" -le 30 ]; then zeile "Letzter Lauf vor ${ALTER} h ($LETZTER)."
