@@ -53,19 +53,20 @@ gepinnt.
 
 | | |
 |---|---|
-| Uptime | 22 Stunden |
+| Uptime | 6 Minuten (Neustart am 18.08.2026 für den Speicher-Cgroup) |
 | Load (1/5/15 min) | 0,47 / 0,22 / 0,15 bei 4 Kernen |
-| Temperatur | 49,1 °C — nie gedrosselt (`throttled=0x0`) |
-| RAM verfügbar | 2,1 von 3,7 GiB |
-| Systemdatenträger | 6 % belegt (14 G von 235 G) |
+| Temperatur | 52,5 °C — nie gedrosselt (`throttled=0x0`) |
+| RAM verfügbar | 2,4 von 3,7 GiB — Container zusammen rund 1,4 GiB (38 %) |
+| Systemdatenträger | 4 % belegt (7,8 G von 235 G) — 5 GB durch Image-Aufräumen frei |
 | Datenspeicher SSD | 36 % belegt (310 G von 916 G) |
 | Ausstehende OS-Updates | 0 |
 | Fehlgeschlagene Dienste | 0 |
-| Container-Images | **alle auf feste Versionen gepinnt** (16.08.2026) |
-| Container | **8** (Filebrowser und Dashy am 18.08.2026 abgeschaltet) |
+| Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
+| Container | **8**, alle mit Logrotation und `no-new-privileges` (18.08.2026) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
+| Speicher-Limits | seit dem 18.08.2026 technisch möglich (`cgroup_enable=memory`), Messung läuft, noch keine gesetzt |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 
@@ -76,17 +77,20 @@ gepinnt.
    nicht. → [Kapitel 12](docs/12-backup.md)
 2. **Wurzeldateisystem liegt auf einer SD-Karte von 02/2023.** Ausfallrisiko nach
    3,5 Jahren Dauerbetrieb, während eine SSD zu 64 % leer danebenliegt. → [Kapitel 01](docs/01-hardware.md)
-3. **`simon` ist in der Gruppe `docker`.** Damit ist das Konto faktisch Administrator —
-   ohne sudo, ohne Passwort, ohne Protokoll. Solange das so ist, bleibt jede Verschärfung
-   der sudo-Regeln wirkungslos. → [Kapitel 16](docs/16-konten-und-rechte.md)
+3. **SSH-Passwortanmeldung ist weiterhin möglich.** Am 18.08.2026 vorbereitet,
+   erfolgreich getestet und auf Wunsch zurückgenommen — soll gemeinsam mit Vorlauf
+   erfolgen. `AllowUsers` muss dabei **beide** Konten nennen (`simon claude`), sonst ist
+   die Automatisierung ausgesperrt. → [Kapitel 07](docs/07-sicherheit.md)
 
-Ebenfalls offen: **keine automatischen Sicherheitsupdates** (`unattended-upgrades` ist
-nicht installiert) und die **SSH-Passwortanmeldung**, die in 60 Tagen sechsmal genutzt
-wurde — gegenüber 414 Schlüsselanmeldungen. → [Kapitel 07](docs/07-sicherheit.md)
+Ebenfalls offen: **Speicher-Limits je Container** — seit dem Neustart am 18.08.2026
+technisch möglich, eine 24-Stunden-Messung läuft. → [Kapitel 05](docs/05-docker.md)
 
 Am 18.08.2026 erledigt: Verwaltungsoberflächen aus dem Heimnetz genommen, Filebrowser
 (CVE ohne Patch) und Dashy abgeschaltet, Automatisierung auf ein eigenes, aufgezeichnetes
-Konto umgestellt. → [Kapitel 15](docs/15-aenderungshistorie.md)
+Konto umgestellt, `simon` aus der Gruppe `docker` entfernt, automatische
+Sicherheitsupdates eingerichtet. Nachmittags dazu: Logrotation wirksam gemacht, alle
+Images gepinnt, Bichon-Geheimnis aus dem Git-Verlauf entfernt, Backup-Lücken
+geschlossen, Speicher-Cgroup aktiviert. → [Kapitel 15](docs/15-aenderungshistorie.md)
 
 Das automatisierte Backup der unersetzlichen Daten läuft seit dem 13.08.2026 täglich.
 → [Kapitel 12](docs/12-backup.md)

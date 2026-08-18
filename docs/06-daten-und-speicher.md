@@ -11,7 +11,7 @@
 
 | Ort | Größe | Belegt | Inhalt |
 |---|---|---|---|
-| `/` (SD-Karte) | 235 G | 8,9 G | Betriebssystem, Docker-Layer, Logs |
+| `/` (SD-Karte) | 235 G | **7,8 G** | Betriebssystem, Docker-Layer, Logs — am 18.08.2026 durch Image-Aufräumen um rund 5 G entlastet |
 | `/mnt/usb-hdd` (SSD) | 916 G | **310 G** | Alle Nutzdaten |
 
 Die Trennung ist grundsätzlich richtig: Nutzdaten liegen auf der SSD, nicht auf der
@@ -23,7 +23,10 @@ SD-Karte. Zum Risiko des Systemdatenträgers siehe [01 — Hardware](01-hardware
 |---|---|---|
 | `paperless/` | **Dokumentenarchiv**, Thumbnails, Datenbankdaten | 🔴 sehr hoch |
 | `bichon/` | **E-Mail-Archiv** | 🔴 sehr hoch |
-| `filebrowser-data/` | Filebrowser-Datenbank (Benutzer, Einstellungen) — **Dienst am 18.08.2026 abgeschaltet**, Verzeichnis bewusst behalten (44 KB) | 🟢 gering |
+| ~~`filebrowser-data/`~~ | Filebrowser-Datenbank — Dienst am 18.08.2026 abgeschaltet, Verzeichnis am selben Tag nach `_to_delete/filebrowser-data-20260818` verschoben und aus dem Backup genommen | — |
+| `messungen/` | CSV der befristeten Speichermessung, siehe [05](05-docker.md) | 🟢 gering |
+| `_to_delete/` | Zum Löschen vorgemerkt, wartet auf eine Entscheidung | 🟢 gering |
+| `backups-manuell/` | Tar der Compose-Arbeitskopie vom 18.08.2026 als Rückfallebene, Modus 600. **Enthält Geheimnisse und liegt außerhalb der restic-Pfade** | 🟠 wichtig |
 | `rclone_bak/` | Backup-Ablage Dropbox + OneDrive | 🟡 mittel |
 | `trainings_bilder/` | Bilddatensätze | 🟢 ersetzbar |
 | `Abschlussprojekt_DeepLearning/` | Projektdaten | 🟡 mittel |

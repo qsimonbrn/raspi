@@ -9,6 +9,66 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [1.10.0] — 2026-08-18
+
+### Richtiggestellt
+
+- **Die Aussage aus 1.9.0, die Docker-Log-Rotation gelte für neu erstellte Container,
+  war falsch.** Sie galt für gar keine. `log-driver` und `log-opts` gehören nicht zu
+  den Werten, die Docker bei einem `systemctl reload` übernimmt, und ein echter
+  Daemon-Neustart hatte nie stattgefunden. Nachgewiesen mit einem Wegwerf-Container:
+  `docker create` lieferte `LogConfig: json-file map[]`. Bichon hatte zu dem Zeitpunkt
+  eine ungedrehte Logdatei von 39 MB.
+- **Die Aussage „Alle Images sind auf feste Versionen gepinnt" stimmte nicht.**
+  `homepage` und `bichon` liefen weiter auf `:latest`. Jetzt zutreffend.
+- **Die Angabe, bichon sei mit 11,7 % der größte Speicherverbraucher, war eine
+  Schätzung aus `ps`** — zu dem Zeitpunkt gab es keine Speicherbuchführung im Kernel.
+  Gemessen liegt bichon bei 1,4 %, Paperless bei 25,1 %.
+- **Der Stacks-Pfad `~/docker-stacks` ist irreführend**, wenn er aus dem Konto `claude`
+  gelesen wird: Die Stacks liegen unter `/home/simon/docker-stacks`.
+
+### Geändert am System
+
+- **Logrotation als YAML-Anker `x-logging` in allen fünf aktiven Compose-Dateien.**
+  Wirkt unabhängig vom Daemon und ist beim Nachlesen sichtbar. Nachgemessen: 8 von 8
+  Containern mit `max-size 10m` / `max-file 3`.
+- **`security_opt: no-new-privileges` für alle acht Dienste.**
+- **`homepage` auf `v1.13.2` gepinnt** (die laufende Version, **kein** Sprung auf
+  v2.0.0), **`bichon` auf den Digest `sha256:5766707…`** — das Projekt vergibt keine
+  Versions-Tags.
+- **`BICHON_ENCRYPT_PASSWORD` nach `bichon/.env`** (Modus 660, über `.gitignore`
+  ausgeschlossen), Wert **unverändert**. Der Klartextwert wurde per `git filter-repo`
+  aus allen 22 Commits entfernt und das Repository force-gepusht. Ein Wechsel des
+  Wertes hätte laut Herstellerdoku das 690-MB-Archiv unlesbar gemacht.
+- **`cgroup_enable=memory cgroup_memory=1`** in `/boot/firmware/cmdline.txt` ergänzt,
+  Neustart durchgeführt. Erst dadurch sind Speicher-Limits überhaupt durchsetzbar.
+- **Backup erweitert** um `/mnt/usb-hdd/ntfy` und das Portainer-Volume,
+  `/mnt/usb-hdd/filebrowser-data` entfernt. **`ReadWritePaths=/home/simon/.config/rclone`**
+  in `pi-backup.service`, damit rclone sein erneuertes OneDrive-Token zurückschreiben
+  kann. Testlauf: Exit 0 statt 1, Snapshot `36275ea4`.
+- **Images von 18 auf 8 reduziert** (8,66 GB → 3,63 GB, Wurzeldateisystem
+  14 GB → 7,7 GB). Gezielt entfernt statt `prune -a`.
+- **Befristete Speichermessung** alle fünf Minuten nach
+  `/mnt/usb-hdd/messungen/docker-speicher.csv` als Grundlage für spätere Limits.
+- **Filebrowser-Reste weggeräumt:** `/mnt/usb-hdd/filebrowser-data` (44 KB) liegt jetzt
+  unter `/mnt/usb-hdd/_to_delete/`.
+- **`homepage/config/proxmox.yaml` ist wieder da** — Homepage legt die Vorlage beim
+  Start selbst an. 104 Byte, nur Kommentare. Diesmal versioniert statt gelöscht, damit
+  sie nicht bei jedem Neustart erneut als Änderung auftaucht.
+
+### Geändert an der Dokumentation
+
+- **[05 — Docker](docs/05-docker.md)** überarbeitet: neuer Abschnitt zur Logrotation
+  mit dem Nachweis, warum `daemon.json` allein nichts bewirkte; neuer Abschnitt zur
+  Speicherbuchführung; erste belastbare Speichermessung; Aufräumergebnis; Abschnitt
+  zum Geheimnis im Repository. Die überholten Abschnitte zu Dashy und zum
+  „Aufräumhinweis" sind entfallen.
+- **[15 — Änderungshistorie](docs/15-aenderungshistorie.md)** um den Eintrag zur
+  Docker-Durchsicht ergänzt, samt der bewusst **nicht** umgesetzten Punkte
+  (`cap_drop`, Portbindung) mit Begründung.
+
+---
+
 ## [1.9.0] — 2026-08-18
 
 ### Geändert am System

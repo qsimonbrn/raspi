@@ -265,7 +265,7 @@ unnötige Fläche.
 | **Automatisierung mit eigenem Konto** | Seit 18.08.2026 arbeitet die Automatisierung als `claude`, nicht mehr als `simon`. Jede erhöhte Sitzung wird vollständig aufgezeichnet und ist abspielbar. Siehe [16 — Konten und Rechte](16-konten-und-rechte.md). |
 | **Docker-Socket-Proxy vorbildlich konfiguriert** | Nur `CONTAINERS` und `INFO` erlaubt, `POST` und `EXEC` ausdrücklich verboten, Socket nur lesend eingebunden. |
 | **ntfy mit `deny-all`** | Unauthentifiziertes Veröffentlichen wird mit HTTP 403 abgewiesen, nachgemessen. |
-| **Geheimnisse sauber getrennt** | `.gitignore` greift, keine `.env` je committet, Dateirechte `600`. |
+| **Geheimnisse getrennt** | `.gitignore` greift, keine `.env` je committet, Dateirechte `600`. **Einschränkung:** Bis zum 18.08.2026 stand `BICHON_ENCRYPT_PASSWORD` im Klartext in `bichon/docker-compose.yml` und damit in allen 22 Commits. Behoben durch Auslagerung nach `.env` und `git filter-repo`, siehe [05](05-docker.md). |
 
 ---
 
@@ -284,7 +284,10 @@ Kritikalität.
 | Automatisierungskonto mit Sitzungsaufzeichnung | 18.08.2026 |
 | **`simon` aus der Gruppe `docker` entfernt** — die Gruppe ist jetzt leer | 18.08.2026 |
 | **Automatische Sicherheitsupdates** (`unattended-upgrades`, ohne selbsttätigen Neustart, mit ntfy-Meldung) | 18.08.2026 |
-| **Docker-Log-Rotation** (`daemon.json`, 10 MB × 3) | 18.08.2026 |
+| **Docker-Log-Rotation** — Eintrag in `daemon.json` war **wirkungslos** (`reload` übernimmt `log-opts` nicht), am selben Tag als YAML-Anker in alle Compose-Dateien übernommen, 8 von 8 Containern nachgemessen | 18.08.2026 |
+| **`no-new-privileges` für alle acht Container** | 18.08.2026 |
+| **`BICHON_ENCRYPT_PASSWORD` aus dem Git-Verlauf entfernt** (`git filter-repo`, Force-Push), Wert unverändert nach `.env` | 18.08.2026 |
+| **Speicher-Cgroup aktiviert** (`cgroup_enable=memory`) — vorher waren `mem_limit`-Angaben wirkungslos | 18.08.2026 |
 | Obsolete WireGuard-Schlüssel entfernt, darunter `/root/iphone.conf` mit privatem Schlüssel bei Modus 644 | 18.08.2026 |
 | Fehlerhaften Pi-hole-Eintrag `applovin.com` aus der Listenverwaltung entfernt | 18.08.2026 |
 

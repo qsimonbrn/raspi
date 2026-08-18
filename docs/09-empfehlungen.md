@@ -164,11 +164,13 @@ Pi-hole der DNS-Server für den gesamten Haushalt ist — ein unbemerkter Ausfal
 |---|---|---|
 | `dhcpcd` **oder** `NetworkManager` deaktivieren | 15 min | Beendet stündliche Journal-Fehler |
 | `ModemManager`, `triggerhappy` deaktivieren | 5 min | Weniger Angriffsfläche |
-| `sudo docker image prune -a` | 2 min | 1,18 GB frei |
-| `/mnt/usb-hdd/filebrowser.db/` entfernen | 1 min | Aufräumen |
-| Paperless-Stack aus dem korrekten Pfad neu erzeugen | 15 min | Behebt Pfad-Drift |
+| ~~`sudo docker image prune -a`~~ | — | ✅ **erledigt am 18.08.2026** — gezielt statt pauschal: 18 → 8 Images, 8,66 → 3,63 GB |
+| ~~`/mnt/usb-hdd/filebrowser-data/` entfernen~~ | — | ✅ **erledigt am 18.08.2026** — nach `/mnt/usb-hdd/_to_delete/` verschoben, nicht mehr im Backup |
+| ~~Paperless-Stack aus dem korrekten Pfad neu erzeugen~~ | — | ✅ **erledigt** — Label geprüft am 18.08.2026 |
 | Anonyme Volumes zuordnen und explizit benennen | 30 min | Verhindert versehentlichen Datenverlust beim Aufräumen |
-| Offene Git-Änderungen committen | 5 min | Repo deckungsgleich mit der Realität |
+| ~~Offene Git-Änderungen committen~~ | — | ✅ **erledigt am 18.08.2026** |
+| Speicher-Limits je Container setzen | 30 min | Verhindert, dass ein Dienst den Pi in den OOM-Killer fährt. Erst nach Auswertung der laufenden 24-Stunden-Messung, siehe [05](05-docker.md) |
+| Fünf verwaiste anonyme Volumes entfernen | 5 min | `docker volume prune`, faktisch leer (479 B) |
 
 **Vorsicht bei `dhcpcd`/`NetworkManager`:** Ein Fehler kappt die Netzwerkverbindung. Nur
 mit physischem Zugang oder zweitem Zugangsweg durchführen.

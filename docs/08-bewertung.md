@@ -90,11 +90,11 @@ Ausfallpunkt ist die SD-Karte — und für genau diesen Fall gibt es kein Backup
 | ~~Dashy-Konfiguration nicht persistent~~ | ✅ **erledigt am 18.08.2026 — Dienst abgeschaltet** | [05](05-docker.md) |
 | `dhcpcd` und `NetworkManager` laufen parallel, stündliche Journal-Fehler | [02](02-betriebssystem.md) |
 | Ungenutzte Dienste: `ModemManager`, `triggerhappy`, `wpa_supplicant` | [02](02-betriebssystem.md) |
-| 1,18 GB verwaiste Docker-Images | [05](05-docker.md) |
-| Pfad-Drift beim Paperless-Stack (Label zeigt auf gelöschtes Verzeichnis) | [05](05-docker.md) |
+| ~~1,18 GB verwaiste Docker-Images~~ | ✅ **erledigt am 18.08.2026** — 18 → 8 Images, 8,66 → 3,63 GB | [05](05-docker.md) |
+| ~~Pfad-Drift beim Paperless-Stack~~ | ✅ **erledigt** | [05](05-docker.md) |
 | Anonyme Docker-Volumes ohne klare Zuordnung | [05](05-docker.md) |
-| Verwaistes `filebrowser.db/`-Verzeichnis | [06](06-daten-und-speicher.md) |
-| Offene, nicht committete Änderungen im `docker-stacks`-Repo | [05](05-docker.md) |
+| ~~Verwaistes `filebrowser-data/`-Verzeichnis~~ | ✅ **erledigt am 18.08.2026** | [06](06-daten-und-speicher.md) |
+| ~~Offene, nicht committete Änderungen im `docker-stacks`-Repo~~ | ✅ **erledigt am 18.08.2026** | [05](05-docker.md) |
 | `smartmontools` fehlt — keine SSD-Gesundheitsdaten | [01](01-hardware.md) |
 
 ---

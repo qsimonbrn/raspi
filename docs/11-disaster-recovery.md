@@ -16,7 +16,9 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | 4 | **Pi-hole-Konfiguration** (Blocklisten, lokale DNS-Einträge, Anpassungen) | ✅ **ja** | Teleporter-Export im Backup |
 | 5 | **Tailscale-Zustand** (`/var/lib/tailscale`) | ✅ **ja** | restic-Backup, täglich — im Notfall aber entbehrlich, siehe unten |
 | 6 | **Samba-Konfiguration und Passwortdatenbank** | ✅ **ja** | restic-Backup, täglich |
-| 7 | **Nutzdaten auf der SSD** (310 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
+| 7 | **ntfy** (Benutzer, Zugriffsregeln, Nachrichten-Cache) | ✅ **ja** | restic-Backup, seit 18.08.2026 |
+| 8 | **Portainer-Konfiguration** (Volume) | ✅ **ja** | restic-Backup, seit 18.08.2026 — absturzkonsistent, da im laufenden Betrieb gesichert |
+| 9 | **Nutzdaten auf der SSD** (310 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
 
 **Sechs von sieben** — seit Einrichtung des Backups am 13.08.2026.
 Details in [12 — Backup](12-backup.md).

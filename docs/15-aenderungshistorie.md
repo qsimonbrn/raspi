@@ -19,6 +19,76 @@ Backup.
 
 ---
 
+## 18.08.2026 (nachmittags) — Docker-Durchsicht: Logrotation, Pinning, Speicher-Cgroup
+
+| | |
+|---|---|
+| Betroffen | Alle acht Container, Backup, Kernel-Parameter |
+| Kapitel | [05](05-docker.md), [06](06-daten-und-speicher.md), [07](07-sicherheit.md), [11](11-disaster-recovery.md), [12](12-backup.md) |
+
+**Anlass.** Am Vormittag war in `daemon.json` eine Logrotation eingetragen worden mit
+der Aussage, sie greife bei neu erstellten Containern. Die Nachfrage, ob sich eine
+Neuerstellung lohnt, führte zu einer vollständigen Durchsicht der Docker-Einrichtung.
+
+**Befund: die Logrotation war überhaupt nicht in Kraft.** Nicht bei den laufenden und
+auch nicht bei neuen Containern. `log-driver` und `log-opts` gehören nicht zu den
+Werten, die Docker bei einem `systemctl reload` übernimmt; ein echter Neustart des
+Daemons hatte nie stattgefunden. Bewiesen mit einem Wegwerf-Container: `docker create`
+lieferte `LogConfig: json-file map[]`. Bichon hatte zu dem Zeitpunkt eine ungedrehte
+Logdatei von **39 MB**.
+
+**Zweiter Befund: Speicher-Limits waren technisch unmöglich.** `docker stats` zeigte
+bei jedem Container `0B / 0B`, `docker info` meldete *No memory limit support*. In
+`cmdline.txt` fehlten `cgroup_enable=memory` und `cgroup_memory=1`. Ein `mem_limit`
+in einer Compose-Datei wäre wirkungslos geblieben.
+
+**Dritter Befund: das Backup meldete seit Tagen Fehlschlag** (`ExecMainStatus=1`),
+obwohl es durchlief. Ursache war eine stehengebliebene Prüfung auf eine
+WireGuard-Konfiguration, die es seit der Umstellung auf Tailscale nicht mehr gibt.
+Ein Alarm, der jede Nacht grundlos kommt, verdeckt den echten Fehlschlag.
+
+**Umgesetzt.**
+
+| Änderung | Nachweis |
+|---|---|
+| Logrotation als YAML-Anker in allen fünf aktiven Compose-Dateien | 8 von 8 Containern tragen `max-size 10m` / `max-file 3` |
+| `security_opt: no-new-privileges` für alle acht Dienste | `docker inspect` je Container |
+| `homepage` auf `v1.13.2`, `bichon` auf Digest gepinnt | kein `:latest` mehr im laufenden Betrieb |
+| `BICHON_ENCRYPT_PASSWORD` nach `bichon/.env`, Verlauf per `git filter-repo` bereinigt | Wert in keinem der 22 Commits mehr auffindbar |
+| Backup um `/mnt/usb-hdd/ntfy` und das Portainer-Volume erweitert, `filebrowser-data` entfernt | `restic ls latest` |
+| `ReadWritePaths` für rclone in `pi-backup.service` | keine `read-only`-Meldung mehr, Exit 0 statt 1 |
+| `cgroup_enable=memory cgroup_memory=1` in `cmdline.txt`, Neustart | `cgroup.controllers` enthält `memory` |
+| Images von 18 auf 8 reduziert | 8,66 GB → 3,63 GB, Wurzel 14 GB → 7,7 GB |
+| Befristete Speichermessung alle 5 Minuten | `/mnt/usb-hdd/messungen/docker-speicher.csv` |
+
+**Entschieden.**
+
+- **Kein Passwortwechsel bei Bichon.** Laut Herstellerdoku nicht änderbar, ohne das
+  690-MB-Archiv unlesbar zu machen. Dazu kommt, dass das Passwort das Archiv auf
+  derselben Platte schützt, auf der die Compose-Datei liegt — der Gewinn wäre null
+  gewesen, der Preis das ganze Archiv. Stattdessen Wert unverändert nach `.env` und
+  Verlauf bereinigt.
+- **Kein Update-Lauf.** Alle gepinnten Images waren bereits die jeweils neueste
+  Fassung. `homepage` v2.0.0 bleibt bewusst liegen (Breaking Change bei der
+  Authentifizierung, vier Tage alt).
+- **Kein `cap_drop: ALL`.** Paperless braucht Root, um über `USERMAP_UID` die
+  Dateirechte zu setzen; dasselbe gilt für Postgres und Redis. Der Aufwand stünde in
+  keinem Verhältnis.
+- **Keine Bindung der Ports an `127.0.0.1`.** `pi-guard` verwirft die Verwaltungsports
+  aus dem LAN nachweislich; eine zweite Schicht würde nur riskieren, den
+  Tailscale-Zugriff mit zu verlieren.
+- **Speicher-Limits erst nach Messung.** Heute wäre jede Zahl geraten. Der Timer läuft,
+  die Auswertung folgt.
+
+**Nebenbefund.** Der Neustart dauerte rund fünf Minuten statt der erwarteten ein bis
+zwei — beim nächsten Mal entsprechend ansagen.
+
+**Rückfallebene.** Vor allen Änderungen: `restic`-Snapshot `94f0076d`, ein Tar der
+gesamten Arbeitskopie unter `/mnt/usb-hdd/backups-manuell/` und der GitHub-Tag
+`vor-anpassungen-2026-08-18` im Repository `docker-stacks`.
+
+---
+
 ## 18.08.2026 — Erste Härtungsstufe und eigenes Automatisierungskonto
 
 | | |

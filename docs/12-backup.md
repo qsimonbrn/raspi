@@ -142,12 +142,23 @@ Wiederaufbau.
 
 ```
 /mnt/usb-hdd/bichon              E-Mail-Archiv
+/mnt/usb-hdd/ntfy                Benutzer, Zugriffsregeln, Nachrichten-Cache
 /mnt/usb-hdd/paperless/export    Dokumentenexport
 /mnt/usb-hdd/paperless/media     Originaldateien
-/mnt/usb-hdd/filebrowser-data    Benutzer und Einstellungen
+/var/lib/docker/volumes/portainer_portainer_data/_data
 /home/simon/docker-stacks        Compose-Dateien
 /home/simon/raspi-doku           diese Dokumentation
 ```
+
+**Geändert am 18.08.2026.** `/mnt/usb-hdd/ntfy` und das Portainer-Volume kamen dazu,
+`/mnt/usb-hdd/filebrowser-data` fiel weg.
+
+Ohne die ntfy-Daten müssten Benutzer und Zugriffsregeln der Alarmierung neu angelegt
+werden — genau die Einrichtung, die meldet, wenn das Backup ausfällt. Das Portainer-
+Volume wird im laufenden Betrieb mitgenommen und ist damit nur absturzkonsistent;
+sein Inhalt ist notfalls neu aufbaubar, und das ist der Preis dafür, Portainer nicht
+jede Nacht anzuhalten. `filebrowser-data` gehörte zu einem am 18.08.2026
+abgeschalteten Dienst und liegt jetzt unter `/mnt/usb-hdd/_to_delete/`.
 
 Ausgeschlossen: `*/tmp/*`, `*/logs/*`, `*.lock`, Cache-Verzeichnisse.
 
