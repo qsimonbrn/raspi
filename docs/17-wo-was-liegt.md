@@ -65,7 +65,7 @@ wirkungslos. Der Grund ist banal: systemd startet nichts aus einem Home-Verzeich
 Docker liest ausschließlich `/etc/docker`, der Kernel ausschließlich `/boot`, `sudo`
 ausschließlich `/etc/sudoers.d`.
 
-| Im Repository | Läuft von hier | Stand 18.08.2026 |
+| Im Repository | Läuft von hier | Stand 20.08.2026 |
 |---|---|---|
 | `backup/pi-backup.sh` | `/usr/local/bin/pi-backup.sh` | identisch |
 | `backup/pi-backup.service` | `/etc/systemd/system/` | identisch |
@@ -87,14 +87,24 @@ ausschließlich `/etc/sudoers.d`.
 | `abgleich/sync.sh` | `/usr/local/sbin/pi-abgleich.sh` | identisch |
 | `abgleich/pi-abgleich.service` | `/etc/systemd/system/` | identisch |
 | `abgleich/pi-abgleich.timer` | `/etc/systemd/system/` | identisch |
+| `pihole/pi-gravity.sh` | `/usr/local/sbin/pi-gravity.sh` | identisch |
+| `pihole/pi-gravity.service` | `/etc/systemd/system/` | identisch |
+| `pihole/pi-gravity.timer` | `/etc/systemd/system/` | identisch |
+| `pihole/cron.d-pihole` | `/etc/cron.d/pihole` | identisch |
 
-**Zwei Fallen stecken allein in dieser Tabelle:**
+**Drei Fallen stecken allein in dieser Tabelle:**
 
 1. Die Skripte liegen teils in `/usr/local/bin`, teils in `/usr/local/sbin`. Welches wo,
    ist nicht zu erraten — man muss es nachsehen (`systemctl show <unit> -p ExecStart`).
 2. Namen können auseinanderlaufen. `pi_wartung.sh` hieß installiert `pi-maintenance.sh` —
    ein Abgleich, der den Dateinamen fortschreibt, findet so ein Paar nicht und meldet
    fälschlich „fehlt". Am 18.08.2026 beidseitig auf `pi-wartung.sh` vereinheitlicht.
+3. **`pihole/cron.d-pihole` gehört nicht uns.** Die Datei wird von Pi-hole selbst
+   angelegt und bei jedem Core-Update neu geschrieben. Sie steht hier nicht, weil wir
+   sie pflegen wollen, sondern damit der Abgleich **meldet**, wenn ein Update die
+   Anpassung überschrieben hat. Bei allen anderen Zeilen der Tabelle ist eine
+   Abweichung ein Versehen — bei dieser ist sie der erwartete Normalfall nach einem
+   Pi-hole-Update. Was dann zu tun ist, steht in `system/pihole/README.md`.
 
 ---
 

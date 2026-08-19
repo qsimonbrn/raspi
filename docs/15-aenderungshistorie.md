@@ -93,9 +93,24 @@ kommt. Empfohlen wurde ein Content-Blocker in Safari (AdGuard, Wipr, 1Blocker) s
 *Einstellungen → Apps → Safari → Pop-ups blockieren*. Nicht umgesetzt — das ist eine
 Einstellung am Endgerät, nicht am Pi.
 
-`/etc/cron.d/pihole` ist **nicht** unter `system/` versioniert und wird deshalb auch
-nicht von `pi-abgleich` überwacht. Die Datei gehört Pi-hole und wird bei einem
-Core-Update überschrieben — dann steht der Zeitplan wieder auf wöchentlich.
+**Nachtrag, 01:50 Uhr — der Zeitplan überlebt jetzt ein Pi-hole-Update.** Zunächst
+stand die tägliche Ausführung in `/etc/cron.d/pihole`. Diese Datei gehört Pi-hole und
+wird bei jedem Core-Update neu geschrieben; die Änderung wäre beim nächsten
+`pihole -up` still auf wöchentlich zurückgefallen. Ersetzt durch einen eigenen
+systemd-Timer — `/etc/systemd/system/` fasst Pi-hole nicht an.
+
+| | |
+|---|---|
+| Neu | `pi-gravity.sh`, `pi-gravity.service`, `pi-gravity.timer` (täglich 03:02, Zufallsversatz 5 min) |
+| Geändert | Cron-Zeile in `/etc/cron.d/pihole` auskommentiert, mit Begründung im Kopf |
+| Abgleich | vier neue Paare im Manifest, darunter `/etc/cron.d/pihole` selbst — meldet, wenn ein Core-Update die Anpassung zurücksetzt |
+| Meldung | ntfy bei Fehlschlag **und** wenn die Einträge um mehr als ein Viertel schrumpfen — sonst fällt der Ausfall einer Quelle nicht auf, weil `pihole -g` trotzdem mit Exit 0 endet |
+
+Nachgemessen: Testlauf mit `Result=success`, Journal-Eintrag `1115593 -> 1115593
+Domains`, Eigentümer von `gravity.db` unverändert `pihole:pihole`, `pi-abgleich check`
+meldet **24 von 24 Paaren identisch**. Der ntfy-Weg selbst ist nur auf seine
+Voraussetzungen geprüft (URL, Topic, Token-Datei lesbar), nicht durch einen echten
+Versand — das erste Mal meldet er sich also ungetestet.
 
 ---
 ## 18.08.2026 (abends) — Repositories zusammengeführt

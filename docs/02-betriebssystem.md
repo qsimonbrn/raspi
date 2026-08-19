@@ -69,7 +69,7 @@ Es läuft in acht Abschnitten und braucht rund 20 Sekunden, wenn nichts zu tun i
 |---|---|---|
 | 1 | Zustand | Laufzeit, Temperatur, Drosselung, Belegung, freier Speicher |
 | 2 | Systemupdate | `apt full-upgrade`, listet vorher die betroffenen Pakete auf |
-| 3 | Pi-hole | Blocklisten immer; **Versionssprung nur mit `PIHOLE_UPDATE=1`** |
+| 3 | Pi-hole | Blocklisten immer; **Versionssprung nur mit `PIHOLE_UPDATE=1`**. Seit 20.08.2026 zusätzlich täglich über `pi-gravity.timer` |
 | 4 | Docker | Nur schauen: laufende Container, ungesunde, Belegung, **Kontrolle auf ungedrehte Logdateien über 12 MB** |
 | 5 | Abgleich | ruft `pi-abgleich.sh check`, siehe [17](17-wo-was-liegt.md) |
 | 6 | Backup | wie lange der letzte Lauf zurückliegt, ob der Timer aktiv ist |
@@ -120,6 +120,7 @@ Konten.
 | `fstrim.timer` | wöchentlich | TRIM für SSD |
 | `pi-reboot-check.timer` | täglich 08:30 | meldet über ntfy, wenn ein Neustart fällig ist |
 | `pi-backup.timer` | täglich 03:17 | restic-Backup nach OneDrive |
+| `pi-gravity.timer` | täglich 03:02 | Pi-hole-Blocklisten aktualisieren (seit 20.08.2026) |
 
 `fstrim.timer` ist aktiv — das ist für die SSD wichtig und richtig so.
 

@@ -1,0 +1,13 @@
+# /etc/systemd/system/pi-gravity.timer
+[Unit]
+Description=Taegliche Aktualisierung der Pi-hole-Blocklisten
+
+[Timer]
+# 03:02 wie der urspruengliche Cronjob. Das Backup startet um 03:17; der Lauf
+# dauert rund 15 Sekunden, der Zufallsversatz bleibt deshalb klein.
+OnCalendar=*-*-* 03:02
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -35,3 +35,7 @@ system/wartung/pi-aliase.sh	/etc/profile.d/pi-aliase.sh	root:root	644	keiner
 system/abgleich/sync.sh	/usr/local/sbin/pi-abgleich.sh	root:root	750	keiner
 system/abgleich/pi-abgleich.service	/etc/systemd/system/pi-abgleich.service	root:root	644	systemd
 system/abgleich/pi-abgleich.timer	/etc/systemd/system/pi-abgleich.timer	root:root	644	systemd
+system/pihole/pi-gravity.sh	/usr/local/sbin/pi-gravity.sh	root:root	750	keiner
+system/pihole/pi-gravity.service	/etc/systemd/system/pi-gravity.service	root:root	644	systemd
+system/pihole/pi-gravity.timer	/etc/systemd/system/pi-gravity.timer	root:root	644	systemd
+system/pihole/cron.d-pihole	/etc/cron.d/pihole	root:root	644	keiner

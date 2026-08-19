@@ -22,13 +22,25 @@ Minor-Sprung: Kapitel 04 bekommt einen neuen Abschnitt.
   behalten. `gravity` wuchs auf 800.598 eindeutige Domains.
 - **Fünf Regex-Regeln** für Werbedomains, die in keiner der sechs geprüften Listen
   stehen.
-- **`updateGravity` von wöchentlich auf täglich** (03:02) umgestellt.
+- **`updateGravity` von wöchentlich auf täglich** (03:02) umgestellt — als eigener
+  systemd-Timer `pi-gravity`, nicht in `/etc/cron.d/pihole`. Diese Datei gehört Pi-hole
+  und wird bei jedem Core-Update neu geschrieben; die Änderung wäre dort still
+  zurückgefallen. Das Skript meldet über ntfy, wenn ein Lauf scheitert oder die Zahl
+  der Einträge um mehr als ein Viertel fällt.
+- **Vier neue Paare im Abgleich** (`system/pihole/`), darunter `/etc/cron.d/pihole`
+  selbst — damit ein Core-Update, das die Anpassung zurücksetzt, am nächsten Morgen
+  gemeldet wird. 24 statt 20 Paare.
 
 ### Hinzugefügt
 
 - `docs/04-dienste-system.md`: Abschnitt **Blocklisten** — Bestand, Format-Fallstrick,
   bewusst nicht eingebundene Listen, Abfragen zur Wirksamkeitsprüfung, Speicherbedarf.
 - `docs/15-aenderungshistorie.md`: Eintrag vom 20.08.2026 mit Messwerten und Nachkontrolle.
+- `system/pihole/` samt README: warum der Zeitplan nicht in Pi-holes Cronjob gehört und
+  was nach einem Core-Update zu tun ist.
+- `docs/17-wo-was-liegt.md`: vier neue Zeilen in der Tabelle, dritte Falle ergänzt —
+  bei `cron.d-pihole` ist eine Abweichung der erwartete Normalfall, kein Versehen.
+- `docs/02-betriebssystem.md`: `pi-gravity.timer` in der Timer-Tabelle.
 
 ### Geändert
 

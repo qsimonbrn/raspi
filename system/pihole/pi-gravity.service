@@ -1,0 +1,27 @@
+# /etc/systemd/system/pi-gravity.service
+[Unit]
+Description=Aktualisiert die Pi-hole-Blocklisten
+Documentation=https://github.com/qsimonbrn/raspi/blob/main/docs/04-dienste-system.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/pi-gravity.sh
+
+# root, weil "pihole updateGravity" nach /etc/pihole schreibt und das Skript
+# /etc/pi-backup.env fuer die ntfy-Meldung liest (Modus 644, aber root:root).
+# Die Eigentuemer von gravity.db bleiben dabei pihole:pihole -- nachgeprueft
+# am 20.08.2026.
+User=root
+Nice=15
+IOSchedulingClass=idle
+PrivateTmp=true
+ProtectHome=read-only
+NoNewPrivileges=true
+
+# Ein haengender Download darf den naechsten Lauf nicht blockieren.
+TimeoutStartSec=20min
+
+[Install]
+WantedBy=multi-user.target

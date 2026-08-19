@@ -86,8 +86,25 @@ erfolgreich abgerufen. Wer sie wieder braucht, setzt `enabled = 1` in der Tabell
 | HaGeZi TIF (voll) | 2,1 Mio. Einträge, laut Hersteller ab 2 GB RAM; die Medium-Variante reicht |
 | Phishing Army | überschneidet sich stark mit TIF Medium |
 
-**Aktualisierung:** täglich um 03:02 über `/etc/cron.d/pihole` (bis 20.08.2026
-wöchentlich sonntags). Von Hand: `sudo pihole -g`, Dauer rund 15 Sekunden.
+**Aktualisierung:** täglich um 03:02 über **`pi-gravity.timer`**, nicht über
+Pi-holes eigenen Cronjob. Bis zum 20.08.2026 lief sie wöchentlich sonntags.
+
+Der Zeitplan liegt bewusst in einer eigenen systemd-Unit: `/etc/cron.d/pihole` gehört
+Pi-hole und wird bei jedem Core-Update neu geschrieben — eine dort eingetragene
+Änderung wäre beim nächsten `pihole -up` still auf wöchentlich zurückgefallen. Die
+Cron-Zeile ist deshalb auskommentiert, die Datei steht im Abgleich, und `pi-abgleich`
+meldet, wenn ein Update sie zurücksetzt. Details in `system/pihole/README.md`.
+
+`pi-gravity.sh` meldet zusätzlich über ntfy, wenn der Lauf scheitert **oder** wenn die
+Zahl der Einträge gegenüber dem Vortag um mehr als ein Viertel fällt. Letzteres ist der
+übliche Verlauf, wenn eine Quelle nicht mehr erreichbar ist: `pihole -g` läuft mit
+Exit 0 durch, und die Sperren fallen leise weg.
+
+```bash
+systemctl list-timers pi-gravity.timer     # wann als naechstes
+sudo systemctl start pi-gravity.service    # von Hand, rund 15 Sekunden
+journalctl -t pi-gravity -n 5              # Ergebnis der letzten Laeufe
+```
 
 **Speicherbedarf:** `pihole-FTL` belegt mit 800.598 Domains 47 MB. Die Domainzahl ist
 für den Speicherbedarf also praktisch bedeutungslos — vor dem Ausbau waren es bei
