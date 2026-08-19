@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 20.08.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -19,6 +19,85 @@ Backup.
 
 ---
 
+## 20.08.2026 — Pi-hole-Blocklisten überarbeitet, Gravity-Update täglich
+
+| | |
+|---|---|
+| Betroffen | Pi-hole (`gravity.db`, `/etc/cron.d/pihole`) |
+| Kapitel | [04](04-dienste-system.md) |
+| Rückfallebene | `/mnt/usb-hdd/backups-manuell/pi-hole_raspberrypi_teleporter_2026-08-20_01-27-04_CEST.zip`, `gravity.db.vor-listen-20260820`, `cron.d-pihole.vor-taeglich-20260820` |
+
+**Anlass.** Auf dem iPhone (`192.168.178.164`) erschienen beim Lesen auf
+`weebcentral.com` Banner, Pop-ups und selbsttätig geöffnete Tabs mit Betrugsseiten.
+Der naheliegende Verdacht — Pi-hole arbeite nicht — war falsch: In den betroffenen
+15 Minuten wurden 167 von 385 Anfragen dieses Geräts geblockt.
+
+**Der eigentliche Befund.** Alle vier eingebundenen Listen lagen im **Hosts-Format**,
+das ausschließlich exakte Domainnamen sperrt. Die Werbenetzwerke liefern über
+Subdomains aus. Von fünfzehn nachweislich durchgelassenen Werbedomains hatten sechs
+ihre Eltern-Domain bereits in `gravity` — `magsrv.com` stand drin, abgefragt und
+durchgelassen wurde `s.magsrv.com`. Eine Blockliste mit 485.267 Einträgen sagt über
+die Wirksamkeit also nichts aus, solange das Format nicht dazu passt.
+
+**Vorgehen.** Vor jeder Änderung gemessen: die fünfzehn durchgelassenen Domains gegen
+Kandidatenlisten geprüft, anschließend die 6.176 Domains, die im gesamten Heimnetz in
+sieben Tagen erlaubt beantwortet wurden, gegen jede Kandidatenliste gehalten — um
+Fehlblockaden zu finden, bevor sie auftreten.
+
+| Kandidat | zusätzlich gesperrte, bisher genutzte Domains | Entscheidung |
+|---|---|---|
+| HaGeZi Pop-Up Ads | 0 | aufgenommen |
+| HaGeZi TIF Medium | 0 | aufgenommen |
+| HaGeZi Badware Hoster | 0 | verworfen, Nutzen neben TIF gering |
+| Phishing Army extended | 0 | verworfen, Überschneidung mit TIF |
+| HaGeZi DynDNS | 1 (`karlsruhe-wired-….dynamic-m.com`) | verworfen |
+| HaGeZi Anti-Piracy | sperrt `weebcentral.com`, `mangadex.org` | verworfen |
+
+**Geändert:**
+
+| | |
+|---|---|
+| Aufgenommen | HaGeZi Pro++, OISD Big, HaGeZi Pop-Up Ads, HaGeZi TIF Medium — alle im Adblock-Format |
+| Abgeschaltet | `blocklistproject` ads.txt und tracking.txt (Hosts-Format, für Fehlblockaden bekannt) — `enabled = 0`, nicht gelöscht |
+| Behalten | StevenBlack und adaway — sie enthalten 59.379 bzw. 3.934 Domains, die weder in Pro++ noch in OISD stehen |
+| Ergänzt | fünf Regex-Regeln für `girlzsearch.com`, `planeptune.us`, `405kk.com`, `jump5geo.com`, `openwebschool.de` — diese Domains stehen in **keiner** der sechs geprüften Listen |
+| Zeitplan | `/etc/cron.d/pihole`: `updateGravity` von sonntags auf **täglich** 03:02 |
+
+**Nachgemessen.** Alle fünfzehn Werbedomains antworten mit `0.0.0.0`. Zehn
+Gegenproben (`weebcentral.com`, `de.wikipedia.org`, `rewe.de`, `paypal.com`,
+`spotify.com`, `usercentrics.eu` und weitere) lösen unverändert auf. `gravity`
+wuchs von 485.267 auf 800.598 eindeutige Domains, `pihole-FTL` belegt dabei 47 MB
+statt vorher 51 MB.
+
+**Nachkontrolle am selben Abend, 01:38 Uhr.** Erneuter Besuch auf `weebcentral.com`,
+diesmal über Tailscale (Client `100.94.181.68`, nicht `192.168.178.164` — das ist beim
+Auswerten leicht zu übersehen). In zehn Minuten **111 geblockte Anfragen**, darunter
+`sootoarathus.net`, `my.rtmark.net`, `aqle3.com`, `ad.a-ads.com`, `484r.com`,
+`platform.pubadx.one`, `chagnougroalry.net`, `405kk.com` — alles Domains, die vor der
+Umstellung durchgegangen wären.
+
+Durchgekommen war genau eine Werbedomain: **`openwebschool.de`**, einmalig um 01:38:45
+unmittelbar nach `weebcentral.com` abgefragt. Der Name gibt sich als Bildungsangebot;
+die Seite ist tatsächlich ein Affiliate-Portal für Online-Casinos ohne Verifizierung.
+Klassische Tarnung — deutscher, harmlos klingender Domainname, deshalb in keiner
+Blockliste. Als fünfte Regex-Regel ergänzt.
+
+> **Nicht sperren:** `temp.compsci88.com` (seit 18.05.2026, 138 Anfragen) und
+> `scans.lastation.us` (seit 24.05.2026, 33 Anfragen) sind die Bildserver von
+> `weebcentral.com`. Sie sehen wie Werbe-CDNs aus und liefern die Seiteninhalte. Eine
+> Sperre würde die Seite unbrauchbar machen, ohne eine einzige Werbung zu entfernen.
+
+**Was offen bleibt.** DNS-Sperren verhindern nicht, dass eine Seite per JavaScript
+einen neuen Tab öffnet, und trennen keine Werbung, die von der Domain der Seite selbst
+kommt. Empfohlen wurde ein Content-Blocker in Safari (AdGuard, Wipr, 1Blocker) samt
+*Einstellungen → Apps → Safari → Pop-ups blockieren*. Nicht umgesetzt — das ist eine
+Einstellung am Endgerät, nicht am Pi.
+
+`/etc/cron.d/pihole` ist **nicht** unter `system/` versioniert und wird deshalb auch
+nicht von `pi-abgleich` überwacht. Die Datei gehört Pi-hole und wird bei einem
+Core-Update überschrieben — dann steht der Zeitplan wieder auf wöchentlich.
+
+---
 ## 18.08.2026 (abends) — Repositories zusammengeführt
 
 | | |

@@ -1,6 +1,6 @@
 # 04 — Systemdienste
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · Blocklisten 20.08.2026*
 
 Dienste, die **direkt auf dem Betriebssystem** laufen — nicht in Containern.
 Container siehe [05 — Docker](05-docker.md).
@@ -38,6 +38,84 @@ Pi-hole ist der DNS-Server für das gesamte Heimnetz. Damit hängt die Namensauf
 > oder — sauberer — bei einem geplanten Neustart des Pi kurz auf den Router-DNS
 > umstellen. Ein zweiter dauerhaft eingetragener DNS-Server hebelt allerdings die
 > Werbefilterung teilweise aus, weil Clients frei wählen dürfen. Bewusste Abwägung.
+
+### Blocklisten
+
+*Stand: 20.08.2026 — 800.598 eindeutige Domains, vier Listen aktiv*
+
+| Liste | Format | Domains | Zweck |
+|---|---|---|---|
+| [StevenBlack/hosts](https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts) | Hosts | 95.667 | Werbung und Tracker, breite Grundlage |
+| [adaway.org](https://adaway.org/hosts.txt) | Hosts | 6.540 | mobile Werbung |
+| [HaGeZi Pro++](https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.plus.txt) | **Adblock** | 245.443 | Werbung, Tracker, Telemetrie, Betrug |
+| [HaGeZi Pop-Up Ads](https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/popupads.txt) | **Adblock** | 54.146 | Pop-ups und selbsttätig öffnende Tabs |
+| [HaGeZi TIF Medium](https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/tif.medium.txt) | **Adblock** | 439.389 | Scam, Phishing, Malware, C&C-Server |
+| [OISD Big](https://big.oisd.nl/) | **Adblock** | 273.269 | breiter Filter, auf wenige Fehlblockaden ausgelegt |
+
+Dazu 17 exakte Sperren (Werbe-SDKs mobiler Apps) und fünf Regex-Regeln für Werbedomains,
+die in keiner der sechs geprüften Listen stehen: `girlzsearch.com`, `planeptune.us`,
+`405kk.com`, `jump5geo.com`, `openwebschool.de`.
+
+> **Nicht sperren, auch wenn sie so aussehen:** `temp.compsci88.com` und
+> `scans.lastation.us` sind die Bildserver von `weebcentral.com` und liefern die
+> Seiteninhalte, nicht Werbung.
+
+**Abgeschaltet, nicht gelöscht:** die beiden Listen von `blocklistproject`
+(`ads.txt`, `tracking.txt`, zusammen 379.777 Domains). Sie liegen im Hosts-Format,
+gelten als anfällig für Fehlblockaden und wurden zuletzt am 26.07. bzw. 19.07.2026
+erfolgreich abgerufen. Wer sie wieder braucht, setzt `enabled = 1` in der Tabelle
+`adlist` der `gravity.db`.
+
+> **Der wichtigste Punkt zum Verständnis: Hosts-Listen sperren keine Subdomains.**
+> Ein Eintrag `magsrv.com` im Hosts-Format sperrt `magsrv.com` — und sonst nichts.
+> Das Werbenetzwerk liefert über `s.magsrv.com` aus, und diese Anfrage geht durch.
+> Adblock-Listen schreiben stattdessen `||magsrv.com^`, was Pi-hole seit Version 5
+> nativ versteht und was die gesamte Domain samt aller Subdomains erfasst.
+>
+> Bis zum 20.08.2026 lagen **alle vier** eingebundenen Listen im Hosts-Format. Sechs
+> von fünfzehn nachgewiesen durchgelassenen Werbedomains hatten ihre Eltern-Domain
+> bereits in `gravity` — geblockt wurden sie trotzdem nicht. Das ist der Grund, warum
+> eine hohe Domainzahl allein nichts über die Wirksamkeit aussagt.
+
+**Bewusst nicht eingebunden:**
+
+| Liste | Grund |
+|---|---|
+| HaGeZi Anti-Piracy | sperrt `weebcentral.com` und `mangadex.org` — nachgeprüft |
+| HaGeZi DynDNS | sperrte im Test eine tatsächlich genutzte Domain (`dynamic-m.com`), Nutzen im Heimnetz gering |
+| HaGeZi TIF (voll) | 2,1 Mio. Einträge, laut Hersteller ab 2 GB RAM; die Medium-Variante reicht |
+| Phishing Army | überschneidet sich stark mit TIF Medium |
+
+**Aktualisierung:** täglich um 03:02 über `/etc/cron.d/pihole` (bis 20.08.2026
+wöchentlich sonntags). Von Hand: `sudo pihole -g`, Dauer rund 15 Sekunden.
+
+**Speicherbedarf:** `pihole-FTL` belegt mit 800.598 Domains 47 MB. Die Domainzahl ist
+für den Speicherbedarf also praktisch bedeutungslos — vor dem Ausbau waren es bei
+522.422 Domains 51 MB.
+
+**Wirksamkeit prüfen** — der Weg, der den Befund vom 20.08.2026 aufgedeckt hat:
+
+```bash
+# Was hat ein bestimmtes Geraet in den letzten 15 Minuten abgefragt und durfte durch?
+sudo pihole-FTL sqlite3 -separator ' | ' /etc/pihole/pihole-FTL.db \
+  "select domain, count(*) c from queries
+   where client='192.168.178.164'
+     and timestamp > strftime('%s','now')-900
+     and status in (2,3,12,13,14,17)
+   group by domain order by c desc;" </dev/null
+
+# Wird eine Domain tatsaechlich gesperrt? 0.0.0.0 oder leer = ja
+dig +short @127.0.0.1 s.magsrv.com A
+```
+
+Statuswerte: 1 und 9 geblockt über `gravity`, 2 weitergeleitet, 3 aus dem Cache,
+16 Sonderdomain (iCloud Private Relay), 17 aus veraltetem Cache.
+
+**Was DNS-Sperren grundsätzlich nicht leisten.** Ein Tab, den eine Seite per
+JavaScript öffnet, geht auf — Pi-hole verhindert nur, dass Inhalt hineingeladen wird.
+Werbung, die von der Domain der Seite selbst ausgeliefert wird, ist über DNS nicht
+trennbar. Gegen beides hilft nur ein Content-Blocker im Browser. Pi-hole ist die
+netzwerkweite Grundsicherung, nicht der vollständige Werbeschutz.
 
 ### iCloud Private Relay wird absichtlich blockiert
 

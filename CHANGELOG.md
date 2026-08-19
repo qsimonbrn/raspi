@@ -9,6 +9,33 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.1.0] — 2026-08-20
+
+Minor-Sprung: Kapitel 04 bekommt einen neuen Abschnitt.
+
+### Geändert am System
+
+- **Pi-hole-Blocklisten auf Adblock-Format umgestellt.** Alle bisherigen Listen lagen im
+  Hosts-Format und sperrten deshalb keine Subdomains — der Grund, warum trotz 485.267
+  Einträgen Werbung durchkam. Neu: HaGeZi Pro++, HaGeZi Pop-Up Ads, HaGeZi TIF Medium,
+  OISD Big. Die beiden `blocklistproject`-Listen abgeschaltet, StevenBlack und adaway
+  behalten. `gravity` wuchs auf 800.598 eindeutige Domains.
+- **Fünf Regex-Regeln** für Werbedomains, die in keiner der sechs geprüften Listen
+  stehen.
+- **`updateGravity` von wöchentlich auf täglich** (03:02) umgestellt.
+
+### Hinzugefügt
+
+- `docs/04-dienste-system.md`: Abschnitt **Blocklisten** — Bestand, Format-Fallstrick,
+  bewusst nicht eingebundene Listen, Abfragen zur Wirksamkeitsprüfung, Speicherbedarf.
+- `docs/15-aenderungshistorie.md`: Eintrag vom 20.08.2026 mit Messwerten und Nachkontrolle.
+
+### Geändert
+
+- Erfassungsdatum in `docs/04-dienste-system.md` und `docs/15-aenderungshistorie.md`.
+
+---
+
 ## [2.0.0] — 2026-08-18
 
 Major-Sprung, weil sich die Ablage der gesamten Dokumentation geändert hat.
