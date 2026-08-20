@@ -20,10 +20,13 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | 8 | **Portainer-Konfiguration** (Volume) | ✅ **ja** | restic-Backup, seit 18.08.2026 — absturzkonsistent, da im laufenden Betrieb gesichert |
 | 9 | **Nutzdaten auf der SSD** (310 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
 
-**Sechs von sieben** — seit Einrichtung des Backups am 13.08.2026.
+**Acht von neun** — seit Einrichtung des Backups am 13.08.2026, um Position 7 und 8
+erweitert am 18.08.2026. Am 20.08.2026 erstmals nachgewiesen, dass sich das Gesicherte
+auch zurückholen lässt: `restic check` über alle 10 Snapshots ohne Fehler, Stichprobe aus
+Snapshot `af02aa04` zurückgeholt und byte-identisch.
 Details in [12 — Backup](12-backup.md).
 
-Offen bleibt Position 7: die 222 GB unter `SSD_Müll` und 86 GB unter `rclone_bak`.
+Offen bleibt Position 9: die 222 GB unter `SSD_Müll` und 86 GB unter `rclone_bak`.
 Empfehlung dazu in [12 — Backup, Abschnitt 8](12-backup.md#8-was-dieses-backup-nicht-abdeckt).
 
 ---

@@ -41,7 +41,7 @@ Pi-hole ist der DNS-Server für das gesamte Heimnetz. Damit hängt die Namensauf
 
 ### Blocklisten
 
-*Stand: 20.08.2026 — 800.598 eindeutige Domains, vier Listen aktiv*
+*Stand: 20.08.2026 — 1.115.658 eindeutige Domains, sechs Listen aktiv, zwei abgeschaltet*
 
 | Liste | Format | Domains | Zweck |
 |---|---|---|---|
@@ -106,9 +106,10 @@ sudo systemctl start pi-gravity.service    # von Hand, rund 15 Sekunden
 journalctl -t pi-gravity -n 5              # Ergebnis der letzten Laeufe
 ```
 
-**Speicherbedarf:** `pihole-FTL` belegt mit 800.598 Domains 47 MB. Die Domainzahl ist
-für den Speicherbedarf also praktisch bedeutungslos — vor dem Ausbau waren es bei
-522.422 Domains 51 MB.
+**Speicherbedarf:** `pihole-FTL` belegt mit 1.115.658 Domains 60 MB (20.08.2026). Die
+Domainzahl schlägt also nur schwach durch: 522.422 Domains kosteten 51 MB, 800.598
+Domains 47 MB, die mehr als doppelte Menge jetzt 60 MB. Der Speicherbedarf ist kein
+Argument gegen große Listen.
 
 **Wirksamkeit prüfen** — der Weg, der den Befund vom 20.08.2026 aufgedeckt hat:
 

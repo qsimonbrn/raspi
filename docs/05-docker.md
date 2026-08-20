@@ -1,6 +1,6 @@
 # 05 — Docker
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · Verbrauchswerte nachgemessen: 20.08.2026*
 
 ## Überblick
 
@@ -12,7 +12,7 @@
 | Images gesamt | **8 (3,63 GB), nichts freigebbar** — aufgeräumt am 18.08.2026 |
 | Alle Images | auf feste Versionen bzw. Digests gepinnt (vollständig seit 18.08.2026) |
 | Logrotation | 10 MB je Datei, 3 Dateien — in jeder Compose-Datei gesetzt |
-| Speicher-Limits | technisch möglich seit dem Neustart am 18.08.2026, noch keine gesetzt |
+| Speicher-Limits | technisch möglich seit dem Neustart am 18.08.2026, noch keine gesetzt — 4.785 Messpunkte liegen vor (20.08.2026) |
 
 ## Container
 
@@ -131,32 +131,42 @@ jetzt `memory`, `docker info` meldet keine Warnung mehr.
 
 ## Ressourcenverbrauch
 
-Erste belastbare Speichermessung, 18.08.2026, sechs Minuten nach dem Neustart:
+Messung im eingeschwungenen Zustand, 20.08.2026, nach zwei Tagen und fünf Stunden
+Laufzeit:
 
-| Container | RAM | Anteil | CPU |
-|---|---|---|---|
-| paperless | 953 MiB | 25,1 % | 87,9 % (Startlast) |
-| homepage | 168 MiB | 4,4 % | 0,0 % |
-| portainer | 88 MiB | 2,3 % | 0,0 % |
-| paperless-db-1 | 62 MiB | 1,6 % | 0,0 % |
-| bichon | 51 MiB | 1,4 % | 0,0 % |
-| ntfy | 50 MiB | 1,3 % | 0,0 % |
-| homepage-dockerproxy | 30 MiB | 0,8 % | 0,0 % |
-| paperless-redis-1 | 15 MiB | 0,4 % | 1,2 % |
-| **zusammen** | **rund 1,4 GB** | **38 %** | |
+| Container | RAM | Anteil |
+|---|---|---|
+| paperless | 736 MiB | 19,4 % |
+| bichon | 356 MiB | 9,4 % |
+| homepage | 91 MiB | 2,4 % |
+| paperless-db-1 | 33 MiB | 0,9 % |
+| portainer | 27 MiB | 0,7 % |
+| ntfy | 23 MiB | 0,6 % |
+| homepage-dockerproxy | 16 MiB | 0,4 % |
+| paperless-redis-1 | 5 MiB | 0,1 % |
+| **zusammen** | **rund 1,26 GiB** | **33,9 %** |
 
-Die CPU-Spitze bei Paperless ist Startlast, kein Dauerzustand. Die früher
-dokumentierte Aussage, **bichon** sei mit 11,7 % der größte Speicherverbraucher,
-stammte aus einer Zeit ohne Speicherbuchführung und war eine Schätzung aus `ps` —
-gemessen ist Paperless mit Abstand der größte Posten, bichon liegt bei 1,4 %.
+**Der Vergleich mit der Kaltstartmessung ist die eigentliche Information.** Sechs Minuten
+nach dem Neustart am 18.08.2026 lagen dieselben Container bei zusammen rund 1,4 GB
+(38 %), aber mit völlig anderer Verteilung: paperless 953 MiB, homepage 168 MiB,
+portainer 88 MiB — und **bichon bei 51 MiB (1,4 %)**. Zwei Tage später belegt bichon
+356 MiB, das Siebenfache. Das ist kein Leck, sondern der normale Arbeitssatz eines
+Dienstes, der E-Mails verarbeitet und indiziert; er war beim Kaltstart schlicht noch
+nicht aufgebaut.
 
-**Speicher-Limits sind noch nicht gesetzt.** Ein Timer schreibt seit dem 18.08.2026
-alle fünf Minuten nach `/mnt/usb-hdd/messungen/docker-speicher.csv`, damit die
-Werte auf einer Messung über 24 Stunden beruhen statt auf einer Schätzung. Skript,
-Unit und Anleitung zum Entfernen liegen unter `system/messung/`.
+Daraus folgt für die Limits: **eine Momentaufnahme kurz nach dem Start taugt nicht als
+Grundlage.** Wer bichon damals ein Limit von 128 MiB gegeben hätte, hätte den Dienst
+zwei Tage später abgewürgt.
+
+**Speicher-Limits sind noch nicht gesetzt** (nachgemessen: alle acht Container melden
+`Memory: 0`). Ein Timer schreibt seit dem 18.08.2026 alle fünf Minuten nach
+`/mnt/usb-hdd/messungen/docker-speicher.csv`; am 20.08.2026 liegen dort 4.785 Zeilen
+über zwei Tage — genug, um Limits mit Reserve aus dem gemessenen Höchstwert je Container
+abzuleiten statt aus einer Schätzung. Skript, Unit und Anleitung zum Entfernen liegen
+unter `system/messung/`.
 
 **Bewertung:** Der Pi ist von seiner Kapazitätsgrenze entfernt, aber nicht mehr
-komfortabel weit: 38 % Speicher im Leerlauf lassen für einen schweren zusätzlichen
+komfortabel weit: 34 % Speicher im Leerlauf lassen für einen schweren zusätzlichen
 Dienst (Immich, Nextcloud) keinen Raum. Zwei bis drei schlanke Dienste
 (Uptime Kuma, Diun, Dozzle) sind problemlos möglich.
 

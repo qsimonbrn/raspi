@@ -9,6 +9,73 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.3.0] — 2026-08-20
+
+Erste turnusmäßige Aktualisierung mit dem überarbeiteten Ablauf. Minor-Sprung, weil ein
+neuer Befund dazukommt: das Postgres-Passwort im Git-Verlauf hat ein eigenes Kapitel
+bekommen.
+
+### Geändert
+
+- **Messwerte in `README`, `01`, `02`, `04`, `05`, `08` nachgezogen** (Bestandsaufnahme
+  `2026-08-20-1111`, Laufzeit 103 s). Behauptungsprüfung: 10 `ok` · 1 `ACHTUNG` ·
+  0 nicht prüfbar.
+- **`05` — Ressourcenverbrauch neu gemessen.** Die bisherige Tabelle stammte von einer
+  Messung sechs Minuten nach dem Neustart; im eingeschwungenen Zustand nach zwei Tagen
+  sieht die Verteilung anders aus. **bichon: 51 MiB kalt, 356 MiB warm** — das
+  Siebenfache. Daraus die Konsequenz für die noch zu setzenden Limits: Eine
+  Kaltstartmessung taugt nicht als Grundlage, ein Limit von 128 MiB hätte den Dienst zwei
+  Tage später abgewürgt. Beide Messungen stehen jetzt im Kapitel, mit Erklärung des
+  Unterschieds.
+- **`04` — Pi-hole-Kennzahlen.** 1.115.658 Domains statt 800.598, sechs aktive Listen
+  statt vier; `pihole-FTL` belegt 60 MB statt 47 MB.
+- **`09` — Maßnahme 1.2 „Wiederherstellung testen" auf 🟡 teilweise erledigt.** Die
+  Speicherebene ist bewiesen, die Anwendungsebene nicht: Dass ein zurückgeholter
+  Paperless-Export sich auch **importieren** lässt, ist weiterhin ungeprüft.
+- **`09` — zwei neue Maßnahmen:** 2.13 Postgres-Passwort aus dem Verlauf entfernen,
+  sowie `tailscale` von Hand aktualisieren.
+
+### Richtiggestellt
+
+- **`08` widersprach sich selbst.** Oben stand „Keine automatisierten Backups — letzter
+  Lauf 12.12.2025" als 🔴 kritischer Befund, unten im selben Kapitel „sechs davon sind
+  gesichert — seit Einrichtung des restic-Backups am 13.08.2026". Der Befund ist seit dem
+  13.08.2026 erledigt und seit dem 20.08.2026 als wiederherstellbar nachgewiesen.
+- **`08` führte zwei weitere erledigte Befunde als offen:** „Keine Firewall auf dem Host"
+  (seit 18.08.2026 `pi-guard`) und „Keine automatischen Sicherheitsupdates" (seit
+  18.08.2026 `unattended-upgrades`).
+- **`08` und `11` zählten „sechs von sieben" gesicherten Bausteinen.** Die Tabelle in `11`
+  führt seit dem 18.08.2026 neun Positionen, acht davon gesichert — ntfy und das
+  Portainer-Volume kamen dazu, der Fließtext blieb stehen. In `11` verwies der Satz
+  danach außerdem auf „Position 7", gemeint war Position 9.
+- **`README` beschrieb die Compose-Dateien als „in einem separaten Repository"**, während
+  weiter unten im selben `README` korrekt steht, dass die Repositories am 18.08.2026
+  zusammengelegt wurden.
+- **`02` — „0 ausstehende Updates" mit der Deutung „wird regelmäßig manuell gepflegt".**
+  Gemessen: ein ausstehendes Paket (`tailscale` 1.102.2 → 1.102.3). Wichtiger als die
+  Zahl ist der Grund: `unattended-upgrades` ist auf `origin=Debian` beschränkt
+  (nachgemessen in `50unattended-upgrades`), Tailscale kommt aus einem eigenen
+  Repository und wird deshalb **nie** selbsttätig aktualisiert.
+- **`09` — zwei Maßnahmen trugen beide die Nummer 2.9.** Samba-Härtung ist jetzt 2.12.
+
+### Hinzugefügt
+
+- **`07` — eigener Abschnitt „🟡 Postgres-Passwort im Git-Verlauf".** Klartext in neun
+  Commits zwischen dem 10.12.2025 und dem 13.08.2026. Nachgemessen und entschärfend: Der
+  Wert stimmt **nicht** mit dem laufenden überein, und Postgres veröffentlicht keinen
+  Port nach außen. Der eigentliche Befund ist, dass das Geheimnis acht Monate unbemerkt
+  im Verlauf lag und nicht von einem Menschen gefunden wurde, sondern von einer Prüfung,
+  die es seit dem 20.08.2026 gibt.
+- **`README` — Zeile „Backup" im Kasten „Zustand auf einen Blick"**, mit dem Nachweis der
+  Wiederherstellbarkeit statt nur der Tatsache, dass gesichert wird.
+
+### Nicht geändert
+
+Am System wurde nichts angefasst. Das ausstehende Tailscale-Update und die Bereinigung
+des Git-Verlaufs sind als Maßnahmen aufgenommen, nicht ausgeführt.
+
+---
+
 ## [2.2.0] — 2026-08-20
 
 Minor-Sprung: Die Bestandsaufnahme prüft jetzt Behauptungen statt nur Werte zu sammeln.

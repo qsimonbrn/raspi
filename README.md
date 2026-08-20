@@ -2,7 +2,7 @@
 
 Vollständige Dokumentation des Heimservers `raspberrypi` (`192.168.178.80`).
 
-> **Stand:** 16.08.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
+> **Stand:** 20.08.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
 > **Nächste Prüfung empfohlen:** bei jeder Änderung am Setup, mindestens quartalsweise
 
 ---
@@ -18,9 +18,9 @@ Ein Raspberry Pi 4B als Heimserver mit drei Rollen:
 | **Dateiablage** | Samba auf einer 1-TB-SSD |
 
 Dazu Tailscale für den Fernzugriff, Portainer zur Container-Verwaltung und Homepage als
-Einstiegsseite. Acht Docker-Container in fünf Stacks, Compose-Dateien versioniert in
-einem separaten Repository — seit dem 16.08.2026 durchgängig auf feste Image-Versionen
-gepinnt.
+Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liegen seit dem
+18.08.2026 in **diesem** Repository unter `stacks/` und laufen direkt von dort — seit dem
+16.08.2026 durchgängig auf feste Image-Versionen gepinnt.
 
 ---
 
@@ -54,20 +54,21 @@ gepinnt.
 
 | | |
 |---|---|
-| Uptime | 6 Minuten (Neustart am 18.08.2026 für den Speicher-Cgroup) |
-| Load (1/5/15 min) | 0,47 / 0,22 / 0,15 bei 4 Kernen |
-| Temperatur | 52,5 °C — nie gedrosselt (`throttled=0x0`) |
-| RAM verfügbar | 2,4 von 3,7 GiB — Container zusammen rund 1,4 GiB (38 %) |
-| Systemdatenträger | 4 % belegt (7,8 G von 235 G) — 5 GB durch Image-Aufräumen frei |
+| Uptime | 2 Tage 5 h (Neustart am 18.08.2026 für den Speicher-Cgroup) |
+| Load (1/5/15 min) | 0,74 / 0,29 / 0,17 bei 4 Kernen |
+| Temperatur | 48,7 °C — nie gedrosselt (`throttled=0x0`) |
+| RAM verfügbar | 2,1 von 3,7 GiB — Container zusammen rund 1,26 GiB (34 %) |
+| Systemdatenträger | 4 % belegt (7,9 G von 235 G) |
 | Datenspeicher SSD | 36 % belegt (310 G von 916 G) |
-| Ausstehende OS-Updates | 0 |
+| Ausstehende OS-Updates | 1 — `tailscale` 1.102.2 → 1.102.3 (Fremd-Repository, von `unattended-upgrades` nicht erfasst) |
 | Fehlgeschlagene Dienste | 0 |
+| Backup | täglich, 10 Snapshots; am 20.08.2026 erstmals als **wiederherstellbar nachgewiesen** |
 | Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
 | Container | **8**, alle mit Logrotation und `no-new-privileges` (18.08.2026) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
-| Speicher-Limits | seit dem 18.08.2026 technisch möglich (`cgroup_enable=memory`), Messung läuft, noch keine gesetzt |
+| Speicher-Limits | seit dem 18.08.2026 technisch möglich (`cgroup_enable=memory`), 4.785 Messpunkte vorhanden, noch keine gesetzt |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 
@@ -84,7 +85,8 @@ gepinnt.
    die Automatisierung ausgesperrt. → [Kapitel 07](docs/07-sicherheit.md)
 
 Ebenfalls offen: **Speicher-Limits je Container** — seit dem Neustart am 18.08.2026
-technisch möglich, eine 24-Stunden-Messung läuft. → [Kapitel 05](docs/05-docker.md)
+technisch möglich; die Messung liegt am 20.08.2026 mit 4.785 Punkten über zwei Tage vor
+und ist auswertbar. → [Kapitel 05](docs/05-docker.md)
 
 Am 18.08.2026 erledigt: Verwaltungsoberflächen aus dem Heimnetz genommen, Filebrowser
 (CVE ohne Patch) und Dashy abgeschaltet, Automatisierung auf ein eigenes, aufgezeichnetes
@@ -94,6 +96,9 @@ Images gepinnt, Bichon-Geheimnis aus dem Git-Verlauf entfernt, Backup-Lücken
 geschlossen, Speicher-Cgroup aktiviert. → [Kapitel 15](docs/15-aenderungshistorie.md)
 
 Das automatisierte Backup der unersetzlichen Daten läuft seit dem 13.08.2026 täglich.
+Am 20.08.2026 wurde es erstmals **als wiederherstellbar nachgewiesen**: `restic check`
+über alle 10 Snapshots ohne Fehler, Stichprobe zurückgeholt und byte-identisch. Bis dahin
+war nur bekannt, dass gesichert wird — nicht, dass es sich zurückholen lässt.
 → [Kapitel 12](docs/12-backup.md)
 
 ---

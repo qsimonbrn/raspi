@@ -1,6 +1,6 @@
 # 02 — Betriebssystem
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · Paketstand nachgemessen: 20.08.2026*
 
 ## Basisdaten
 
@@ -24,10 +24,14 @@ Der Kernel `6.12.x` ist der aktuelle Raspberry-Pi-Foundation-Zweig für Bookworm
 
 | | |
 |---|---|
-| Ausstehende Updates | **0** |
+| Ausstehende Updates | **1** — `tailscale` 1.102.2 → 1.102.3 (20.08.2026) |
 | Fehlgeschlagene systemd-Dienste | **0** |
 
-Das ist ein gutes Zeichen: Das System wird offensichtlich regelmäßig und manuell gepflegt.
+Das eine ausstehende Paket ist kein Versäumnis, sondern eine Lücke im Verfahren:
+`unattended-upgrades` ist auf die Debian-Quellen beschränkt (`origin=Debian`, Label
+`Debian` und `Debian-Security`, nachgemessen in `/etc/apt/apt.conf.d/50unattended-upgrades`).
+Tailscale kommt aus einem eigenen Repository (`/etc/apt/sources.list.d/tailscale.list`)
+und wird deshalb **nie** selbsttätig aktualisiert — dieses Paket bleibt Handarbeit.
 
 ## ✅ Automatische Sicherheitsupdates — seit 18.08.2026
 

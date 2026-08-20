@@ -1,6 +1,6 @@
 # 01 — Hardware
 
-*Erfasst: 13.08.2026*
+*Erfasst: 13.08.2026 · Werte nachgemessen: 20.08.2026*
 
 ## Rechner
 
@@ -15,7 +15,7 @@
 
 | Messwert | Wert | Bewertung |
 |---|---|---|
-| Kerntemperatur | 47,7 °C | unauffällig — der Pi 4 drosselt erst ab 80 °C |
+| Kerntemperatur | 48,7 °C (20.08.2026) | unauffällig — der Pi 4 drosselt erst ab 80 °C |
 | `vcgencmd get_throttled` | `0x0` | **noch nie gedrosselt**, auch nicht historisch |
 
 Der Wert `0x0` ist aussagekräftiger als die Momentantemperatur: Er ist ein Bitfeld, das
@@ -29,11 +29,13 @@ eingebrochen ist noch die Kühlung an ihre Grenze kam.
 
 | | Gesamt | Belegt | Frei | Cache | Verfügbar |
 |---|---|---|---|---|---|
-| RAM | 3,7 GiB | 1,3 GiB | 750 MiB | 1,8 GiB | **2,4 GiB** |
-| Swap | 512 MiB | 179 MiB | 332 MiB | — | — |
+| RAM | 3,7 GiB | 1,6 GiB | 551 MiB | 1,7 GiB | **2,1 GiB** |
+| Swap | 511 MiB | 160 MiB | 351 MiB | — | — |
 
-Die 1,8 GiB Cache sind kein Verbrauch, sondern vom Kernel genutzter freier Speicher —
-die relevante Zahl ist **verfügbar: 2,4 GiB**. Das System hat reichlich Luft.
+Die 1,7 GiB Cache sind kein Verbrauch, sondern vom Kernel genutzter freier Speicher —
+die relevante Zahl ist **verfügbar: 2,1 GiB** (gemessen 20.08.2026 nach zwei Tagen
+Laufzeit). Das System hat Luft, aber weniger als die Kaltstartmessung vom 18.08.2026
+vermuten ließ.
 
 Dass 179 MiB Swap belegt sind, ist bei 16 Tagen Uptime normal: Der Kernel lagert
 langfristig ungenutzte Speicherseiten aus, auch wenn RAM frei ist.

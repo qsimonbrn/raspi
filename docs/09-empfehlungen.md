@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 16.08.2026*
+*Stand: 20.08.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -42,10 +42,20 @@ Details in [06 — Daten & Speicher](06-daten-und-speicher.md).
 
 </details>
 
-### 1.2 Wiederherstellung testen
+### 1.2 Wiederherstellung testen — 🟡 teilweise erledigt am 20.08.2026
 
-Ein Backup, aus dem nie zurückgespielt wurde, ist eine Vermutung. Konkreter erster Test:
-Paperless-Export in eine leere Testinstanz importieren und prüfen, ob die
+> **Erledigt ist die Speicherebene:** `restic check` über alle 10 Snapshots ohne Fehler,
+> eine Stichprobe aus Snapshot `af02aa04` zurückgeholt und byte-identisch. Damit ist
+> belegt, dass das Repository unbeschädigt ist und Dateien herauskommen. Die Prüfung
+> läuft seit dem 20.08.2026 bei jeder Bestandsaufnahme mit.
+>
+> **Offen bleibt die Anwendungsebene:** dass ein zurückgeholter Paperless-Export sich in
+> eine leere Instanz **importieren** lässt und die Ordnungsstruktur vollständig ist, ist
+> weiterhin ungeprüft. Ein intakter `document_exporter`-Ordner ist noch kein
+> funktionierendes Archiv.
+
+Ein Backup, aus dem nie zurückgespielt wurde, ist eine Vermutung. Konkreter nächster
+Test: Paperless-Export in eine leere Testinstanz importieren und prüfen, ob die
 Ordnungsstruktur vollständig ist.
 
 **Aufwand:** 30 Minuten. **Wert:** Der Unterschied zwischen einem Backup und der Hoffnung
@@ -92,7 +102,8 @@ Ausführliche Begründungen in [07 — Sicherheit](07-sicherheit.md).
 | 2.9 | **Ersatz für `filebrowser`** — Dienst am 18.08.2026 abgeschaltet (CVE-2026-32759 ohne Patch), Nachfolger noch offen | 1 h | mittel |
 | 2.10 | **homepage auf v2.0.0** — Breaking Change bei der Authentifizierung, Release Notes lesen | 30 min | mittel |
 | ~~2.11~~ | ~~**Dashy abschalten**~~ — ✅ **erledigt am 18.08.2026.** Die drei alten Images liegen noch im System | — | — |
-| 2.9 | Samba härten (`map to guest = Never`, `server min protocol = SMB3`) | 15 min | niedrig |
+| 2.12 | Samba härten (`map to guest = Never`, `server min protocol = SMB3_11`, Signierung erzwingen) | 15 min | niedrig |
+| 2.13 | **Postgres-Passwort aus dem Git-Verlauf entfernen** — am 20.08.2026 von der Behauptungsprüfung gefunden: Klartext in neun Commits zwischen 10.12.2025 und 13.08.2026 (`paperless/docker-compose.yml`, alter Pfad). Nachgemessen: Der Wert stimmt **nicht** mit dem laufenden überein, es ist ein abgelegtes Passwort ohne gültigen Zugang. Bereinigung wie beim Bichon-Geheimnis am 18.08.2026 (`git filter-repo`, Force-Push, alle Klone neu ziehen) | 30 min | mittel |
 
 **Zu 2.1 — Sicherheitsnetz:** Die bestehende SSH-Sitzung offen lassen und den Login in
 einer *zweiten* Sitzung testen, bevor die erste geschlossen wird.
@@ -169,7 +180,8 @@ Pi-hole der DNS-Server für den gesamten Haushalt ist — ein unbemerkter Ausfal
 | ~~Paperless-Stack aus dem korrekten Pfad neu erzeugen~~ | — | ✅ **erledigt** — Label geprüft am 18.08.2026 |
 | Anonyme Volumes zuordnen und explizit benennen | 30 min | Verhindert versehentlichen Datenverlust beim Aufräumen |
 | ~~Offene Git-Änderungen committen~~ | — | ✅ **erledigt am 18.08.2026** |
-| Speicher-Limits je Container setzen | 30 min | Verhindert, dass ein Dienst den Pi in den OOM-Killer fährt. Erst nach Auswertung der laufenden 24-Stunden-Messung, siehe [05](05-docker.md) |
+| Speicher-Limits je Container setzen | 30 min | Verhindert, dass ein Dienst den Pi in den OOM-Killer fährt. Die Messung liegt seit dem 20.08.2026 auswertbar vor (4.785 Punkte über zwei Tage), siehe [05](05-docker.md). Limits aus dem gemessenen Höchstwert je Container ableiten, nicht aus dem Kaltstartwert |
+| `tailscale` von Hand aktualisieren | 5 min | 1.102.2 → 1.102.3 steht am 20.08.2026 aus. Tailscale kommt aus einem eigenen Repository und wird von `unattended-upgrades` bauartbedingt **nie** erfasst — dieses Paket bleibt dauerhaft Handarbeit |
 | Fünf verwaiste anonyme Volumes entfernen | 5 min | `docker volume prune`, faktisch leer (479 B) |
 
 **Vorsicht bei `dhcpcd`/`NetworkManager`:** Ein Fehler kappt die Netzwerkverbindung. Nur

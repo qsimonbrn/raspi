@@ -1,6 +1,6 @@
 # 08 — Bewertung
 
-*Stand: 16.08.2026*
+*Stand: 20.08.2026*
 
 Eine ehrliche Einordnung des Gesamtzustands. Messwerte stehen in den Fachkapiteln; hier
 geht es um die Einschätzung.
@@ -15,12 +15,15 @@ löst und seine Compose-Dateien in Git versioniert, weiß, was er tut. Das sind 
 Entscheidungen, die in typischen Heimserver-Setups selten alle drei richtig getroffen
 werden.
 
-Das System läuft entsprechend: 16 Tage Uptime, Load 0,05, nie gedrosselt, kein
-fehlgeschlagener Dienst, keine ausstehenden Paketupdates.
+Das System läuft entsprechend: am 20.08.2026 zwei Tage Uptime seit dem geplanten
+Neustart, Load 0,74, nie gedrosselt, kein fehlgeschlagener Dienst, ein ausstehendes
+Paketupdate.
 
-Die Schwächen liegen nicht im Aufbau, sondern in dem, was **nach** dem Aufbau kommt:
-Backups, Updates, Aufräumen. Klassisches Muster — das Interessante ist das Bauen, nicht
-das Betreiben.
+Die Schwächen lagen nicht im Aufbau, sondern in dem, was **nach** dem Aufbau kommt:
+Backups, Updates, Aufräumen. Genau dort ist zwischen dem 13. und 20.08.2026 das meiste
+geschlossen worden — Backup eingerichtet und als wiederherstellbar nachgewiesen,
+Sicherheitsupdates automatisiert, Verwaltungsoberflächen aus dem Heimnetz genommen. Was
+offen bleibt, steht unten und ist kürzer geworden.
 
 ---
 
@@ -47,17 +50,24 @@ das Betreiben.
 
 - **Compose-Dateien in Git mit GitHub-Remote.** Der beste Einzelaspekt des Setups —
   Konfiguration ist nachvollziehbar und wiederherstellbar.
-- **Betriebssystem manuell, aber zuverlässig gepflegt.** 0 ausstehende Updates.
+- **Sicherheitsupdates laufen selbsttätig.** Seit dem 18.08.2026 `unattended-upgrades`
+  ohne automatischen Neustart. Am 20.08.2026 ein ausstehendes Paket, und zwar eines aus
+  einem Fremd-Repository (Tailscale), das dieses Verfahren bauartbedingt nicht erfasst.
+- **Backup nicht nur eingerichtet, sondern geprüft.** Am 20.08.2026 `restic check` über
+  alle 10 Snapshots ohne Fehler und eine Stichprobe byte-identisch zurückgeholt. Der
+  Unterschied zwischen „es wird gesichert" und „es lässt sich zurückholen" ist der
+  einzige, der im Ernstfall zählt.
 - **Sinnvolle Mount-Optionen.** `noatime` schont die SD-Karte, `nofail` verhindert
   Boot-Blockaden bei abgezogener SSD, `fstrim.timer` ist aktiv.
 - **Nutzdaten auf der SSD, nicht auf der SD-Karte.**
 
 ### Hardware
 
-- **Thermik und Stromversorgung unauffällig.** `throttled=0x0` über 16 Tage — Kühlung
-  und Netzteil sind korrekt dimensioniert.
-- **Reichlich Reserven.** 2,4 GiB RAM verfügbar, unter 6 % CPU, 560 GB freier
-  SSD-Speicher.
+- **Thermik und Stromversorgung unauffällig.** `throttled=0x0`, auch historisch nie
+  gedrosselt; 48,7 °C am 20.08.2026 — Kühlung und Netzteil sind korrekt dimensioniert.
+- **Reserven vorhanden, aber kleiner als gedacht.** 2,1 GiB RAM verfügbar im
+  eingeschwungenen Zustand (20.08.2026), 560 GB freier SSD-Speicher. Die früher
+  genannten 2,4 GiB stammten aus einer Messung sechs Minuten nach dem Neustart.
 
 ---
 
@@ -67,21 +77,24 @@ das Betreiben.
 
 | Befund | Konsequenz | Kapitel |
 |---|---|---|
-| **Keine automatisierten Backups** — letzter Lauf 12.12.2025 | Paperless-Dokumente, E-Mail-Archiv und 310 GB Nutzdaten sind bei Ausfall verloren | [06](06-daten-und-speicher.md) |
+| ~~**Keine automatisierten Backups** — letzter Lauf 12.12.2025~~ | ✅ **erledigt am 13.08.2026** — restic läuft täglich; am 20.08.2026 erstmals als wiederherstellbar nachgewiesen (`restic check` über 10 Snapshots ohne Fehler, Stichprobe byte-identisch) | [12](12-backup.md) |
 | **Wurzeldateisystem auf SD-Karte von 02/2023** | Ausfall wahrscheinlich und ohne Vorwarnung, während eine SSD zu 64 % leer danebenliegt | [01](01-hardware.md) |
 
-Diese beiden Punkte hängen zusammen und verstärken sich: Der wahrscheinlichste
-Ausfallpunkt ist die SD-Karte — und für genau diesen Fall gibt es kein Backup.
+Diese beiden Punkte hingen zusammen und verstärkten sich: Der wahrscheinlichste
+Ausfallpunkt ist die SD-Karte — und für genau diesen Fall gab es kein Backup. Seit dem
+13.08.2026 gibt es eines, seit dem 20.08.2026 ist es geprüft. Der Ausfall der SD-Karte
+bleibt wahrscheinlich, kostet aber keine Daten mehr, sondern einen Wiederaufbau nach
+[Kapitel 11](11-disaster-recovery.md).
 
 ### 🟠 Wichtig
 
 | Befund | Konsequenz | Kapitel |
 |---|---|---|
-| Keine Firewall auf dem Host | Nur eine Schutzschicht (FRITZ!Box), keine Tiefenverteidigung | [07](07-sicherheit.md) |
-| SSH-Passwortanmeldung aktiv, kein `fail2ban` | Unbegrenzte Brute-Force-Versuche möglich | [07](07-sicherheit.md) |
+| ~~Keine Firewall auf dem Host~~ | ✅ **erledigt am 18.08.2026** — `pi-guard` sperrt die Verwaltungsoberflächen gegen das Heimnetz, nachgemessen an den Trefferzählern | [07](07-sicherheit.md) |
+| **SSH-Passwortanmeldung aktiv, kein `fail2ban`** | Unbegrenzte Brute-Force-Versuche möglich; `passwordauthentication yes` am 20.08.2026 erneut nachgemessen | [07](07-sicherheit.md) |
 | ~~`filebrowser` wird eingestellt~~ | ✅ **erledigt am 18.08.2026 — abgeschaltet.** Zusätzlich kam CVE-2026-32759 ohne Patch hinzu. Nachfolger noch offen | [05](05-docker.md) |
 | Öffentliche IPv6-Adresse ohne lokale Firewall | Eine Fehlkonfiguration in der FRITZ!Box legt alle Dienste offen | [03](03-netzwerk.md) |
-| Keine automatischen Sicherheitsupdates | Patch-Prozess hängt an einer einzelnen Person | [02](02-betriebssystem.md) |
+| ~~Keine automatischen Sicherheitsupdates~~ | ✅ **erledigt am 18.08.2026** — `unattended-upgrades` ohne selbsttätigen Neustart. Bleibt: Fremd-Repositories wie Tailscale sind davon **nicht** erfasst | [02](02-betriebssystem.md) |
 
 ### 🟡 Aufräumen
 
@@ -101,8 +114,10 @@ Ausfallpunkt ist die SD-Karte — und für genau diesen Fall gibt es kein Backup
 
 ## Die eine Zahl
 
-Für einen vollständigen Wiederaufbau nach Totalausfall werden sieben Dinge gebraucht.
-**Sechs davon sind gesichert** — seit Einrichtung des restic-Backups am 13.08.2026.
+Für einen vollständigen Wiederaufbau nach Totalausfall werden neun Dinge gebraucht.
+**Acht davon sind gesichert** — seit Einrichtung des restic-Backups am 13.08.2026, um
+ntfy und Portainer erweitert am 18.08.2026 und am 20.08.2026 als wiederherstellbar
+nachgewiesen.
 
 Nicht gesichert bleiben die 310 GB Nutzdaten auf der SSD; sie passen nicht in den
 verfügbaren Cloud-Speicher.

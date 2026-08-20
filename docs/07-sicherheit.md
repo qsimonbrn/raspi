@@ -1,6 +1,6 @@
 # 07 — Sicherheit
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · nachgemessen: 20.08.2026*
 
 ## Zusammenfassung
 
@@ -250,6 +250,36 @@ unnötige Fläche.
 
 ---
 
+## 🟡 Postgres-Passwort im Git-Verlauf
+
+*Gefunden am 20.08.2026 durch die Behauptungsprüfung in `inventar/collect.sh`, beim ersten
+Lauf nach ihrer Einführung.*
+
+`POSTGRES_PASSWORD` steht im Klartext in neun Commits zwischen dem 10.12.2025 und dem
+13.08.2026, in `paperless/docker-compose.yml` unter dem Pfad, den es vor der
+Zusammenlegung der Repositories gab. Beide Repositories sind öffentlich.
+
+**Nachgemessen, und das entschärft den Befund:** Der Wert im Verlauf stimmt **nicht** mit
+dem heute laufenden überein — Container und `.env` tragen ein anderes Passwort. Es ist
+ein abgelegtes Geheimnis, kein gültiger Zugang. Hinzu kommt, dass Postgres nur im
+internen Docker-Netz des Paperless-Stacks erreichbar ist und keinen Port nach außen
+veröffentlicht (`5432/tcp`, nicht gemappt — nachgemessen am 20.08.2026).
+
+**Was daraus folgt:** Die Bereinigung ist keine Notfallmaßnahme, sondern Hygiene. Sie
+kostet dasselbe wie am 18.08.2026 beim Bichon-Geheimnis: `git filter-repo`, Force-Push,
+und jeder vorhandene Klon muss neu gezogen werden — ein bewusster Eingriff in die
+Historie beider Repositories, rund 30 Minuten. Aufgenommen als Maßnahme 2.13 in
+[09 — Empfehlungen](09-empfehlungen.md).
+
+**Der eigentliche Befund ist ein anderer:** Dieses Geheimnis lag acht Monate im Verlauf,
+ohne dass es jemandem aufgefallen wäre. Gefunden hat es nicht ein Mensch, sondern eine
+Prüfung, die es seit dem 20.08.2026 gibt. Vor ihr wurde schlicht nicht gesucht — und
+alles, wonach nicht gesucht wird, gilt stillschweigend als in Ordnung.
+
+---
+
+---
+
 ## Positiv hervorzuheben
 
 | | Warum es zählt |
@@ -265,13 +295,11 @@ unnötige Fläche.
 | **Automatisierung mit eigenem Konto** | Seit 18.08.2026 arbeitet die Automatisierung als `claude`, nicht mehr als `simon`. Jede erhöhte Sitzung wird vollständig aufgezeichnet und ist abspielbar. Siehe [16 — Konten und Rechte](16-konten-und-rechte.md). |
 | **Docker-Socket-Proxy vorbildlich konfiguriert** | Nur `CONTAINERS` und `INFO` erlaubt, `POST` und `EXEC` ausdrücklich verboten, Socket nur lesend eingebunden. |
 | **ntfy mit `deny-all`** | Unauthentifiziertes Veröffentlichen wird mit HTTP 403 abgewiesen, nachgemessen. |
-| **Geheimnisse getrennt** | `.gitignore` greift, keine `.env` je committet, Dateirechte `600`. **Einschränkung:** Bis zum 18.08.2026 stand `BICHON_ENCRYPT_PASSWORD` im Klartext in `bichon/docker-compose.yml` und damit in allen 22 Commits. Behoben durch Auslagerung nach `.env` und `git filter-repo`, siehe [05](05-docker.md). |
-
----
+| **Geheimnisse getrennt** | `.gitignore` greift, keine `.env` je committet, Dateirechte `600`. **Einschränkung 1:** Bis zum 18.08.2026 stand `BICHON_ENCRYPT_PASSWORD` im Klartext in `bichon/docker-compose.yml` und damit in allen 22 Commits. Behoben durch Auslagerung nach `.env` und `git filter-repo`, siehe [05](05-docker.md). **Einschränkung 2:** Am 20.08.2026 fand die Behauptungsprüfung ein zweites, bis dahin unbekanntes Geheimnis im Verlauf — dazu der Abschnitt unten. |
 
 ## Priorisierte Maßnahmenliste
 
-Stand 18.08.2026. Die Reihenfolge folgt der Wirkung pro Aufwand, nicht streng der
+Stand 20.08.2026. Die Reihenfolge folgt der Wirkung pro Aufwand, nicht streng der
 Kritikalität.
 
 ### Erledigt
@@ -303,6 +331,7 @@ Kritikalität.
 | 9 | `auditd` mit gezielten Regeln | 1 h | mittel | Zugriffe auf Benutzerdatenbank, sudo-Regeln, SSH-Konfiguration |
 | 10 | Protokolle ins Backup | 30 min | mittel | Ein Angreifer mit Systemrechten löscht als Erstes die Spuren |
 | 11 | Samba härten | 15 min | niedrig | `map to guest`, Mindestprotokoll SMB3 |
+| 12 | **Postgres-Passwort aus dem Git-Verlauf entfernen** | 30 min | mittel | Gefunden am 20.08.2026. Der Wert ist nachweislich **nicht** der laufende — Hygiene, kein Notfall. Weg wie bei Bichon: `git filter-repo`, Force-Push, alle Klone neu ziehen |
 
 > **Reihenfolge beachten:** Punkt 8 gehört *hinter* ein geprüftes Backup. Ein
 > Container-Update ohne Rückfallebene ist selbst ein Risiko.
