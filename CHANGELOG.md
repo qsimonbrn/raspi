@@ -748,8 +748,10 @@ Major-Sprung, weil sich die Ablage der gesamten Dokumentation geändert hat.
 ### Neue Befunde
 
 - **Schwache Standardpasswörter bei Paperless** — `PAPERLESS_ADMIN_PASSWORD`
-  steht auf `***ENTFERNT-20260820***`, `POSTGRES_PASSWORD` auf ***ENTFERNT-20260820***, beides im
+  und `POSTGRES_PASSWORD` stehen auf unveränderten Beispielwerten, beides im
   Git-Repository. Aufgenommen in `docs/07-sicherheit.md`.
+  *(Die Werte standen hier ursprünglich im Klartext und wurden am 20.08.2026
+  maskiert — siehe Eintrag 2.4.0.)*
 - **222 GB unter `SSD_Müll` sind ungesichert** — darunter 2.971 Bilddateien und
   ein vollständiges Windows-Benutzerprofil. Passt nicht in 5 GB.
 - **86 GB unter `rclone_bak`** sind Sicherungskopien auf derselben Festplatte,

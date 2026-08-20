@@ -166,17 +166,24 @@ abgeschottet.
 
 ---
 
-## 🟠 Schwache Standardpasswörter bei Paperless
+## ✅ Schwache Standardpasswörter bei Paperless — behoben, nachgewiesen am 20.08.2026
 
-In `stacks/paperless/docker-compose.yml` stehen unveränderte Beispielwerte:
+Bis zum 16.08.2026 standen in `stacks/paperless/docker-compose.yml` unveränderte
+Beispielwerte: ein Administratorpasswort aus jeder Standard-Wortliste und ein
+Datenbankpasswort, das dem Benutzernamen entsprach. **Die Werte werden hier bewusst nicht
+mehr ausgeschrieben** — dieses Kapitel liegt selbst im Repository.
 
-| Variable | Wert |
+| Variable | Zustand am 20.08.2026 |
 |---|---|
-| `PAPERLESS_ADMIN_PASSWORD` | `***ENTFERNT-20260820***` |
-| `POSTGRES_PASSWORD` | `paperless` |
+| `PAPERLESS_ADMIN_PASSWORD` | in der Oberfläche geändert; der alte Wert wird vom Konto `admin` abgelehnt (`check_password()` → `False`) |
+| `POSTGRES_PASSWORD` | ausgelagert nach `.env` (Modus 600, über `.gitignore` ausgeschlossen); der alte Wert wird von der Datenbank über TCP abgelehnt, der laufende angenommen |
 
-Paperless ist auf `0.0.0.0:8000` gebunden, also aus dem gesamten Heimnetz erreichbar.
-`***ENTFERNT-20260820***` ist in jeder Standard-Wortliste enthalten.
+Beide Werte liegen weiterhin im Git-Verlauf der Commits bis zum 13.08.2026 — dazu der
+Abschnitt [Zwei Passwörter im Git-Verlauf](#-zwei-passwörter-im-git-verlauf), und dort
+auch die Bereinigung.
+
+Paperless ist auf `0.0.0.0:8000` gebunden, seit dem 18.08.2026 aber durch `pi-guard`
+gegen das Heimnetz gesperrt und nur über Tailscale erreichbar.
 
 Erschwerend: Die Datei liegt in einem **Git-Repository**. Es ist privat, aber Passwörter
 gehören auch dort nicht hinein — sie landen dauerhaft in der Versionsgeschichte, wo sie
@@ -250,33 +257,54 @@ unnötige Fläche.
 
 ---
 
-## 🟡 Postgres-Passwort im Git-Verlauf
+## 🟡 Zwei Passwörter im Git-Verlauf
 
-*Gefunden am 20.08.2026 durch die Behauptungsprüfung in `inventar/collect.sh`, beim ersten
-Lauf nach ihrer Einführung.*
+*Gefunden am 20.08.2026. Das erste durch die Behauptungsprüfung in `inventar/collect.sh`,
+das zweite von Hand — und genau das ist der interessantere Teil des Befunds.*
 
-`POSTGRES_PASSWORD` steht im Klartext in neun Commits zwischen dem 10.12.2025 und dem
-13.08.2026, in `paperless/docker-compose.yml` unter dem Pfad, den es vor der
-Zusammenlegung der Repositories gab. Beide Repositories sind öffentlich.
+`POSTGRES_PASSWORD` und `PAPERLESS_ADMIN_PASSWORD` stehen im Klartext in neun Commits
+zwischen dem 10.12.2025 und dem 13.08.2026, in `paperless/docker-compose.yml` unter dem
+Pfad, den es vor der Zusammenlegung der Repositories gab.
 
-**Nachgemessen, und das entschärft den Befund:** Der Wert im Verlauf stimmt **nicht** mit
-dem heute laufenden überein — Container und `.env` tragen ein anderes Passwort. Es ist
-ein abgelegtes Geheimnis, kein gültiger Zugang. Hinzu kommt, dass Postgres nur im
-internen Docker-Netz des Paperless-Stacks erreichbar ist und keinen Port nach außen
-veröffentlicht (`5432/tcp`, nicht gemappt — nachgemessen am 20.08.2026).
+**Nachgemessen, und beides entschärft den Befund erheblich:**
 
-**Was daraus folgt:** Die Bereinigung ist keine Notfallmaßnahme, sondern Hygiene. Sie
-kostet dasselbe wie am 18.08.2026 beim Bichon-Geheimnis: `git filter-repo`, Force-Push,
-und jeder vorhandene Klon muss neu gezogen werden — ein bewusster Eingriff in die
-Historie beider Repositories, rund 30 Minuten. Aufgenommen als Maßnahme 2.13 in
-[09 — Empfehlungen](09-empfehlungen.md).
+| Wert | gilt heute noch? | wie geprüft (20.08.2026) |
+|---|---|---|
+| `POSTGRES_PASSWORD` | **nein** | Verbindungsversuch aus dem Paperless-Container über TCP gegen `paperless-db` (dort greift `scram-sha-256`): alter Wert abgelehnt, laufender Wert aus `.env` angenommen, Zufallswert abgelehnt |
+| `PAPERLESS_ADMIN_PASSWORD` | **nein** | `check_password()` gegen das Konto `admin` in Paperless → `False`. Das Passwort wurde in der Oberfläche geändert, wie es die Empfehlung vorsah |
 
-**Der eigentliche Befund ist ein anderer:** Dieses Geheimnis lag acht Monate im Verlauf,
-ohne dass es jemandem aufgefallen wäre. Gefunden hat es nicht ein Mensch, sondern eine
-Prüfung, die es seit dem 20.08.2026 gibt. Vor ihr wurde schlicht nicht gesucht — und
-alles, wonach nicht gesucht wird, gilt stillschweigend als in Ordnung.
+Hinzu kommt: Beide Repositories sind **privat** — nachgemessen am 20.08.2026 mit einem
+anonymen `git ls-remote`, das für beide scheitert. Postgres veröffentlicht außerdem
+keinen Port nach außen (`5432/tcp`, nicht gemappt).
 
----
+**Was daraus folgt:** Die Bereinigung ist keine Notfallmaßnahme, sondern Hygiene — kein
+Wert im Verlauf öffnet heute noch eine Tür. Durchgeführt am 20.08.2026 mit
+`git filter-repo --replace-text` über alle 60 Commits, anschließend Force-Push, wie
+am 18.08.2026 beim Bichon-Geheimnis.
+
+> **Eine Vorbedingung, die leicht übersehen wird:** Dieses Kapitel selbst schrieb beide
+> Passwörter im Klartext aus (Abschnitt „Schwache Standardpasswörter bei Paperless").
+> Den Verlauf zu bereinigen und den Wert im aktuellen Stand stehen zu lassen, hätte das
+> Geheimnis im selben Zug neu in die Historie geschrieben. Die Tabelle wurde deshalb
+> **vor** dem Rückschreiben maskiert.
+
+### Der eigentliche Befund: die Prüfung hat nur eines von zwei gefunden
+
+`PAPERLESS_ADMIN_PASSWORD` wurde von der Behauptungsprüfung **nicht** gemeldet. Ihr
+Ausschlussfilter verwirft Treffer, die nach Platzhalter aussehen
+(`changeme|beispiel|example|your_|xxx|placeholder`) — und der damalige Wert begann mit
+`changeme`. Der Filter ist richtig gedacht: Eine Prüfung, die bei jeder Beispielkonfiguration
+Alarm schlägt, wird nach dem zweiten Mal ignoriert. Er unterstellt aber, dass ein Wert,
+der wie ein Platzhalter aussieht, auch nur ein Platzhalter *ist*. Hier war der Platzhalter
+acht Monate lang das echte Administratorpasswort.
+
+Korrigiert am 20.08.2026: Der Filter greift nur noch, wenn die Datei selbst eine Vorlage
+ist (`*.example`, `*.sample`, `*.dist`, `*/beispiel*`). Ein platzhalterartiger Wert in
+einer echten Compose-Datei wird gemeldet.
+
+**Das Muster ist dasselbe wie am 18.08.2026 sechsmal:** Etwas galt als geprüft und war es
+nur zur Hälfte. Eine Prüfung, die still einen Teil ihres Suchraums ausblendet, ist
+gefährlicher als keine — sie erzeugt Vertrauen, das sie nicht deckt.
 
 ---
 
