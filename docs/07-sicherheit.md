@@ -344,6 +344,8 @@ Kritikalität.
 | **`no-new-privileges` für alle acht Container** | 18.08.2026 |
 | **`BICHON_ENCRYPT_PASSWORD` aus dem Git-Verlauf entfernt** (`git filter-repo`, Force-Push), Wert unverändert nach `.env` | 18.08.2026 |
 | **Speicher-Cgroup aktiviert** (`cgroup_enable=memory`) — vorher waren `mem_limit`-Angaben wirkungslos | 18.08.2026 |
+| **`POSTGRES_PASSWORD` und `PAPERLESS_ADMIN_PASSWORD` aus dem Git-Verlauf entfernt** (`git filter-repo` über 61 Commits, Force-Push). Beide Werte vorher nachgemessen ungültig | 20.08.2026 |
+| **Ausschlussfilter der Behauptungsprüfung repariert** — er urteilte über den Wert statt über die Datei und hatte deshalb eines der beiden Geheimnisse verschluckt | 20.08.2026 |
 | Obsolete WireGuard-Schlüssel entfernt, darunter `/root/iphone.conf` mit privatem Schlüssel bei Modus 644 | 18.08.2026 |
 | Fehlerhaften Pi-hole-Eintrag `applovin.com` aus der Listenverwaltung entfernt | 18.08.2026 |
 
@@ -359,7 +361,6 @@ Kritikalität.
 | 9 | `auditd` mit gezielten Regeln | 1 h | mittel | Zugriffe auf Benutzerdatenbank, sudo-Regeln, SSH-Konfiguration |
 | 10 | Protokolle ins Backup | 30 min | mittel | Ein Angreifer mit Systemrechten löscht als Erstes die Spuren |
 | 11 | Samba härten | 15 min | niedrig | `map to guest`, Mindestprotokoll SMB3 |
-| 12 | **Postgres-Passwort aus dem Git-Verlauf entfernen** | 30 min | mittel | Gefunden am 20.08.2026. Der Wert ist nachweislich **nicht** der laufende — Hygiene, kein Notfall. Weg wie bei Bichon: `git filter-repo`, Force-Push, alle Klone neu ziehen |
 
 > **Reihenfolge beachten:** Punkt 8 gehört *hinter* ein geprüftes Backup. Ein
 > Container-Update ohne Rückfallebene ist selbst ein Risiko.

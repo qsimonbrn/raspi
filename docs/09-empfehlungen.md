@@ -103,7 +103,7 @@ Ausführliche Begründungen in [07 — Sicherheit](07-sicherheit.md).
 | 2.10 | **homepage auf v2.0.0** — Breaking Change bei der Authentifizierung, Release Notes lesen | 30 min | mittel |
 | ~~2.11~~ | ~~**Dashy abschalten**~~ — ✅ **erledigt am 18.08.2026.** Die drei alten Images liegen noch im System | — | — |
 | 2.12 | Samba härten (`map to guest = Never`, `server min protocol = SMB3_11`, Signierung erzwingen) | 15 min | niedrig |
-| 2.13 | **Postgres-Passwort aus dem Git-Verlauf entfernen** — am 20.08.2026 von der Behauptungsprüfung gefunden: Klartext in neun Commits zwischen 10.12.2025 und 13.08.2026 (`paperless/docker-compose.yml`, alter Pfad). Nachgemessen: Der Wert stimmt **nicht** mit dem laufenden überein, es ist ein abgelegtes Passwort ohne gültigen Zugang. Bereinigung wie beim Bichon-Geheimnis am 18.08.2026 (`git filter-repo`, Force-Push, alle Klone neu ziehen) | 30 min | mittel |
+| ~~2.13~~ | ~~**Postgres-Passwort aus dem Git-Verlauf entfernen**~~ — ✅ **erledigt am 20.08.2026.** Es waren **zwei** Werte, nicht einer: `PAPERLESS_ADMIN_PASSWORD` stand in denselben neun Commits und war der Prüfung durch den Platzhalterfilter entgangen. Beide vorher nachgemessen ungültig, `git filter-repo` über 61 Commits, Force-Push, danach 0 Treffer. Vorgehen und Fallstricke in [15](15-aenderungshistorie.md) | — | — |
 
 **Zu 2.1 — Sicherheitsnetz:** Die bestehende SSH-Sitzung offen lassen und den Login in
 einer *zweiten* Sitzung testen, bevor die erste geschlossen wird.

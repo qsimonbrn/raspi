@@ -598,21 +598,56 @@ else
 fi
 
 # --- 7. Steht ein Geheimnis im Git-Verlauf? --------------------------------
-# Wichtig: Kommentarzeilen und Platzhalter ausschliessen. Eine Pruefung, die
-# jedes Mal denselben Fehlalarm liefert (hier: die auskommentierte
-# Beispielkonfiguration in stacks/homepage/config/proxmox.yaml), wird nach dem
-# zweiten Mal ignoriert -- und taugt dann nichts mehr.
-GITTREFFER="$(cd /home/simon/raspi 2>/dev/null && git grep -I -h -inE \
+# Kommentarzeilen und Vorlagen ausschliessen. Eine Pruefung, die jedes Mal
+# denselben Fehlalarm liefert (hier: die auskommentierte Beispielkonfiguration
+# in stacks/homepage/config/proxmox.yaml), wird nach dem zweiten Mal ignoriert
+# -- und taugt dann nichts mehr.
+#
+# ABER: Bis zum 20.08.2026 hat diese Pruefung ueber den WERT gefiltert und alles
+# verworfen, was nach Platzhalter aussah (changeme|example|your_|xxx|...). Genau
+# so ist ihr PAPERLESS_ADMIN_PASSWORD durch die Lappen gegangen: Der Wert sah
+# aus wie ein Platzhalter, war aber acht Monate lang das echte
+# Administratorpasswort. Ein Platzhalter-WERT sagt nichts darueber, ob er
+# benutzt wird -- das sagt nur die DATEI, in der er steht. Deshalb wird jetzt
+# ueber den Pfad gefiltert: Vorlagen (*.example, *.sample, *.dist, *.template,
+# *beispiel*) duerfen Platzhalter enthalten, echte Konfigurationsdateien nicht.
+GITROH="$(cd /home/simon/raspi 2>/dev/null && git grep -I -inE \
   '^[^#/]*(password|passwd|secret|token|api[_-]?key)[[:space:]]*[=:][[:space:]]*[^[:space:]"'"'"'<${#]{8,}' \
-  $(git rev-list --all 2>/dev/null) -- 2>/dev/null \
-  | grep -viE 'changeme|beispiel|example|your[_-]|xxx+|placeholder|MASKIERT|<.*>' \
-  | sort -u | wc -l)"
-if [ -z "$GITTREFFER" ]; then
-  pruef "Keine Geheimnisse im Git-Verlauf" "?" "Suche lief nicht -- Repository lesbar?"
-elif [ "$GITTREFFER" -eq 0 ]; then
-  pruef "Keine Geheimnisse im Git-Verlauf" "ok" "alle $(cd /home/simon/raspi && git rev-list --all | wc -l) Commits durchsucht, kein Treffer ausserhalb von Kommentaren und Platzhaltern"
+  $(git rev-list --all 2>/dev/null) -- 2>/dev/null)"
+if [ -z "$GITROH" ]; then
+  # Leer heisst hier tatsaechlich "kein Treffer" -- ob die Suche lief, zeigt
+  # die Commitzahl darunter. Sie ist 0, wenn das Repository nicht lesbar war.
+  GITCOMMITS="$(cd /home/simon/raspi 2>/dev/null && git rev-list --all 2>/dev/null | wc -l)"
+  if [ "${GITCOMMITS:-0}" -eq 0 ]; then
+    pruef "Keine Geheimnisse im Git-Verlauf" "?" "Suche lief nicht -- Repository lesbar?"
+  else
+    pruef "Keine Geheimnisse im Git-Verlauf" "ok" "alle $GITCOMMITS Commits durchsucht, kein Treffer ausserhalb von Kommentaren und Vorlagendateien"
+  fi
 else
-  pruef "Keine Geheimnisse im Git-Verlauf" "ACHTUNG" "$GITTREFFER verdaechtige Zeile(n) im Verlauf -- pruefen mit \`git grep -inE '(password|secret|token)' \$(git rev-list --all)\`"
+  # Format je Zeile: <commit>:<pfad>:<zeilennr>:<inhalt>
+  # Gefiltert wird in awk, nicht in grep: \t ist in POSIX-ERE kein Tabulator,
+  # sondern der Buchstabe t. Genau daran ist die erste Fassung dieser Korrektur
+  # am 20.08.2026 gescheitert -- sie liess maskierte Zeilen durch und meldete
+  # einen Treffer, den es nicht mehr gab. Aufgefallen ist es nur, weil die
+  # Aenderung gegen das bereinigte UND das gesicherte Repository geprueft wurde.
+  GITGEFILTERT="$(printf '%s\n' "$GITROH" \
+    | awk -F: 'NF>3 {
+        pfad=$2; rest="";
+        for (i=4; i<=NF; i++) rest = rest (i>4 ? ":" : "") $i;
+        lp = tolower(pfad); lr = toupper(rest);
+        if (lp ~ /\.example|\.sample|\.dist|\.template|beispiel/) next;
+        if (lr ~ /MASKIERT|ENTFERNT-[0-9]+|REDACTED/) next;
+        if (rest ~ /\$\{/) next;
+        print pfad "\t" rest
+      }' \
+    | sort -u)"
+  GITTREFFER="$(printf '%s' "$GITGEFILTERT" | grep -c . )"
+  if [ "$GITTREFFER" -eq 0 ]; then
+    pruef "Keine Geheimnisse im Git-Verlauf" "ok" "alle $(cd /home/simon/raspi && git rev-list --all | wc -l) Commits durchsucht, Treffer nur in Vorlagendateien oder bereits maskiert"
+  else
+    GITDATEIEN="$(printf '%s\n' "$GITGEFILTERT" | cut -f1 | sort -u | tr '\n' ' ')"
+    pruef "Keine Geheimnisse im Git-Verlauf" "ACHTUNG" "$GITTREFFER verdaechtige Zeile(n) im Verlauf, betroffen: ${GITDATEIEN}-- pruefen mit \`git grep -inE '(password|secret|token)' \$(git rev-list --all)\`"
+  fi
 fi
 
 # --- 8. Hat pi-guard Treffer? ----------------------------------------------

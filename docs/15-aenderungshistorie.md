@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 20.08.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 20.08.2026 (zweiter Eintrag desselben Tages)*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,70 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 20.08.2026 — Zwei Passwörter aus dem Git-Verlauf entfernt
+
+| | |
+|---|---|
+| Betroffen | Repository `qsimonbrn/raspi` (alle 61 Commits neu geschrieben), `docs/07`, `CHANGELOG.md`, `inventar/collect.sh` |
+| Kapitel | [07](07-sicherheit.md) |
+| Rückfallebene | `/mnt/usb-hdd/backups-manuell/raspi-vor-filter-repo-20260820.tar.gz` (Modus 600, 671 Dateien, vor dem Eingriff geprüft) · GitHub-Tag `vor-anpassungen-2026-08-18` |
+
+**Anlass.** Die Behauptungsprüfung meldete beim zweiten Lauf erneut eine verdächtige
+Zeile im Git-Verlauf. Beim Nachsehen waren es **zwei** Geheimnisse, nicht eines:
+`POSTGRES_PASSWORD` und `PAPERLESS_ADMIN_PASSWORD`, beide in neun Commits zwischen dem
+10.12.2025 und dem 13.08.2026.
+
+**Vor dem Eingriff nachgemessen — beide Werte sind tot:**
+
+| Wert | Ergebnis | Prüfung |
+|---|---|---|
+| `POSTGRES_PASSWORD` | wird abgelehnt | Verbindung aus dem Paperless-Container über TCP gegen `paperless-db`; Positivkontrolle mit dem laufenden Wert aus `.env` angenommen, Negativkontrolle mit Zufallswert abgelehnt |
+| `PAPERLESS_ADMIN_PASSWORD` | wird abgelehnt | `check_password()` gegen das Konto `admin` → `False` |
+
+Die Positiv- und Negativkontrolle war nötig, weil der erste Versuch **wertlos** war: Ein
+`psql` im Datenbankcontainer läuft über den lokalen Socket, und dafür steht in
+`pg_hba.conf` `trust` — dort wird *jedes* Passwort angenommen, auch ein zufälliges. Ohne
+die Gegenprobe wäre die Meldung „das alte Passwort gilt noch" in die Doku gewandert.
+
+**Durchgeführt.**
+
+1. `docs/07` und `CHANGELOG.md` maskiert und committet. **Diese Reihenfolge ist
+   zwingend:** Beide Dateien schrieben die Werte im Klartext aus. Wer erst den Verlauf
+   bereinigt und dann committet, schreibt das Geheimnis im selben Zug wieder hinein.
+2. `git filter-repo --replace-text` über alle 61 Commits. Das Admin-Passwort als
+   `literal`, das Postgres-Passwort **nur in der Zuweisung** als `regex` — es lautete
+   `paperless`, und eine literale Ersetzung hätte jedes Vorkommen dieses Wortes im
+   gesamten Repository zerstört.
+3. Force-Push auf `origin`, Tag mitgezogen. Danach: 0 Treffer im gesamten Verlauf,
+   67 Blobs tragen die Marke `***ENTFERNT-20260820***`.
+
+**Der wichtigere Teil: die Prüfung hatte nur eines von zwei gefunden.** Ihr
+Ausschlussfilter verwarf Werte, die nach Platzhalter aussehen — und der Wert des
+Admin-Passworts begann mit `changeme`. Der Filter urteilte über den Wert, obwohl nur die
+Datei etwas darüber sagt, ob ein Wert benutzt wird. Korrigiert: Ausgeschlossen wird jetzt
+nach Pfad (`*.example`, `*.sample`, `*.dist`, `*.template`, `*beispiel*`), nicht nach
+Aussehen des Wertes.
+
+**Und ein Fehler in der Korrektur selbst.** Die erste Fassung filterte mit
+`grep -E '\t…'` — in POSIX-ERE ist `\t` kein Tabulator, sondern der Buchstabe `t`. Der
+Filter lief, meldete aber eine längst maskierte Zeile als Treffer. Aufgefallen ist das
+nur, weil die Änderung gegen drei Fälle geprüft wurde: das bereinigte Repository
+(erwartet 0, geliefert 0), die Sicherung von vorher (erwartet 2, geliefert 2) und ein
+eigens gebautes Testrepository mit demselben Platzhalter in einer `.example`-Datei und in
+einer echten Compose-Datei (erwartet: nur die echte wird gemeldet — genau so). Seitdem
+filtert `awk`, nicht `grep`.
+
+**Folgen für vorhandene Klone.** Alle Commit-Kennungen haben sich geändert. Ein
+bestehender Klon lässt sich nicht mehr per `git pull` angleichen und muss neu gezogen
+werden. Auf dem Pi selbst ist das erledigt; ein Klon auf dem Mac wäre neu zu holen.
+
+**Was offen bleibt.** GitHub hält verwaiste Objekte noch eine Weile unter ihrer direkten
+Kennung erreichbar; erzwingen lässt sich das Aufräumen nur über den GitHub-Support. Da
+beide Werte nachweislich ungültig sind und beide Repositories privat, ist das nicht
+verfolgt worden.
 
 ---
 

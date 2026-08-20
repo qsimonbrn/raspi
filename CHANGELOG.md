@@ -9,6 +9,56 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.4.0] — 2026-08-20
+
+Zwei Passwörter aus dem Git-Verlauf entfernt — und die Prüfung repariert, die nur eines
+von beiden gefunden hatte.
+
+### Sicherheit
+
+- **`POSTGRES_PASSWORD` und `PAPERLESS_ADMIN_PASSWORD` aus allen 61 Commits entfernt**
+  (`git filter-repo --replace-text`, Force-Push). Beide standen im Klartext in neun
+  Commits zwischen dem 10.12.2025 und dem 13.08.2026. Vorgehen, Messungen und
+  Fallstricke im Betriebstagebuch [15](docs/15-aenderungshistorie.md).
+- **Vor dem Eingriff nachgemessen: beide Werte sind ungültig.** Das Admin-Passwort wird
+  vom Konto `admin` abgelehnt, das Datenbankpasswort von Postgres über TCP — jeweils mit
+  Positiv- und Negativkontrolle, weil der erste Versuch über den lokalen Socket lief, wo
+  `pg_hba.conf` auf `trust` steht und **jedes** Passwort angenommen wird.
+- **Klartextwerte in `docs/07` und im CHANGELOG maskiert**, und zwar **vor** der
+  Bereinigung. Sonst hätte der Commit, der den Verlauf säubert, das Geheimnis im selben
+  Zug neu hineingeschrieben. Die Maskierung im CHANGELOG-Eintrag vom 16.08.2026 ist eine
+  bewusste Ausnahme von der Regel, dass Verlaufsdateien nicht umgeschrieben werden: Der
+  Wortlaut bleibt, nur die Werte fallen weg.
+
+### Behoben
+
+- **Der Ausschlussfilter der Behauptungsprüfung urteilte über den Wert statt über die
+  Datei.** Er verwarf alles, was nach Platzhalter aussieht — und übersah so ein
+  Passwort, das mit `changeme` begann und trotzdem acht Monate lang in Gebrauch war.
+  Jetzt entscheidet der Pfad: Vorlagen (`*.example`, `*.sample`, `*.dist`, `*.template`,
+  `*beispiel*`) dürfen Platzhalter enthalten, echte Konfigurationsdateien nicht.
+- **Die erste Fassung dieser Korrektur war selbst kaputt.** Sie filterte mit
+  `grep -E '\t…'`; in POSIX-ERE ist `\t` kein Tabulator, sondern der Buchstabe `t`. Der
+  Filter lief durch und meldete eine bereits maskierte Zeile als Treffer. Gefunden hat es
+  nicht das Lesen, sondern die Gegenprobe gegen drei Fälle: bereinigtes Repository
+  (erwartet 0 → 0), Sicherung von vorher (erwartet 2 → 2), Testrepository mit demselben
+  Platzhalter in einer `.example`- und einer echten Compose-Datei (erwartet: nur die
+  echte → genau so). Gefiltert wird seitdem in `awk`.
+- **`docs/09` verwies mit `../docs/` auf ein Nachbarkapitel im selben Verzeichnis.**
+
+### Richtiggestellt
+
+- **„Beide Repositories sind öffentlich"** — ein Satz, den diese Dokumentation am
+  Vormittag des 20.08.2026 selbst neu bekommen hatte, ungeprüft. Anonymes
+  `git ls-remote` scheitert für beide: Sie sind **privat**. Ein hausgemachter Fall
+  desselben Musters, das dieses Repository an sechs Beispielen vom 18.08.2026
+  dokumentiert.
+- **`docs/07`, „Schwache Standardpasswörter bei Paperless" stand auf 🟠 offen.**
+  Nachgemessen ist der Befund erledigt: Beide Werte wurden geändert, der alte
+  funktioniert nachweislich nicht mehr.
+
+---
+
 ## [2.3.0] — 2026-08-20
 
 Erste turnusmäßige Aktualisierung mit dem überarbeiteten Ablauf. Minor-Sprung, weil ein
