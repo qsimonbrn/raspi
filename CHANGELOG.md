@@ -9,6 +9,56 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.2.0] — 2026-08-20
+
+Minor-Sprung: Die Bestandsaufnahme prüft jetzt Behauptungen statt nur Werte zu sammeln.
+
+### Geändert
+
+- **`inventar/collect.sh` überarbeitet.** Der Anlass war nicht der Skill-Text, sondern
+  seine Datengrundlage: Das Skript kannte `pi-abgleich`, `pi-guard`, `pi-gravity`, die
+  Logrotation, `no-new-privileges` und die Speicher-Cgroup mit null Treffern. Der
+  Diff-Mechanismus, auf dem die Doku-Pflege beruht, war blind für alles seit dem
+  16.08.2026.
+- **Neuer Abschnitt „Behauptungsprüfung"** mit elf Prüfungen. Maßstab ist nicht, was
+  leicht zu messen ist, sondern was still scheitert, was oft angefasst wird und was
+  ungeprüft hingenommen wird — bis hin zum Wiederherstellungspfad des Backups.
+- **Drei Marken statt leerer Zellen:** `ok` geprüft und in Ordnung · `ACHTUNG` geprüft
+  und abweichend · `?` konnte nicht geprüft werden. Die Unterscheidung zwischen der
+  ersten und der letzten Marke ist der Zweck der Änderung: Eine leere Zelle las sich
+  bisher wie „nichts vorhanden".
+- **Neue Datei `inventar/snapshots/aktuell-werte.tsv`** — maschinenlesbare Zahlen, damit
+  der nächste Lauf Wachstum gegen den vorigen vergleichen kann statt gegen einen
+  absoluten Grenzwert.
+- **Laufzeit** rund 86 s statt 27 s; die restic-Prüfungen sprechen über rclone mit
+  OneDrive. Mit `--ohne-tiefpruefung` bleibt es bei rund 27 s.
+
+### Richtiggestellt
+
+- **`rclone listremotes` lief ohne `sudo`** und lieferte deshalb eine leere Zeile, die
+  sich wie „kein Remote konfiguriert" las. Ebenso irreführend: der rclone-Log-Eintrag
+  vom 12.12.2025 als scheinbar letzter Backup-Zeitpunkt, der Cronjob-Zähler `0` bei vier
+  laufenden systemd-Timern und `ufw: nicht installiert` als scheinbarer Mangel, wo eine
+  bewusste Entscheidung für `pi-guard` steht. Alle vier Zeilen ersetzt.
+- **`restic snapshots --latest 1` liefert nicht den neuesten Snapshot**, sondern den
+  neuesten je Pfad-Gruppe (gemessen am 20.08.2026). Nach der Umstellung der gesicherten
+  Pfade am 18.08. kam dadurch ein zwei Tage alter Snapshot zurück — das Backup sah still
+  stehend aus. Das Skript sortiert jetzt selbst nach Zeit.
+- **Der Wiederherstellungspfad des Backups war nie getestet.** Am 20.08.2026 erstmals
+  nachgewiesen: `restic check` über alle 9 Snapshots ohne Fehler, Stichprobe aus Snapshot
+  `fd04740b` zurückgeholt und byte-identisch.
+
+### Offen
+
+- **Ein Postgres-Passwort steht im Klartext im Git-Verlauf**, in neun Commits zwischen
+  dem 10.12.2025 und dem 13.08.2026 (`paperless/docker-compose.yml`, alter Pfad). Der
+  aktuelle Stand ist sauber, und der Wert stimmt nachweislich **nicht** mit dem heute
+  laufenden überein — Postgres und `.env` tragen einen anderen. Gefunden von der neuen
+  Prüfung beim ersten Lauf. Aufräumen des Verlaufs steht aus, siehe
+  [09 — Empfehlungen](docs/09-empfehlungen.md).
+
+---
+
 ## [2.1.0] — 2026-08-20
 
 Minor-Sprung: Kapitel 04 bekommt einen neuen Abschnitt.
