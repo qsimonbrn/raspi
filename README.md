@@ -60,7 +60,7 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 | RAM verfügbar | 2,1 von 3,7 GiB — Container zusammen rund 1,26 GiB (34 %) |
 | Systemdatenträger | 4 % belegt (7,9 G von 235 G) |
 | Datenspeicher SSD | 36 % belegt (310 G von 916 G) |
-| Ausstehende OS-Updates | 1 — `tailscale` 1.102.2 → 1.102.3 (Fremd-Repository, von `unattended-upgrades` nicht erfasst) |
+| Ausstehende OS-Updates | 0 — `tailscale` am 20.08.2026 von Hand auf 1.102.3 gezogen (Fremd-Repository, von `unattended-upgrades` nie erfasst) |
 | Fehlgeschlagene Dienste | 0 |
 | Backup | täglich, 10 Snapshots; am 20.08.2026 erstmals als **wiederherstellbar nachgewiesen** |
 | Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
@@ -68,7 +68,7 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
-| Speicher-Limits | seit dem 18.08.2026 technisch möglich (`cgroup_enable=memory`), 4.785 Messpunkte vorhanden, noch keine gesetzt |
+| Speicher-Limits | **seit 20.08.2026 gesetzt** für alle acht Container, Summe 3.104 von 3.796 MiB — nicht überbucht |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 
@@ -84,9 +84,10 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
    erfolgen. `AllowUsers` muss dabei **beide** Konten nennen (`simon claude`), sonst ist
    die Automatisierung ausgesperrt. → [Kapitel 07](docs/07-sicherheit.md)
 
-Ebenfalls offen: **Speicher-Limits je Container** — seit dem Neustart am 18.08.2026
-technisch möglich; die Messung liegt am 20.08.2026 mit 4.785 Punkten über zwei Tage vor
-und ist auswertbar. → [Kapitel 05](docs/05-docker.md)
+Am 20.08.2026 erledigt: **Speicher-Limits je Container** stehen für alle acht, auf
+Grundlage einer Messung über zwei Tage und bewusst großzügig — sie sollen einen
+ausgerissenen Dienst abfangen, nicht den normalen Betrieb begrenzen.
+→ [Kapitel 05](docs/05-docker.md)
 
 Am 18.08.2026 erledigt: Verwaltungsoberflächen aus dem Heimnetz genommen, Filebrowser
 (CVE ohne Patch) und Dashy abgeschaltet, Automatisierung auf ein eigenes, aufgezeichnetes

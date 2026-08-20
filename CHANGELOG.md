@@ -9,6 +9,44 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.5.0] — 2026-08-20
+
+Speicher-Limits gesetzt und dokumentiert, Tailscale aktualisiert. Beides sind
+Systemänderungen — die Begründungen stehen ausführlich im Betriebstagebuch
+[15](docs/15-aenderungshistorie.md), hier nur die Doku-Seite.
+
+### Hinzugefügt
+
+- **`docs/05` — neuer Abschnitt „Speicher-Limits — gesetzt am 20.08.2026"** mit der
+  Messgrundlage (603 Punkte je Container über zwei Tage), der Limit-Tabelle samt Reserve
+  je Container und der Begründung, **warum großzügig statt knapp**: Die Messung tastet
+  alle fünf Minuten ab und sieht einen OCR-Lauf von unter zwei Minuten überhaupt nicht,
+  das gemessene Maximum ist also eine Untergrenze. Dazu der Hinweis, dass ein
+  `mem_limit` erst beim Neuerzeugen des Containers greift, nicht beim Neustart.
+- **`docs/15` — Eintrag zu beiden Systemänderungen**, mit der Nachmessung: alle acht
+  Container melden ihr Limit, kein OOM, kein Neustart, Paperless nach 125 s wieder
+  `healthy`, `pi-guard` unbeschädigt.
+
+### Geändert
+
+- **`README` und `docs/05`:** Speicher-Limits von „noch keine gesetzt" auf „gesetzt für
+  alle acht, Summe 3.104 von 3.796 MiB, nicht überbucht".
+- **`README` und `docs/02`:** ausstehende Updates von 1 auf 0. Der Hinweis bleibt, dass
+  `unattended-upgrades` auf `origin=Debian` beschränkt ist und Tailscale deshalb **nie**
+  selbsttätig aktualisiert wird — der Fall ist erledigt, die Lücke im Verfahren nicht.
+- **`docs/09`:** beide Maßnahmen als erledigt gekennzeichnet. Bei Tailscale mit dem
+  Zusatz, dass daraus ein Dauerauftrag wird.
+
+### Anmerkung zur Messung
+
+Der befristete Timer `docker-stats-messung` wird **noch nicht** entfernt, obwohl
+`system/messung/README.md` das nach der Auswertung vorsieht. Sein erster Zweck ist
+erfüllt, sein zweiter beginnt gerade: zu zeigen, ob ein Container gegen seine neue Decke
+läuft — vor allem bichon, dessen Arbeitssatz im Messfenster noch wuchs. Entfernt wird er
+nach ein bis zwei Wochen ohne Anschlag.
+
+---
+
 ## [2.4.0] — 2026-08-20
 
 Zwei Passwörter aus dem Git-Verlauf entfernt — und die Prüfung repariert, die nur eines

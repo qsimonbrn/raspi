@@ -10,6 +10,20 @@ x-logging: &logging
     max-size: "10m"
     max-file: "3"
 
+# --- Speicher-Limits ---------------------------------------------------------
+#  Gesetzt am 20.08.2026 auf Grundlage einer Messung ueber 603 Punkte je
+#  Container (18.08. 06:03 bis 20.08. 11:39, alle 5 Minuten). Die Werte sind
+#  bewusst grosszuegig: Sie sollen einen ausgerissenen Dienst abfangen, nicht
+#  den normalen Betrieb begrenzen. Die Messung tastet alle fuenf Minuten ab und
+#  sieht kurze Spitzen -- etwa einen OCR-Lauf -- ueberhaupt nicht; das gemessene
+#  Maximum ist deshalb eine Untergrenze.
+#
+#  Die Summe aller Limits liegt bei 3104 MiB von 3796 MiB RAM. Damit ist nichts
+#  ueberbucht: Selbst wenn alle Container gleichzeitig anschlagen, bleibt dem
+#  System Luft. Ein Limit greift ERST, wenn der Container neu erzeugt wird --
+#  ein Neustart genuegt nicht.
+# -----------------------------------------------------------------------------
+
 services:
   bichon:
     # Bichon veroeffentlicht keine Versions-Tags. Festgenagelt auf den Digest des
@@ -20,6 +34,8 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    # gemessenes Maximum 462 MiB (20.08.2026)
+    mem_limit: 768m
 
     # Geheimnis steht in .env (Modus 660, ueber .gitignore ausgeschlossen).
     env_file:

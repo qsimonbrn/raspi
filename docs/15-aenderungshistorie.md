@@ -19,6 +19,68 @@ Backup.
 
 ---
 
+## 20.08.2026 — Speicher-Limits gesetzt, Tailscale aktualisiert
+
+| | |
+|---|---|
+| Betroffen | Alle fünf Compose-Stacks, Paket `tailscale` |
+| Kapitel | [05](05-docker.md), [02](02-betriebssystem.md) |
+| Rückfallebene | Die Limits stehen versioniert in den Compose-Dateien; ein Entfernen der Zeilen plus `compose up -d` stellt den vorherigen Zustand her |
+
+**Anlass.** Die Messung lief seit dem 18.08.2026 und war überfällig. Ohne Limits sucht
+sich der OOM-Killer im Ernstfall ein beliebiges Opfer, und das ist selten der Dienst, der
+das Problem verursacht hat.
+
+**Grundlage.** 603 Messpunkte je Container über zwei Tage und fünf Stunden.
+
+| Container | gemessenes Maximum | Limit | Reserve |
+|---|---|---|---|
+| paperless | 907 MiB | **1280 MiB** | 41 % |
+| bichon | 462 MiB | **768 MiB** | 66 % |
+| homepage | 176 MiB | **320 MiB** | 82 % |
+| paperless-db | 61 MiB | **256 MiB** | 319 % |
+| portainer | 89 MiB | **192 MiB** | 116 % |
+| paperless-redis | 15 MiB | **128 MiB** | 742 % |
+| ntfy | 51 MiB | **96 MiB** | 90 % |
+| homepage-dockerproxy | 30 MiB | **64 MiB** | 113 % |
+| **Summe** | **1.790 MiB** | **3.104 MiB** | von 3.796 MiB RAM |
+
+**Zwei Gründe für die Großzügigkeit — beide aus den Daten, nicht aus Vorsicht:**
+
+1. **Die Messung sieht kurze Spitzen nicht.** Sie tastet alle fünf Minuten ab; ein
+   OCR-Lauf dauert oft unter zwei Minuten. Das Maximum von 907 MiB bei Paperless ist eine
+   Untergrenze. Ein knappes Limit hätte irgendwann mitten in einer Texterkennung
+   zugeschlagen, und das Dokument wäre im Einwurf liegen geblieben.
+2. **bichon wächst noch.** 14,7 MiB beim Kaltstart, Median 370, Maximum 462 — der
+   Arbeitssatz baute sich über die zwei Tage auf und war am Ende nicht am Ende.
+
+Die Summe der Limits liegt bei 3.104 MiB von 3.796 MiB RAM. **Nichts ist überbucht:**
+Selbst wenn alle acht gleichzeitig anschlagen, bleibt dem System Luft.
+
+**Durchgeführt.** Stack für Stack `compose up -d`, zuerst die vier kleinen, dann
+Paperless. Ein `mem_limit` greift erst beim Neuerzeugen des Containers — ein Neustart
+genügt nicht.
+
+**Nachgemessen.** Alle acht Container melden ihr Limit über `docker inspect`
+(`HostConfig.Memory`), `OOMKilled=false`, `RestartCount=0`. Paperless war nach 125 s
+wieder `healthy` und liegt bei 753 MiB von 1,25 GiB (59 %). **`pi-guard` hat das
+Neuerzeugen überstanden** — beide Ketten stehen mit je einer Referenz, die Zähler laufen
+weiter. Das war die eigentliche Frage bei dieser Änderung: Docker schreibt seine
+iptables-Regeln beim Erzeugen eines Containers neu, und die Sperre der
+Verwaltungsoberflächen hängt genau dort.
+
+**Die Messung läuft weiter.** Ihr erster Zweck ist erfüllt, ihr zweiter beginnt gerade:
+zu zeigen, ob ein Container gegen seine neue Decke läuft. Entfernt wird sie erst, wenn
+das ein bis zwei Wochen lang nicht passiert.
+
+**Tailscale 1.102.2 → 1.102.3.** Von Hand, weil das Paket aus einem eigenen Repository
+kommt und `unattended-upgrades` auf `origin=Debian` beschränkt ist. Danach: Tailnet
+vollständig, alle drei Geräte sichtbar, Exit Node weiterhin angeboten, 0 ausstehende
+Pakete. **Das bleibt ein Dauerauftrag** — dieses eine Paket wird nie selbsttätig
+aktualisiert.
+
+---
+
 ## 20.08.2026 — Zwei Passwörter aus dem Git-Verlauf entfernt
 
 | | |

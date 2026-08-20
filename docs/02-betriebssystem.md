@@ -24,10 +24,12 @@ Der Kernel `6.12.x` ist der aktuelle Raspberry-Pi-Foundation-Zweig für Bookworm
 
 | | |
 |---|---|
-| Ausstehende Updates | **1** — `tailscale` 1.102.2 → 1.102.3 (20.08.2026) |
+| Ausstehende Updates | **0** (20.08.2026, nach dem Tailscale-Update) |
 | Fehlgeschlagene systemd-Dienste | **0** |
 
-Das eine ausstehende Paket ist kein Versäumnis, sondern eine Lücke im Verfahren:
+Am Vormittag des 20.08.2026 stand hier noch ein Paket aus (`tailscale` 1.102.2 →
+1.102.3); es wurde am selben Tag von Hand nachgezogen. Der Fall lohnt sich trotzdem zu
+merken, weil er eine Lücke im Verfahren zeigt:
 `unattended-upgrades` ist auf die Debian-Quellen beschränkt (`origin=Debian`, Label
 `Debian` und `Debian-Security`, nachgemessen in `/etc/apt/apt.conf.d/50unattended-upgrades`).
 Tailscale kommt aus einem eigenen Repository (`/etc/apt/sources.list.d/tailscale.list`)

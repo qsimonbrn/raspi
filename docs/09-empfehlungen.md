@@ -180,8 +180,8 @@ Pi-hole der DNS-Server für den gesamten Haushalt ist — ein unbemerkter Ausfal
 | ~~Paperless-Stack aus dem korrekten Pfad neu erzeugen~~ | — | ✅ **erledigt** — Label geprüft am 18.08.2026 |
 | Anonyme Volumes zuordnen und explizit benennen | 30 min | Verhindert versehentlichen Datenverlust beim Aufräumen |
 | ~~Offene Git-Änderungen committen~~ | — | ✅ **erledigt am 18.08.2026** |
-| Speicher-Limits je Container setzen | 30 min | Verhindert, dass ein Dienst den Pi in den OOM-Killer fährt. Die Messung liegt seit dem 20.08.2026 auswertbar vor (4.785 Punkte über zwei Tage), siehe [05](05-docker.md). Limits aus dem gemessenen Höchstwert je Container ableiten, nicht aus dem Kaltstartwert |
-| `tailscale` von Hand aktualisieren | 5 min | 1.102.2 → 1.102.3 steht am 20.08.2026 aus. Tailscale kommt aus einem eigenen Repository und wird von `unattended-upgrades` bauartbedingt **nie** erfasst — dieses Paket bleibt dauerhaft Handarbeit |
+| ~~Speicher-Limits je Container setzen~~ | — | ✅ **erledigt am 20.08.2026** — alle acht Container, Summe 3.104 von 3.796 MiB, nicht überbucht. Nachgemessen: Limits stehen, kein OOM, kein Neustart. Begründung der Großzügigkeit in [05](05-docker.md) |
+| ~~`tailscale` von Hand aktualisieren~~ | — | ✅ **erledigt am 20.08.2026** (1.102.2 → 1.102.3, Tailnet danach vollständig). **Bleibt als Dauerauftrag:** Tailscale kommt aus einem eigenen Repository und wird von `unattended-upgrades` bauartbedingt **nie** erfasst |
 | Fünf verwaiste anonyme Volumes entfernen | 5 min | `docker volume prune`, faktisch leer (479 B) |
 
 **Vorsicht bei `dhcpcd`/`NetworkManager`:** Ein Fehler kappt die Netzwerkverbindung. Nur

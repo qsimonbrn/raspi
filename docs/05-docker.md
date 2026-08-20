@@ -12,7 +12,7 @@
 | Images gesamt | **8 (3,63 GB), nichts freigebbar** — aufgeräumt am 18.08.2026 |
 | Alle Images | auf feste Versionen bzw. Digests gepinnt (vollständig seit 18.08.2026) |
 | Logrotation | 10 MB je Datei, 3 Dateien — in jeder Compose-Datei gesetzt |
-| Speicher-Limits | technisch möglich seit dem Neustart am 18.08.2026, noch keine gesetzt — 4.785 Messpunkte liegen vor (20.08.2026) |
+| Speicher-Limits | **gesetzt am 20.08.2026** für alle acht Container, auf Grundlage einer Messung über zwei Tage |
 
 ## Container
 
@@ -158,12 +158,52 @@ Daraus folgt für die Limits: **eine Momentaufnahme kurz nach dem Start taugt ni
 Grundlage.** Wer bichon damals ein Limit von 128 MiB gegeben hätte, hätte den Dienst
 zwei Tage später abgewürgt.
 
-**Speicher-Limits sind noch nicht gesetzt** (nachgemessen: alle acht Container melden
-`Memory: 0`). Ein Timer schreibt seit dem 18.08.2026 alle fünf Minuten nach
-`/mnt/usb-hdd/messungen/docker-speicher.csv`; am 20.08.2026 liegen dort 4.785 Zeilen
-über zwei Tage — genug, um Limits mit Reserve aus dem gemessenen Höchstwert je Container
-abzuleiten statt aus einer Schätzung. Skript, Unit und Anleitung zum Entfernen liegen
-unter `system/messung/`.
+### Speicher-Limits — gesetzt am 20.08.2026
+
+Grundlage ist die Messung, die seit dem 18.08.2026 alle fünf Minuten nach
+`/mnt/usb-hdd/messungen/docker-speicher.csv` schreibt: **603 Punkte je Container**
+zwischen dem 18.08. 06:03 und dem 20.08. 11:39.
+
+| Container | gemessenes Maximum | Limit | Reserve |
+|---|---|---|---|
+| paperless | 907 MiB | **1280 MiB** | 41 % |
+| bichon | 462 MiB | **768 MiB** | 66 % |
+| homepage | 176 MiB | **320 MiB** | 82 % |
+| paperless-db | 61 MiB | **256 MiB** | 319 % |
+| portainer | 89 MiB | **192 MiB** | 116 % |
+| paperless-redis | 15 MiB | **128 MiB** | 742 % |
+| ntfy | 51 MiB | **96 MiB** | 90 % |
+| homepage-dockerproxy | 30 MiB | **64 MiB** | 113 % |
+| **Summe** | **1.790 MiB** | **3.104 MiB** | von 3.796 MiB RAM |
+
+**Die Limits sind bewusst großzügig.** Sie sind eine Reißleine gegen einen ausgerissenen
+Dienst, kein Sparprogramm. Der Grund steht in der Messung selbst: Sie tastet alle fünf
+Minuten ab und **sieht kurze Spitzen überhaupt nicht** — ein OCR-Lauf in Paperless dauert
+oft unter zwei Minuten. Das gemessene Maximum von 907 MiB ist deshalb eine Untergrenze,
+keine Obergrenze. Ein Limit knapp darüber würde irgendwann mitten in einer Texterkennung
+zuschlagen, und das Dokument bliebe unbearbeitet im Einwurf liegen.
+
+Dazu kommt, dass **bichon noch wächst**: niedrigster Wert 14,7 MiB (Kaltstart), Median
+370 MiB, Maximum 462 MiB. Der Arbeitssatz eines E-Mail-Indexers baut sich über Tage auf
+und war am Ende des Messfensters erkennbar noch nicht am Ende.
+
+**Die Summe aller Limits liegt mit 3.104 MiB unter den 3.796 MiB RAM.** Damit ist nichts
+überbucht: Selbst wenn alle acht Container gleichzeitig ihre Decke erreichen, bleibt dem
+Betriebssystem Luft. Das ist die eigentliche Absicherung — der OOM-Killer sucht sich
+sonst ein beliebiges Opfer, und das ist selten der Schuldige.
+
+**Nachgemessen nach dem Setzen** (20.08.2026): Alle acht Container melden ihr Limit über
+`docker inspect`, `OOMKilled=false`, `RestartCount=0`, Paperless nach 125 s wieder
+`healthy`. `pi-guard` hat das Neuerzeugen überstanden — die Ketten stehen samt Referenz.
+
+> **Ein Limit greift erst, wenn der Container neu erzeugt wird.** Ein `restart` genügt
+> nicht, `compose up -d` schon. Wer nur die Compose-Datei ändert und committet, hat die
+> Änderung an einer von zwei Stellen gemacht.
+
+**Die Messung läuft vorerst weiter.** Ihr ursprünglicher Zweck ist erfüllt, aber sie hat
+jetzt einen zweiten: zu zeigen, ob ein Container gegen seine neue Decke läuft — vor allem
+bichon. Erst wenn das über ein bis zwei Wochen nicht passiert, wird sie entfernt;
+Anleitung in `system/messung/README.md`.
 
 **Bewertung:** Der Pi ist von seiner Kapazitätsgrenze entfernt, aber nicht mehr
 komfortabel weit: 34 % Speicher im Leerlauf lassen für einen schweren zusätzlichen
