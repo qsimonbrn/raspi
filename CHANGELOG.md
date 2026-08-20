@@ -9,6 +9,48 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.6.0] — 2026-08-20
+
+Die Backup-Prüfung prüft jetzt die Nutzdaten, nicht nur die Buchführung darüber.
+
+### Geändert
+
+- **`inventar/collect.sh`: `restic check` läuft mit `--read-data-subset=80M`.** Bisher
+  prüfte die Bestandsaufnahme nur Index und Metadaten. Der Unterschied ist nicht
+  theoretisch — **nachgemessen an einem Wegwerf-Repository**: In einer 3-MB-Pack-Datei
+  wurde ein einziges Byte gekippt, danach meldete `restic check` weiterhin
+  `no errors were found`, während `restic check --read-data`
+  `Fatal: repository contains errors` lieferte. Stille Datenfäule in der Cloud wäre also
+  bis zum Ernstfall unbemerkt geblieben.
+- **Neuer Sonderfall in derselben Prüfung: „0 Packs gelesen" ergibt `?`, nicht `ok`.**
+  Die erste Fassung dieser Erweiterung benutzte einen Bruch (`1/50`). Das Repository hat
+  aber nur **45 Pack-Dateien** — an den meisten Tagen wären damit null Packs geprüft
+  worden, und die Zeile hätte trotzdem Entwarnung gemeldet. Genau die Art Prüfung, gegen
+  die dieser Abschnitt gebaut ist.
+- **Der Befund nennt jetzt die gelesene Menge** („4 / 4 packs, Stichprobe 80M") statt nur
+  zu behaupten, es sei geprüft worden.
+- **Der Byte-Vergleich der Stichprobe ist nicht mehr die Grundlage der Marke**, sondern
+  eine Zusatzangabe. Er sagt nichts, wenn das Original seit dem Snapshot geändert wurde —
+  bei `README.md` der Normalfall. Die Prüfung schreibt das hin, statt Gleichheit zu
+  behaupten.
+- **Laufzeit** 84 s statt 82 s.
+
+### Hinzugefügt
+
+- **`docs/12` — neuer Abschnitt „6a. Wie geprüft wird, dass das Backup taugt"** mit der
+  Gegenprobe, der Begründung für eine Größenangabe statt eines Bruchs und dem Hinweis,
+  dass `restic check --read-data` von Hand der vollständige, aber langsame Nachweis ist.
+
+### Abwägung, die dokumentiert bleibt
+
+Eine Größe (`80M`) hält die Laufzeit konstant, wählt die Packs aber zufällig:
+vollständige Abdeckung ist **wahrscheinlich, nicht garantiert**. Ein Bruch (`1/10`) würde
+sie garantieren, ließe die Laufzeit aber mit dem Repository wachsen — bei 5 GB wären das
+Minuten. Für stille Datenfäule, die zufällige Packs trifft, reicht die Stichprobe; für
+den Nachweis „jedes Byte einmal geprüft" nicht.
+
+---
+
 ## [2.5.0] — 2026-08-20
 
 Speicher-Limits gesetzt und dokumentiert, Tailscale aktualisiert. Beides sind

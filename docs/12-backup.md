@@ -1,6 +1,6 @@
 # 12 — Backup
 
-*Eingerichtet: 13.08.2026*
+*Eingerichtet: 13.08.2026 · Prüfung erweitert: 20.08.2026*
 
 Vollständige Beschreibung der Sicherungsstrategie: was gesichert wird, was
 bewusst nicht, wie wiederhergestellt wird — und wo die Lücken bleiben.
@@ -194,6 +194,55 @@ Staffelung kostet kaum Platz, weil sich zwischen zwei Ständen nur wenige Blöck
 `logrotate`.
 
 Nur ein Lauf gleichzeitig — abgesichert über `flock`.
+
+---
+
+## 6a. Wie geprüft wird, dass das Backup taugt
+
+*Erweitert am 20.08.2026.*
+
+Die Bestandsaufnahme (`inventar/collect.sh`) prüft das Backup bei jedem Lauf auf **zwei
+Ebenen**. Der Grund für die zweite ist eine gemessene Eigenschaft von restic, die man
+kennen muss:
+
+> **`restic check` allein prüft die Nutzdaten nicht.** Ohne `--read-data` liest der
+> Befehl nur Index und Metadaten. Nachgemessen am 20.08.2026 an einem
+> Wegwerf-Repository: In einer 3-MB-Pack-Datei wurde **ein einziges Byte gekippt**.
+>
+> | Befehl | Ergebnis nach der Beschädigung |
+> |---|---|
+> | `restic check` | `no errors were found` |
+> | `restic check --read-data` | `Fatal: repository contains errors` |
+>
+> Ein Backup, das nur mit dem ersten Befehl geprüft wird, meldet stille Datenfäule in
+> der Cloud also **niemals** — bis zu dem Tag, an dem man es braucht.
+
+Deshalb prüft die Bestandsaufnahme:
+
+| Ebene | Womit | Was das belegt |
+|---|---|---|
+| **Nutzdaten** | `restic check --read-data-subset=80M` | Eine Stichprobe der Pack-Dateien wird tatsächlich heruntergeladen und ihre Prüfsumme verglichen. Am 20.08.2026 waren das 4 von 45 Packs, rund 9 % des 843-MB-Repositorys |
+| **Rückholpfad** | `restic dump latest <datei>` | Dass aus dem Repository eine echte Datei herauskommt — der Weg Ende zu Ende, den Prüfsummen nicht abdecken |
+
+**Warum eine Größe (`80M`) und kein Bruch (`1/10`)?** Ein Bruch garantiert vollständige
+Abdeckung nach zehn Läufen, lässt die Laufzeit aber mit dem Repository wachsen — bei
+5 GB wären das Minuten. Eine Größe hält die Laufzeit konstant (rund 7 s Mehraufwand,
+gemessen), wählt die Packs aber zufällig: vollständige Abdeckung ist damit
+wahrscheinlich, nicht garantiert. Für stille Datenfäule, die zufällige Packs trifft,
+reicht das. Wer den Nachweis „jedes Byte einmal geprüft" will, ruft gelegentlich von Hand
+`sudo -E restic check --read-data` auf — das dauert, liest aber alles.
+
+**Ein Bruch wäre hier sogar gefährlich gewesen.** Die erste Fassung dieser Erweiterung
+benutzte `1/50`. Das Repository hat aber nur **45 Pack-Dateien** — an den meisten Tagen
+wären damit *null* Packs geprüft worden, und die Zeile hätte trotzdem `ok` gemeldet. Die
+Prüfung fängt diesen Fall jetzt ausdrücklich ab: Werden 0 Packs gelesen, lautet die Marke
+`?` und nicht `ok`.
+
+**Was der Byte-Vergleich der Stichprobe kann und was nicht.** Verglichen wird die
+zurückgeholte Datei mit dem Original auf der Platte. Ist das Original seit dem Snapshot
+geändert worden — bei `README.md` im Repository häufig —, sagt der Vergleich nichts, und
+die Prüfung schreibt genau das hin, statt Gleichheit zu behaupten. Der belastbare
+Nachweis in diesem Fall sind die Prüfsummen der Ebene darüber.
 
 ---
 

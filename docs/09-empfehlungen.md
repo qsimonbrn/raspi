@@ -44,10 +44,13 @@ Details in [06 — Daten & Speicher](06-daten-und-speicher.md).
 
 ### 1.2 Wiederherstellung testen — 🟡 teilweise erledigt am 20.08.2026
 
-> **Erledigt ist die Speicherebene:** `restic check` über alle 10 Snapshots ohne Fehler,
-> eine Stichprobe aus Snapshot `af02aa04` zurückgeholt und byte-identisch. Damit ist
-> belegt, dass das Repository unbeschädigt ist und Dateien herauskommen. Die Prüfung
-> läuft seit dem 20.08.2026 bei jeder Bestandsaufnahme mit.
+> **Erledigt ist die Speicherebene:** `restic check` über alle Snapshots ohne Fehler,
+> eine Stichprobe zurückgeholt. Seit dem 20.08.2026 kommt die entscheidende Ergänzung
+> dazu: `--read-data-subset=80M` lädt einen Teil der Pack-Dateien wirklich herunter und
+> prüft ihre Prüfsummen. Ohne diesen Schalter meldet `restic check` „no errors were
+> found" **auch dann, wenn ein Byte in den Nutzdaten gekippt ist** — nachgemessen an
+> einem Wegwerf-Repository, siehe [12](12-backup.md#6a-wie-geprüft-wird-dass-das-backup-taugt).
+> Die Prüfung läuft bei jeder Bestandsaufnahme mit.
 >
 > **Offen bleibt die Anwendungsebene:** dass ein zurückgeholter Paperless-Export sich in
 > eine leere Instanz **importieren** lässt und die Ordnungsstruktur vollständig ist, ist

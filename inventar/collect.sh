@@ -476,27 +476,70 @@ echo "|---|---|---|"
 # --- 1. Ist das Backup wiederherstellbar? -----------------------------------
 # Der Pfad wurde bis zum 20.08.2026 NIE zurueckgespielt. Ein Repository, das
 # sich sichern laesst, ist damit noch nicht wiederherstellbar.
+#
+# Geprueft wird auf zwei Ebenen, und beide sind noetig:
+#
+#   1. "restic check --read-data-subset" liest einen Teil der Pack-Dateien
+#      wirklich HERUNTER und prueft ihre Pruefsummen. Ein blosses "check" ohne
+#      diesen Schalter prueft nur Struktur und Metadaten -- es meldet "no errors
+#      were found" auch dann, wenn die Nutzdaten in der Cloud stillschweigend
+#      verrottet sind. Genau das ist der Fehlerfall, den man erst im Ernstfall
+#      bemerkt.
+#   2. Ein "restic dump" holt eine echte Datei zurueck. Das prueft den Pfad
+#      Ende zu Ende, den die Pruefsummen nicht abdecken.
+#
+# Der Anteil wird als GROESSE angegeben, nicht als Bruch -- das ist eine
+# bewusste Entscheidung mit einem Preis:
+#
+#   Ein Bruch (1/10) garantiert vollstaendige Abdeckung nach zehn Laeufen,
+#   laesst die Laufzeit aber mit dem Repository wachsen: bei 5 GB waeren das
+#   Minuten statt Sekunden. Eine Groesse (80M) haelt die Laufzeit konstant,
+#   waehlt die Packs aber zufaellig -- vollstaendige Abdeckung ist damit
+#   wahrscheinlich, nicht garantiert. Fuer stille Datenfaeule, die zufaellige
+#   Packs trifft, reicht das; fuer den Nachweis "jedes Byte einmal geprueft"
+#   nicht. Wer den will, nimmt gelegentlich von Hand --read-data.
+#
+# Ein Bruch waere hier ausserdem gefaehrlich: Das Repository hatte am
+# 20.08.2026 nur **45 Pack-Dateien**. Ein Anteil von 1/50 haette an den
+# meisten Tagen NULL Packs geprueft und trotzdem "ok" gemeldet -- eine
+# Pruefung, die nichts tut und Vertrauen erzeugt. Deshalb unten zusaetzlich
+# die Abfrage auf "0 / 0 packs".
+#
+# Gemessen am 20.08.2026: 80M entspricht rund 9 % des 843-MB-Repositorys und
+# kostet etwa 7 s. Die uebrigen ~35 s zahlt die Strukturpruefung ohnehin.
 PROBE="/home/simon/raspi/README.md"
+ANTEIL="80M"
 if [ -n "$RESTIC_FEHLER" ]; then
   pruef "Backup wiederherstellbar" "?" "$RESTIC_FEHLER"
 else
-  CHK="$(restic_ check --no-lock 2>&1 | tail -2 | tr '\n' ' ')"
-  if printf '%s' "$CHK" | grep -q "no errors were found"; then
+  # tail -4 statt -2: Die Zeile mit der Pack-Zahl steht vor der Erfolgsmeldung
+  # und faellt bei -2 heraus -- dann fehlt im Befund genau der Beleg, wie viel
+  # tatsaechlich gelesen wurde.
+  CHK="$(restic_ check --no-lock --read-data-subset="$ANTEIL" 2>&1 | tail -4 | tr '\n' ' ')"
+  PACKS="$(printf '%s' "$CHK" | grep -oE '[0-9]+ / [0-9]+ packs' | head -1)"
+  GELESEN="$(printf '%s' "$PACKS" | awk '{print $1}')"
+  [ -n "$PACKS" ] && DATEN="Daten gelesen und geprueft ($PACKS, Stichprobe $ANTEIL)" \
+                  || DATEN="Daten gelesen und geprueft (Stichprobe $ANTEIL)"
+  if [ "${GELESEN:-1}" -eq 0 ] 2>/dev/null; then
+    # Kein einziges Pack gelesen: Die Strukturpruefung mag durchgelaufen sein,
+    # ueber die Nutzdaten sagt dieser Lauf nichts. Das ist keine Entwarnung.
+    pruef "Backup wiederherstellbar" "?" "restic hat 0 Packs gelesen (Stichprobe $ANTEIL zu klein fuer dieses Repository) -- die Nutzdaten wurden nicht geprueft"
+  elif printf '%s' "$CHK" | grep -q "no errors were found"; then
     TMPF="$(mktemp)"
     if restic_ dump latest "$PROBE" > "$TMPF" 2>/dev/null && [ -s "$TMPF" ]; then
       if cmp -s "$TMPF" "$PROBE"; then
-        pruef "Backup wiederherstellbar" "ok" "check ohne Fehler, Stichprobe \`$(basename "$PROBE")\` aus \`$SNAP_ID\` zurueckgeholt und byte-identisch"
+        pruef "Backup wiederherstellbar" "ok" "$DATEN; Stichprobe \`$(basename "$PROBE")\` aus \`$SNAP_ID\` zurueckgeholt und byte-identisch"
       elif [ "$(stat -c %Y "$PROBE" 2>/dev/null || echo 0)" -gt "$SNAP_EPOCH" ]; then
-        pruef "Backup wiederherstellbar" "ok" "check ohne Fehler, Stichprobe zurueckgeholt; weicht ab, weil das Original nach dem Snapshot geaendert wurde"
+        pruef "Backup wiederherstellbar" "ok" "$DATEN; Stichprobe zurueckgeholt ($(stat -c %s "$TMPF") Byte), Byte-Vergleich entfaellt -- das Original wurde nach dem Snapshot geaendert"
       else
         pruef "Backup wiederherstellbar" "ACHTUNG" "Stichprobe weicht vom Original ab, obwohl dieses seit dem Snapshot unveraendert ist"
       fi
     else
-      pruef "Backup wiederherstellbar" "ACHTUNG" "check ohne Fehler, aber \`restic dump\` lieferte die Stichprobe nicht"
+      pruef "Backup wiederherstellbar" "ACHTUNG" "$DATEN, aber \`restic dump\` lieferte die Stichprobe nicht"
     fi
     rm -f "$TMPF"
   else
-    pruef "Backup wiederherstellbar" "ACHTUNG" "restic check meldet: $CHK"
+    pruef "Backup wiederherstellbar" "ACHTUNG" "restic check (Stichprobe $ANTEIL) meldet: $CHK"
   fi
 fi
 
