@@ -65,7 +65,7 @@ Tailscale baut die Verbindung deshalb von innen nach außen auf. Siehe
 
 ## HTTPS im Tailnet
 
-Seit dem 23.08.2026 ist HTTPS für das Tailnet freigeschaltet (Admin-Konsole →
+Seit dem 20.08.2026 ist HTTPS für das Tailnet freigeschaltet (Admin-Konsole →
 DNS → HTTPS Certificates). Der Pi hat ein echtes Let's-Encrypt-Zertifikat auf
 `raspberrypi.tailf372ec.ts.net`, gültig bis 18.11.2026, abgelegt unter
 `/var/lib/tailscale/certs/`. Ausgestellte Zertifikate stehen im öffentlichen
@@ -80,7 +80,7 @@ verschlüsselt.
 > **`tailscale serve --https=443` funktioniert auf diesem Pi NICHT — und meldet
 > trotzdem Erfolg.** `pihole-FTL` ist an `0.0.0.0:80` und `0.0.0.0:443` gebunden, auch
 > auf der Tailscale-Adresse. `serve` kommt nie an den Socket, gibt aber „Serve started
-> and running in the background" aus. Nachgemessen am 23.08.2026: Port 443 lieferte
+> and running in the background" aus. Nachgemessen am 20.08.2026: Port 443 lieferte
 > danach weiterhin Pi-holes selbstsigniertes `CN=pi.hole`.
 
 **Für neue Dienste gilt deshalb Port 8443:**
@@ -99,7 +99,7 @@ jedem Core-Update überschrieben, wie schon bei `/etc/cron.d/pihole`.
 
 > **`tailscale cert` von Hand aufzurufen ist unnötig** — `tailscale serve` holt und
 > erneuert das Zertifikat selbst. Der Handaufruf legt zusätzlich eine Kopie des
-> **privaten Schlüssels** ins Arbeitsverzeichnis; am 23.08.2026 lagen dadurch `.key` und
+> **privaten Schlüssels** ins Arbeitsverzeichnis; am 20.08.2026 lagen dadurch `.key` und
 > `.crt` in `/home/claude` und wurden gelöscht.
 
 **Stand:** Der Weg ist erprobt, es läuft aber nichts dauerhaft darüber
