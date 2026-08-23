@@ -230,6 +230,21 @@ Wert leer, und die Bestandsaufnahme meldet dort `?` — korrekt, aber wenig hilf
 Tabelle `info` in `gravity.db` führt denselben Zeitpunkt unter `updated` als
 Unix-Zeitstempel und übersteht einen Neustart. **Aufwand: rund 10 Minuten.**
 
+### 3.7 Helfer-Image entfernen — 🟡 Aufräumen
+
+*Aufgenommen am 23.08.2026*
+
+`portainer/helper-reset-password:latest` (54,7 MB) wurde am 23.08.2026 einmalig zum
+Zurücksetzen des Portainer-Passworts geholt und wird nicht mehr gebraucht. Es ist
+zugleich das einzige ungepinnte Image auf dem System und widerspricht damit dem
+Grundsatz aus [05 — Docker](05-docker.md).
+
+```bash
+sudo docker rmi portainer/helper-reset-password:latest
+```
+
+**Aufwand: eine Minute.**
+
 ### 3.4 Aufräumen
 
 | Maßnahme | Aufwand | Nutzen |

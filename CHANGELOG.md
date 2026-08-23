@@ -9,6 +9,24 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.8.3] — 2026-08-23
+
+### Hinzugefügt
+
+- **`docs/15-aenderungshistorie.md`: Nachtrag zum Portainer-Passwort.** Weg über
+  `helper-reset-password` bei angehaltenem Container, und zwei Dinge, die beim
+  nächsten Mal Zeit sparen: Das Konto heißt `simon`, nicht `admin`, und der Helfer
+  fragt nicht nach einem Passwort, sondern erzeugt eines.
+- **`docs/09-empfehlungen.md`: 3.7** — das Helfer-Image entfernen; es ist das einzige
+  ungepinnte Image auf dem System.
+
+### Richtiggestellt
+
+- **`docs/10-zugriff.md`:** Der Portainer-Benutzername stand nirgends. Er ist `simon`;
+  ein Konto `admin` gibt es nicht.
+
+---
+
 ## [2.8.2] — 2026-08-23
 
 ### Richtiggestellt

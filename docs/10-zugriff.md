@@ -169,7 +169,8 @@ Checkliste dessen, was im Passwortmanager hinterlegt sein sollte:
 - [ ] SSH-Schlüssel (privat) — inkl. Speicherort
 - [ ] Pi-hole Web-Oberfläche
 - [ ] Paperless-ngx Administratorkonto
-- [ ] Portainer Administratorkonto
+- [ ] Portainer Administratorkonto — das Konto heisst **`simon`** (23.08.2026 beim
+      Zuruecksetzen festgestellt; es gibt nur dieses eine)
 - [ ] Bichon Master-Passwort — ⚠️ laut Compose-Datei **nachträglich nicht änderbar**, ohne das Archiv zu zerstören
 - [ ] Samba-Passwort für `simon`
 - [ ] GitHub-Konto `qsimonbrn` — ⚠️ **Schlüssel zum Heimnetz**, seit der Tailscale-Anmeldung. Zwei-Faktor-Anmeldung zwingend

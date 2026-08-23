@@ -54,7 +54,22 @@ gemacht wurde — und der ist die eigentliche Lehre.
 | Anlass | Nach dem Aufsetzen von Vaultwarden sollten die Dienstpasswörter durch starke, im Tresor erzeugte ersetzt werden |
 
 **Geändert:** Weboberflächen-Passwort von Pi-hole, Samba-Passwort für `simon`,
-Paperless-Anmeldung `admin`, ntfy-Benutzer `simon`. Portainer steht noch aus.
+Paperless-Anmeldung `admin`, ntfy-Benutzer `simon`.
+
+**Nachtrag 23:00 Uhr — Portainer.** Das Passwort war nicht mehr bekannt und liess
+sich nicht auslesen: Das Image ist distroless, es gibt keine Shell im Container.
+Zuruecksetzen ueber `portainer/helper-reset-password` gegen das Volume
+`portainer_portainer_data`, bei angehaltenem Container. Dabei zwei Erkenntnisse:
+Das Konto heisst **`simon`**, nicht `admin` — die Doku hatte das nie festgehalten.
+Und der Helfer *fragt* nicht nach einem Passwort, er erzeugt eines und gibt es aus;
+wer damit rechnet, gefragt zu werden, haelt den Lauf faelschlich fuer gescheitert.
+
+`stop`/`start` statt `down`/`up` gewaehlt, damit der Container nicht neu erzeugt wird
+und Docker die iptables-Regeln nicht neu schreibt. Nachgemessen: `pi-guard` mit allen
+vier DROP-Regeln, Portainer `http=200`.
+
+Das Helfer-Image `portainer/helper-reset-password:latest` liegt seitdem ungepinnt auf
+dem Pi und wird nicht mehr gebraucht — Aufraeumpunkt in `docs/09-empfehlungen.md`.
 Bichon bleibt bewusst unangetastet — das Verschlüsselungspasswort ist laut Hersteller
 nicht änderbar, ohne das Archiv unlesbar zu machen.
 
