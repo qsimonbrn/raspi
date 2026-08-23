@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 20.08.2026 (zweiter Eintrag desselben Tages)*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 23.08.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,50 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 23.08.2026 — Vaultwarden aufgesetzt
+
+| | |
+|---|---|
+| Betroffen | neuer Container `vaultwarden`, `pi-backup.sh`, Homepage, `inventar/collect.sh` |
+| Anlass | Passwörter lagen bis dahin nicht an einem gemeinsamen, gesicherten Ort |
+
+**Was gemacht wurde:** Vaultwarden 1.37.2 als neuer Stack unter `stacks/vaultwarden/`,
+erreichbar ausschließlich über `tailscale serve` auf Port 8443. Der Container bindet an
+`127.0.0.1:8222` und ist damit selbst aus dem Heimnetz nicht ansprechbar. Erstes Konto
+angelegt, danach `SIGNUPS_ALLOWED=false`. Die Admin-Oberfläche `/admin` bleibt
+abgeschaltet.
+
+**Warum 1.37.2, obwohl einen Tag alt:** Die Release Notes nennen die Version als
+Voraussetzung für Clients ab 2026.8.0. Ein frisch installierter Bitwarden-Client hätte
+sich mit 1.37.1 mit hoher Wahrscheinlichkeit nicht verbunden. Das Risiko einer sehr
+frischen Version wurde gegen die Gewissheit eines nicht verbindungsfähigen Clients
+abgewogen.
+
+**Reihenfolge mit Absicht:** Der Backup-Pfad wurde eingerichtet, *bevor* der Container
+lief. Ein Tresor, der Daten sammelt, bevor er im Backup steht, ist ein Zeitfenster, in
+dem ein Ausfall echten Schaden anrichtet.
+
+**Backup erweitert:** `pi-backup.sh` legt einen konsistenten SQLite-Abzug an, statt die
+laufende Datei zu kopieren, und prüft ihn. Dabei wurde gemessen, dass
+`PRAGMA integrity_check` eine **leere Datei mit `ok`** durchgehen lässt — die Prüfung
+wurde deshalb um eine Abfrage der Benutzertabelle ergänzt. Einzelheiten in
+[18 — Vaultwarden](18-vaultwarden.md), Abschnitt 6.
+
+**Nebenbefund, behoben:** `inventar/collect.sh` fragte `gravity.db` ohne `sudo` ab. Seit
+dem Wechsel auf das Konto `claude` am 18.08.2026 scheiterte das still — die
+Bestandsaufnahme meldete `?` statt der Zahlen. Mit `sudo` liefert dieselbe Abfrage
+1.039.885 Domains.
+
+**Nebenbefund, geklärt:** Die vier Blocklisten mit `status=2` sind unauffällig. Laut der
+installierten `gravity.sh` bedeutet 2 „List stayed unchanged" — Cache benutzt, weil
+oben nichts neu war. Der bedenkliche Fall wäre 3 („download failed, using cached"); den
+hat keine Liste.
+
+**Geprüft:** `tailscale serve --bg` übersteht einen Neustart — die offene Frage vom
+23.08.2026 ist damit beantwortet.
 
 ---
 

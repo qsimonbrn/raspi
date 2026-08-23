@@ -1,6 +1,6 @@
 # 10 — Zugriff
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · ergänzt 23.08.2026*
 
 Alle Zugangswege zum System auf einen Blick.
 
@@ -16,8 +16,11 @@ Alle Zugangswege zum System auf einen Blick.
 | **Paperless-ngx** | `http://100.108.219.87:8000` 🔒 | Dokumentenarchiv, Suche, OCR |
 | **Portainer** | `http://100.108.219.87:9000`<br>`https://100.108.219.87:9443` 🔒 | Container-Verwaltung |
 | **Bichon** | `http://100.108.219.87:15630` 🔒 | E-Mail-Archiv |
+| **Vaultwarden** | `https://raspberrypi.tailf372ec.ts.net:8443` 🔒 | Passwort-Tresor, siehe [18](18-vaultwarden.md) |
 
-> Alle Weboberflächen laufen unverschlüsselt über HTTP (Ausnahme: Portainer auf 9443).
+> Alle Weboberflächen laufen unverschlüsselt über HTTP (Ausnahmen: Portainer auf 9443
+> und Vaultwarden auf 8443, das seit dem 23.08.2026 über `tailscale serve` mit einem
+> Let's-Encrypt-Zertifikat ausgeliefert wird).
 > Im Heimnetz vertretbar. Empfehlung zur Umstellung auf Namen mit HTTPS über einen
 > Reverse Proxy in [09 — Empfehlungen](09-empfehlungen.md), Punkt 3.2.
 
@@ -49,6 +52,7 @@ Alle Zugangswege zum System auf einen Blick.
 | Tailnet | `tailf372ec.ts.net` |
 | Pi im Tailnet | `100.108.219.87` bzw. `raspberrypi.tailf372ec.ts.net` |
 | Verbundene Geräte | 3 (`raspberrypi`, `iphone-sibr`, `simons-macbook-pro`) |
+| HTTPS im Tailnet | Port 8443 → Vaultwarden. `serve`-Konfiguration übersteht einen Neustart (geprüft 23.08.2026) |
 | Heimnetz über VPN | ja — `192.168.178.0/24` per Subnetz-Router |
 | DNS über VPN | Pi-hole, tailnetweit erzwungen |
 

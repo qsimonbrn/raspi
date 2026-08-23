@@ -45,6 +45,7 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 | [15 — Änderungshistorie](docs/15-aenderungshistorie.md) | Betriebstagebuch: was wann am System geändert wurde und warum |
 | [16 — Konten und Rechte](docs/16-konten-und-rechte.md) | Wer darf was, Sitzungsaufzeichnung, Überwachungsbefehle, Notausschalter |
 | [17 — Wo was liegt](docs/17-wo-was-liegt.md) | Welche Datei ist Original, welche Kopie — Repositories, installierte Fassungen, Rechte |
+| [18 — Vaultwarden](docs/18-vaultwarden.md) | Passwort-Tresor: Aufbau, Absicherung, Sicherung der Tresor-Datenbank, Wiederherstellung |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 
@@ -54,21 +55,22 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 
 | | |
 |---|---|
-| Uptime | 2 Tage 5 h (Neustart am 18.08.2026 für den Speicher-Cgroup) |
-| Load (1/5/15 min) | 0,74 / 0,29 / 0,17 bei 4 Kernen |
-| Temperatur | 48,7 °C — nie gedrosselt (`throttled=0x0`) |
-| RAM verfügbar | 2,1 von 3,7 GiB — Container zusammen rund 1,26 GiB (34 %) |
-| Systemdatenträger | 4 % belegt (7,9 G von 235 G) |
-| Datenspeicher SSD | 36 % belegt (310 G von 916 G) |
+| Uptime | wenige Minuten (Neustart am 23.08.2026 zur Prüfung der `tailscale serve`-Persistenz) |
+| Load (1/5/15 min) | 0,64 / 2,15 / 1,42 bei 4 Kernen — erhöht durch den Startvorgang |
+| Temperatur | 51,6 °C — nie gedrosselt (`throttled=0x0`) |
+| RAM verfügbar | 2,1 von 3,7 GiB (23.08.2026) |
+| Systemdatenträger | 4 % belegt (8,2 G von 235 G) |
+| Datenspeicher SSD | 36 % belegt (311 G von 916 G) |
 | Ausstehende OS-Updates | 0 — `tailscale` am 20.08.2026 von Hand auf 1.102.3 gezogen (Fremd-Repository, von `unattended-upgrades` nie erfasst) |
 | Fehlgeschlagene Dienste | 0 |
-| Backup | täglich, 10 Snapshots; am 20.08.2026 erstmals als **wiederherstellbar nachgewiesen** |
+| Backup | täglich, 14 Snapshots; zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
 | Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
-| Container | **8**, alle mit Logrotation und `no-new-privileges` (18.08.2026) |
+| Container | **9**, alle mit Logrotation und `no-new-privileges` (23.08.2026) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
-| Speicher-Limits | **seit 20.08.2026 gesetzt** für alle acht Container, Summe 3.104 von 3.796 MiB — nicht überbucht |
+| Speicher-Limits | **seit 20.08.2026 gesetzt** für alle neun Container, Summe 3.360 von 3.796 MiB — nicht überbucht |
+| Passwort-Tresor | **Vaultwarden 1.37.2** seit 23.08.2026, nur über Tailscale auf Port 8443 ([18](docs/18-vaultwarden.md)) |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 
@@ -83,6 +85,10 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
    erfolgreich getestet und auf Wunsch zurückgenommen — soll gemeinsam mit Vorlauf
    erfolgen. `AllowUsers` muss dabei **beide** Konten nennen (`simon claude`), sonst ist
    die Automatisierung ausgesperrt. → [Kapitel 07](docs/07-sicherheit.md)
+
+Am 23.08.2026 erledigt: **Passwort-Tresor Vaultwarden** aufgesetzt, ausschließlich über
+Tailscale erreichbar, mit konsistenter Sicherung der Tresor-Datenbank.
+→ [Kapitel 18](docs/18-vaultwarden.md)
 
 Am 20.08.2026 erledigt: **Speicher-Limits je Container** stehen für alle acht, auf
 Grundlage einer Messung über zwei Tage und bewusst großzügig — sie sollen einen

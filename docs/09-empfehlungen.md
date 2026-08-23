@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 20.08.2026*
+*Stand: 23.08.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -171,6 +171,31 @@ Pi-hole der DNS-Server für den gesamten Haushalt ist — ein unbemerkter Ausfal
 „Internet kaputt" für alle.
 
 **Aufwand:** 30 Minuten. Läuft problemlos auf einem Pi 4.
+
+### 3.5 Blocklisten-Status überwachen — 🟡 offen, klein
+
+*Ergänzt am 23.08.2026*
+
+Am 23.08.2026 wurde geklärt, was die vier Blocklisten mit `status=2` bedeuten. Laut der
+installierten `/opt/pihole/gravity.sh` steht 2 für „List stayed unchanged" — der Cache
+wurde benutzt, weil oben nichts Neues stand. **Harmlos.** Der bedenkliche Fall ist
+`status=3` („download failed, using cached"): Die Liste veraltet dann still, und
+`pihole -g` endet trotzdem mit Code 0.
+
+`pi-gravity.sh` prüft bisher nur, ob die Gesamtzahl der Domains um mehr als ein Viertel
+schrumpft. Ein einzelner ausgefallener Download bleibt darunter und damit unbemerkt. Eine
+Abfrage `select count(*) from adlist where enabled=1 and status>=3` in `pi-gravity.sh`
+würde die Lücke schließen. **Aufwand: rund 15 Minuten.**
+
+### 3.6 Zeitpunkt des letzten Gravity-Laufs aus der Datenbank lesen — 🟢 optional
+
+*Ergänzt am 23.08.2026*
+
+`inventar/collect.sh` liest den Zeitpunkt aus
+`systemctl show pi-gravity.service -p ExecMainExitTimestamp`. Nach einem Neustart ist der
+Wert leer, und die Bestandsaufnahme meldet dort `?` — korrekt, aber wenig hilfreich. Die
+Tabelle `info` in `gravity.db` führt denselben Zeitpunkt unter `updated` als
+Unix-Zeitstempel und übersteht einen Neustart. **Aufwand: rund 10 Minuten.**
 
 ### 3.4 Aufräumen
 

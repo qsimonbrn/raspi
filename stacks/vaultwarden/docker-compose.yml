@@ -1,0 +1,72 @@
+# =============================================================================
+#  Vaultwarden — Passwort-Tresor (Bitwarden-kompatibler Server)
+#
+#  Erreichbar AUSSCHLIESSLICH ueber das Tailnet:
+#      https://raspberrypi.tailf372ec.ts.net:8443
+#  Der Container bindet auf 127.0.0.1:8222 und ist damit selbst aus dem
+#  Heimnetz nicht ansprechbar; davor sitzt "tailscale serve --https=8443",
+#  das TLS mit dem Let's-Encrypt-Zertifikat des Tailnets beendet.
+#
+#  HTTPS ist hier KEIN Sicherheitsgewinn -- der Verkehr laeuft ohnehin
+#  verschluesselt durch Tailscale. Es ist Freischaltbedingung: Die
+#  Bitwarden-Clients nutzen die Web-Crypto-API, die nur in einem
+#  "secure context" laeuft.
+#
+#  Zugangsdaten und Einstellungen stehen in .env (ueber .gitignore
+#  ausgeschlossen). Dokumentation: docs/18-vaultwarden.md
+# =============================================================================
+
+# --- Logrotation -------------------------------------------------------------
+#  Docker dreht Logdateien NUR, wenn es beim Erstellen des Containers gesetzt
+#  ist. Die Vorgabe in /etc/docker/daemon.json greift erst nach einem echten
+#  Daemon-Neustart (ein reload uebernimmt log-opts nicht) -- deshalb steht sie
+#  hier ausdruecklich und ueberlebt jede Aenderung am Daemon.
+# -----------------------------------------------------------------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  vaultwarden:
+    # Fest gepinnt. Ein Update ist eine bewusste Entscheidung mit vorherigem
+    # Backup, kein Pull auf :latest. 1.37.2 ist ab Clients 2026.8.0 zwingend.
+    image: vaultwarden/server:1.37.2
+    container_name: vaultwarden
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+    # Vaultwarden ist in Rust geschrieben und sehr genuegsam; das Limit soll
+    # einen ausgerissenen Dienst abfangen, nicht den Betrieb begrenzen. Der
+    # tatsaechliche Verbrauch wird nach einer Woche nachgemessen und das Limit
+    # dann gegebenenfalls gesenkt.
+    mem_limit: 256m
+
+    # Bindung ausdruecklich an die Loopback-Adresse: Anders als bei den
+    # uebrigen Diensten braucht diesen Port NUR "tailscale serve" auf demselben
+    # Rechner. Damit haengt die Abschottung nicht allein an pi-guard --
+    # selbst wenn Docker die iptables-Regeln neu schreibt, ist der Port aus
+    # dem Heimnetz nicht erreichbar.
+    ports:
+      - "127.0.0.1:8222:80"
+
+    volumes:
+      - /mnt/usb-hdd/vaultwarden:/data
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: Europe/Berlin
+
+    # Das Image bringt ein eigenes Pruefskript mit, das den /alive-Endpunkt
+    # abfragt.
+    healthcheck:
+      test: ["CMD-SHELL", "/healthcheck.sh"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

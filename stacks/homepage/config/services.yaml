@@ -44,6 +44,22 @@
         server: pi
         container: bichon
 
+    - Vaultwarden:
+        # Bewusst OHNE siteMonitor. Der Dienst haengt hinter
+        # "tailscale serve" und ist nur unter seinem Tailnet-Namen mit
+        # gueltigem Zertifikat erreichbar. Der Pi nimmt MagicDNS nicht an
+        # (CorpDNS=false, er ist selbst der DNS-Server), also koennte der
+        # homepage-Container den Namen gar nicht aufloesen -- die Kachel
+        # stuende dauerhaft auf Rot. Ein Punkt, der immer rot ist, sagt
+        # nichts mehr; man gewoehnt sich an ihn und uebersieht dann den
+        # echten Ausfall. Den Zustand liefert stattdessen die
+        # Docker-Anbindung unten (laeuft / laeuft nicht, CPU, RAM).
+        href: https://raspberrypi.tailf372ec.ts.net:8443
+        description: Passwort-Tresor, nur ueber Tailscale erreichbar
+        icon: vaultwarden.png
+        server: pi
+        container: vaultwarden
+
 - Verwaltung:
     - Portainer:
         href: http://100.108.219.87:9000

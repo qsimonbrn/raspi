@@ -9,6 +9,53 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.8.0] — 2026-08-23
+
+Passwort-Tresor Vaultwarden aufgesetzt und dokumentiert. Zwei Prüfungen, die nichts
+prüften, wurden dabei gefunden und repariert.
+
+### Hinzugefügt
+
+- **`docs/18-vaultwarden.md`: neues Kapitel.** Aufbau des Tresors, warum Port 8443 statt
+  443, der Weg einer Anfrage über `tailscale serve`, die Begründung für die
+  abgeschaltete Admin-Oberfläche, alle Einstellungen mit Herleitung, die Sicherung der
+  SQLite-Datenbank und die Wiederherstellung Schritt für Schritt.
+- **`docs/12-backup.md`: Abschnitt „Vaultwarden: warum die laufende Datei ausgeschlossen
+  ist".** Mit der Messung, was `PRAGMA integrity_check` erkennt — und was nicht.
+- **`docs/09-empfehlungen.md`: 3.5 und 3.6.** Überwachung des Blocklisten-Status und eine
+  neustartfeste Quelle für den Zeitpunkt des letzten Gravity-Laufs.
+- **`docs/15-aenderungshistorie.md`: Eintrag zum 23.08.2026.**
+- Vaultwarden in `docs/03-netzwerk.md` (Port 8443), `docs/05-docker.md` (neunter
+  Container), `docs/10-zugriff.md` (Weboberflächen), `docs/11-disaster-recovery.md`
+  (Position 9 der gesicherten Bestände) und im README.
+
+### Geändert
+
+- **`inventar/collect.sh`: `sudo` vor allen sechs `gravity.db`-Abfragen.** Ohne `sudo`
+  scheiterten sie seit dem Kontowechsel am 18.08.2026 still, und die Bestandsaufnahme
+  meldete `?` statt der Domain- und Listenzahlen. Nachgemessen: mit `sudo` liefert
+  dieselbe Abfrage 1.039.885 Domains.
+- **`system/backup/pi-backup.sh`: konsistenter SQLite-Abzug für Vaultwarden**, mit
+  Prüfung des Abzugs und Ausschluss der laufenden Datei aus der restic-Sicherung. Die
+  Prüfung wurde nach einer Messung um eine Abfrage der Benutzertabelle ergänzt, weil
+  `integrity_check` eine leere Datei mit `ok` durchgehen lässt.
+- **`stacks/homepage/config/services.yaml`:** Eintrag für Vaultwarden, bewusst ohne
+  `siteMonitor` — der Pi kann seinen eigenen Tailnet-Namen nicht auflösen, die Kachel
+  stünde dauerhaft auf Rot.
+- README: Container 8 → 9, Speicher-Limits 3.104 → 3.360 MiB, Eckwerte nachgezogen.
+
+### Richtiggestellt
+
+- **Blocklisten mit `status=2` sind unauffällig.** Die am 23.08.2026 offen notierte Frage
+  ist beantwortet: Laut der installierten `gravity.sh` bedeutet 2 „List stayed
+  unchanged". Der bedenkliche Fall wäre 3; den hat keine Liste. Die Frage stand seit dem
+  Vortag als ungeklärt in der Doku.
+- **`tailscale serve --bg` übersteht einen Neustart.** Am 23.08.2026 nachgewiesen —
+  beim vorherigen Versuch war keine Konfiguration vorhanden, die den Neustart hätte
+  überleben können.
+
+---
+
 ## [2.7.0] — 2026-08-23
 
 HTTPS im Tailnet freigeschaltet und der tragfähige Weg dorthin nachgemessen.

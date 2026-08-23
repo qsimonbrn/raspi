@@ -1,6 +1,6 @@
 # 03 — Netzwerk
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · ergänzt 23.08.2026*
 
 ## Anbindung
 
@@ -65,6 +65,7 @@ unkritisch. Siehe dazu den Befund zu den zwei Netzwerk-Managern in
 | Adresse des Pi | `100.108.219.87/32` · `fd7a:115c:a1e0::aa01:dbd5/128` |
 | Tailnet-Bereich | `100.64.0.0/10` (CGNAT-Bereich, von Tailscale genutzt) |
 | Eingehender Port | **keiner** — Verbindungen werden von innen aufgebaut |
+| Von `tailscaled` belegt | **8443** (`tailscale serve` → Vaultwarden), nur auf `100.108.219.87` und der Tailnet-IPv6 |
 | Beworbene Route | `192.168.178.0/24` (Subnetz-Router) |
 
 Der Pi ist unter `100.108.219.87` aus jedem verbundenen Gerät erreichbar, unabhängig

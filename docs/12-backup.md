@@ -1,6 +1,6 @@
 # 12 — Backup
 
-*Eingerichtet: 13.08.2026 · Prüfung erweitert: 20.08.2026*
+*Eingerichtet: 13.08.2026 · Prüfung erweitert: 20.08.2026 · Vaultwarden ergänzt: 23.08.2026*
 
 Vollständige Beschreibung der Sicherungsstrategie: was gesichert wird, was
 bewusst nicht, wie wiederhergestellt wird — und wo die Lücken bleiben.
@@ -145,10 +145,15 @@ Wiederaufbau.
 /mnt/usb-hdd/ntfy                Benutzer, Zugriffsregeln, Nachrichten-Cache
 /mnt/usb-hdd/paperless/export    Dokumentenexport
 /mnt/usb-hdd/paperless/media     Originaldateien
+/mnt/usb-hdd/vaultwarden         Tresor: JWT-Schluessel und Anhaenge
+                                 (db.sqlite3* ausgeschlossen, siehe unten)
 /var/lib/docker/volumes/portainer_portainer_data/_data
 /home/simon/raspi        Compose-Dateien
 /home/simon/raspi           diese Dokumentation
 ```
+
+**Geändert am 23.08.2026.** `/mnt/usb-hdd/vaultwarden` kam dazu, zusammen mit einem
+eigenen Schritt für den Tresor (siehe unten).
 
 **Geändert am 18.08.2026.** `/mnt/usb-hdd/ntfy` und das Portainer-Volume kamen dazu,
 `/mnt/usb-hdd/filebrowser-data` fiel weg.
@@ -446,6 +451,48 @@ wirkungslos.
 | Wie weit zurück? | 7 Tage, 4 Wochen, 6 Monate |
 | Wo? | OneDrive, verschlüsselt vor dem Upload |
 | Was ist zu tun? | Repository-Passwort in den Passwortmanager übertragen |
+
+---
+
+## Vaultwarden: warum die laufende Datei ausgeschlossen ist
+
+*Ergänzt am 23.08.2026*
+
+Der Tresor liegt in einer SQLite-Datenbank im WAL-Modus. Wer die laufende Datei bytweise
+kopiert, kann sie zerrissen erwischen: Hauptdatei und Journal geraten auseinander, und
+das fällt erst beim Wiederherstellen auf — also genau dann, wenn niemand mehr etwas
+retten kann. `pi-backup.sh` legt deshalb vor dem restic-Lauf einen Abzug über die
+Sicherungs-API von SQLite an (`.backup`), der auch während laufender Schreibzugriffe in
+sich stimmig ist. Die Live-Dateien `db.sqlite3`, `-wal` und `-shm` sind über
+`--exclude` aus der Sicherung genommen; im Snapshot liegt ausschließlich der Abzug.
+
+### Was die Prüfung des Abzugs erkennt — und was nicht
+
+Nach dem Abzug läuft `PRAGMA integrity_check`. Am 23.08.2026 wurde an absichtlich
+beschädigten Kopien gemessen, was diese Prüfung leistet:
+
+| Schaden | erkannt? |
+|---|---|
+| 2000 Zufallsbytes mitten in der Datei | ja |
+| auf die Hälfte abgeschnitten | ja |
+| Kopf zerstört | ja |
+| **leere Datei** | **nein — meldet `ok`** |
+| gültige Datei ohne Tabellen | **nein — meldet `ok`** |
+
+SQLite führt keine Prüfsummen über die Seiten; `integrity_check` prüft die *Struktur*,
+und eine leere Datei hat keine kaputte Struktur. Ein Abzug kann damit formal heil und
+trotzdem wertlos sein — der Fall, vor dem dieses Kapitel an mehreren Stellen warnt: eine
+Prüfung, die durchläuft, ohne etwas gemessen zu haben, erzeugt Vertrauen, das sie nicht
+deckt.
+
+`pi-backup.sh` fragt deshalb zusätzlich `SELECT count(*) FROM users` ab und meldet eine
+Warnung, wenn die Tabelle fehlt oder kein einziges Konto enthält. Die Zahl der
+Tresoreinträge steht zur Information im Protokoll, damit ein plötzlicher Rückgang beim
+Durchsehen auffällt.
+
+Die Wiederherstellung ist in [18 — Vaultwarden](18-vaultwarden.md), Abschnitt 7,
+beschrieben. **Wichtig dabei:** die verwaisten `-wal`- und `-shm`-Dateien vor dem Start
+löschen, sonst beschädigen sie die zurückgespielte Datenbank.
 
 ---
 

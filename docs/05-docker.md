@@ -26,12 +26,18 @@
 | **homepage** | `…/gethomepage/homepage:v1.13.2` | 3000 | Dashboard mit Live-Status | `unless-stopped` |
 | **ntfy** | `binwiederhier/ntfy:v2.27.0` | 2586 | Push-Benachrichtigungen | `unless-stopped` |
 | homepage-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Homepage | `unless-stopped` |
+| **vaultwarden** | `vaultwarden/server:1.37.2` | 8222 nur auf `127.0.0.1` 🔒 | Passwort-Tresor, siehe [18](18-vaultwarden.md) | `unless-stopped` |
 
-**Acht Container.** 🔒 markiert Dienste, die seit dem 18.08.2026 nur noch über
-Tailscale erreichbar sind — siehe [07 — Sicherheit](07-sicherheit.md).
+**Neun Container** (seit 23.08.2026). 🔒 markiert Dienste, die seit dem 18.08.2026 nur
+noch über Tailscale erreichbar sind — siehe [07 — Sicherheit](07-sicherheit.md).
 
 Kein Container läuft mit `privileged`, kein Container nutzt `network_mode: host`,
-alle acht laufen mit `no-new-privileges`.
+alle neun laufen mit `no-new-privileges`.
+
+**Vaultwarden ist der einzige Container, der ausdrücklich an `127.0.0.1` gebunden ist.**
+Bei allen übrigen sorgt `pi-guard` für die Abschottung; bei einem Passwort-Tresor soll
+sie nicht an einer einzigen Regelkette hängen, die Docker beim Erzeugen eines Containers
+neu schreibt.
 
 ### Abgeschaltet am 18.08.2026
 

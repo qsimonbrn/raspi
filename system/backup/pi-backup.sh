@@ -48,7 +48,7 @@ log "=== Backup gestartet ==="
 
 # --- Zwischenablage vorbereiten ----------------------------------------------
 rm -rf "$STAGE"
-mkdir -p "$STAGE"/{paperless,pihole,etc,system}
+mkdir -p "$STAGE"/{paperless,vaultwarden,pihole,etc,system}
 chmod 700 "$STAGE"
 
 # --- 1. Paperless: Export inklusive Metadaten --------------------------------
@@ -74,7 +74,58 @@ else
   warn "Paperless-Container laeuft nicht -- uebersprungen"
 fi
 
-# --- 2. Pi-hole: Teleporter-Export -------------------------------------------
+# --- 2. Vaultwarden: konsistenter Datenbankabzug ------------------------------
+# Ein bytweises Kopieren der laufenden SQLite-Datei kann sie zerrissen
+# erwischen: WAL-Journal und Hauptdatei geraten auseinander, und das faellt
+# erst beim Wiederherstellen auf. ".backup" nimmt stattdessen die
+# Sicherungs-API von SQLite und liefert einen in sich stimmigen Stand, auch
+# waehrend geschrieben wird. Die Live-Datei ist deshalb aus der
+# restic-Sicherung ausgeschlossen -- gesichert wird ausschliesslich dieser
+# Abzug. Attachments, Sends und der JWT-Schluessel liegen daneben im
+# Datenverzeichnis und werden direkt gesichert.
+VW_DB=/mnt/usb-hdd/vaultwarden/db.sqlite3
+if docker ps --format '{{.Names}}' | grep -qx vaultwarden; then
+  if [ -r "$VW_DB" ]; then
+    log "Vaultwarden: Datenbankabzug"
+    if sqlite3 "$VW_DB" ".backup '$STAGE/vaultwarden/db.sqlite3'" 2>/dev/null \
+         && [ -s "$STAGE/vaultwarden/db.sqlite3" ]; then
+      # Gegenprobe: Ein Abzug, der sich nicht lesen laesst, ist kein Backup.
+      # integrity_check meldet bei einem heilen Stand genau "ok" -- jede andere
+      # Ausgabe, auch eine leere, ist ein Fehler.
+      PRUEF=$(sqlite3 "$STAGE/vaultwarden/db.sqlite3" 'PRAGMA integrity_check;' 2>&1 | head -1)
+      if [ "$PRUEF" = "ok" ]; then
+        # integrity_check allein genuegt NICHT. Nachgemessen am 23.08.2026 an
+        # absichtlich beschaedigten Kopien: Strukturschaden, Abschneiden und
+        # ein zerstoerter Kopf werden zuverlaessig erkannt -- eine voellig
+        # LEERE Datei besteht die Pruefung dagegen mit "ok". Ein Abzug kann
+        # also formal heil und trotzdem wertlos sein. Erst die Abfrage einer
+        # echten Tabelle zeigt, ob ueberhaupt ein Tresor drinsteht.
+        KONTEN=$(sqlite3 "$STAGE/vaultwarden/db.sqlite3" 'SELECT count(*) FROM users;' 2>/dev/null)
+        case "${KONTEN:-leer}" in
+          *[!0-9]*|leer)
+            warn "Vaultwarden: Abzug ohne lesbare Benutzertabelle -- kein brauchbares Backup" ;;
+          0)
+            warn "Vaultwarden: Abzug enthaelt kein einziges Konto -- kein brauchbares Backup" ;;
+          *)
+            # Die Zahl der Eintraege steht zur Information im Protokoll: Ein
+            # ploetzlicher Rueckgang faellt beim Durchsehen auf.
+            ANZ=$(sqlite3 "$STAGE/vaultwarden/db.sqlite3" 'SELECT count(*) FROM ciphers;' 2>/dev/null)
+            log "Vaultwarden: Datenbank gesichert ($(du -h "$STAGE/vaultwarden/db.sqlite3" | cut -f1), $KONTEN Konto/Konten, ${ANZ:-?} Eintraege)" ;;
+        esac
+      else
+        warn "Vaultwarden: Abzug beschaedigt -- integrity_check meldet: ${PRUEF:-keine Ausgabe}"
+      fi
+    else
+      warn "Vaultwarden: sqlite3 .backup fehlgeschlagen"
+    fi
+  else
+    warn "Vaultwarden: $VW_DB nicht lesbar"
+  fi
+else
+  warn "Vaultwarden-Container laeuft nicht -- uebersprungen"
+fi
+
+# --- 3. Pi-hole: Teleporter-Export -------------------------------------------
 # Enthaelt Einstellungen, lokale DNS-Eintraege und Blocklisten-Quellen --
 # wenige hundert Kilobyte statt 424 MB Query-Datenbank.
 log "Pi-hole: Teleporter-Export"
@@ -84,7 +135,7 @@ else
   warn "Pi-hole: Teleporter-Export fehlgeschlagen"
 fi
 
-# --- 3. Systemkonfiguration ---------------------------------------------------
+# --- 4. Systemkonfiguration ---------------------------------------------------
 log "Systemkonfiguration einsammeln"
 cp -a /var/lib/tailscale      "$STAGE/etc/"       2>/dev/null || warn "Tailscale-Zustand fehlt"
 cp -a /etc/samba              "$STAGE/etc/"       2>/dev/null || warn "Samba-Konfiguration fehlt"
@@ -109,7 +160,7 @@ cp -a /etc/sudoers.d          "$STAGE/konten/"            2>/dev/null || warn "s
 cp -a /var/log/sudo-io        "$STAGE/konten/"            2>/dev/null || warn "Sitzungsaufzeichnungen fehlen"
 cp -a /var/log/sudo-claude.log "$STAGE/konten/"           2>/dev/null
 
-# --- 4. Systemzustand fuer den Wiederaufbau ----------------------------------
+# --- 5. Systemzustand fuer den Wiederaufbau ----------------------------------
 log "Systemzustand dokumentieren"
 apt-mark showmanual                    > "$STAGE/system/pakete-manuell.txt"   2>/dev/null
 dpkg -l                                > "$STAGE/system/pakete-alle.txt"      2>/dev/null
@@ -123,7 +174,7 @@ crontab -l -u simon                    > "$STAGE/system/crontab-simon.txt"    2>
 systemctl list-unit-files --state=enabled --no-pager --no-legend \
                                        > "$STAGE/system/dienste-aktiv.txt"    2>/dev/null
 
-# --- 5. Sicherung ------------------------------------------------------------
+# --- 6. Sicherung ------------------------------------------------------------
 log "restic: Sicherung laeuft"
 restic backup \
   --tag automatisch \
@@ -132,11 +183,14 @@ restic backup \
   --exclude '*/tmp/*' \
   --exclude '*/logs/*' \
   --exclude '*.lock' \
+  --exclude '/mnt/usb-hdd/vaultwarden/db.sqlite3*' \
+  --exclude '/mnt/usb-hdd/vaultwarden/icon_cache' \
   "$STAGE" \
   /mnt/usb-hdd/bichon \
   /mnt/usb-hdd/ntfy \
   /mnt/usb-hdd/paperless/export \
   /mnt/usb-hdd/paperless/media \
+  /mnt/usb-hdd/vaultwarden \
   /var/lib/docker/volumes/portainer_portainer_data/_data \
   /mnt/usb-hdd/claude-skills \
   /home/simon/raspi
@@ -151,7 +205,7 @@ if [ $RC -ne 0 ]; then
   exit $RC
 fi
 
-# --- 6. Aufbewahrung ---------------------------------------------------------
+# --- 7. Aufbewahrung ---------------------------------------------------------
 # 7 taegliche, 4 woechentliche, 6 monatliche Staende. Aeltere werden entfernt
 # und der freiwerdende Platz wird zurueckgegeben (--prune).
 log "restic: alte Staende aufraeumen"
@@ -160,7 +214,7 @@ restic forget \
   --keep-daily 7 --keep-weekly 4 --keep-monthly 6 \
   --prune >/dev/null 2>&1 || warn "Aufraeumen fehlgeschlagen"
 
-# --- 7. Aufraeumen und Bericht ------------------------------------------------
+# --- 8. Aufraeumen und Bericht ------------------------------------------------
 rm -rf "$STAGE"
 
 log "Belegung im Repository:"

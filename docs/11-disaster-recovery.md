@@ -18,15 +18,16 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | 6 | **Samba-Konfiguration und Passwortdatenbank** | ✅ **ja** | restic-Backup, täglich |
 | 7 | **ntfy** (Benutzer, Zugriffsregeln, Nachrichten-Cache) | ✅ **ja** | restic-Backup, seit 18.08.2026 |
 | 8 | **Portainer-Konfiguration** (Volume) | ✅ **ja** | restic-Backup, seit 18.08.2026 — absturzkonsistent, da im laufenden Betrieb gesichert |
-| 9 | **Nutzdaten auf der SSD** (310 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
+| 9 | **Vaultwarden** (Tresor-Datenbank und JWT-Schlüssel) | ✅ **ja** | restic-Backup, seit 23.08.2026 — konsistenter SQLite-Abzug, nicht die laufende Datei |
+| 10 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
 
-**Acht von neun** — seit Einrichtung des Backups am 13.08.2026, um Position 7 und 8
-erweitert am 18.08.2026. Am 20.08.2026 erstmals nachgewiesen, dass sich das Gesicherte
+**Neun von zehn** — seit Einrichtung des Backups am 13.08.2026, um Position 7 und 8
+erweitert am 18.08.2026, um Position 9 am 23.08.2026. Am 20.08.2026 erstmals nachgewiesen, dass sich das Gesicherte
 auch zurückholen lässt: `restic check` über alle 10 Snapshots ohne Fehler, Stichprobe aus
 Snapshot `af02aa04` zurückgeholt und byte-identisch.
 Details in [12 — Backup](12-backup.md).
 
-Offen bleibt Position 9: die 222 GB unter `SSD_Müll` und 86 GB unter `rclone_bak`.
+Offen bleibt Position 10: die 222 GB unter `SSD_Müll` und 86 GB unter `rclone_bak`.
 Empfehlung dazu in [12 — Backup, Abschnitt 8](12-backup.md#8-was-dieses-backup-nicht-abdeckt).
 
 ---
@@ -137,6 +138,9 @@ Eine Wiederherstellungsstrategie ist so gut wie die Antworten auf diese Fragen:
 - [ ] Ist das GitHub-Konto `qsimonbrn` mit Zwei-Faktor-Anmeldung gesichert? Es ist seit
       der Tailscale-Umstellung der Schlüssel zum Heimnetz.
 - [ ] Ist das Bichon-Master-Passwort im Passwortmanager? (Es ist nachträglich nicht änderbar.)
+- [ ] **Ist das Vaultwarden-Master-Passwort außerhalb von Vaultwarden festgehalten?**
+      Es gibt keine Wiederherstellung, und ein Passwort-Hinweis ist bewusst abgeschaltet.
+      Ein Tresor, dessen Schlüssel nur im Tresor liegt, ist im Ernstfall ein Ziegelstein.
 - [ ] Existiert eine Liste der Paperless-Zugangsdaten und der PostgreSQL-Konfiguration?
 - [ ] Weiß außer dir jemand, wie das Netz wieder zum Laufen kommt?
 
