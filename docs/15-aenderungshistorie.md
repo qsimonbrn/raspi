@@ -19,6 +19,33 @@ Backup.
 
 ---
 
+## 23.08.2026 — Korrektur: ntfy stellt nicht zu
+
+| | |
+|---|---|
+| Betroffen | Eintrag von heute weiter unten („Passwörter erneuert, ntfy-Token gewechselt") |
+
+**Zurückgenommen:** Dort steht, der offene Punkt „ntfy-Meldung einmal echt auslösen"
+sei erledigt. Das war falsch. Bewiesen wurde, dass der Server die Meldung *annimmt*
+(`http=200`) — nicht, dass sie ankommt. Genau um den zweiten Teil ging es bei diesem
+Punkt.
+
+**Auf Nachfrage hat Simon bestätigt: von heute ist keine einzige Meldung auf dem
+iPhone angekommen.** Die anschließende Messung zeigt `subscribers=0` über den ganzen
+Abend und eine fehlende `upstream-base-url` in `server.yml`. Ohne sie kann die
+iOS-App von einem selbst gehosteten Server im Hintergrund nichts empfangen.
+
+**Folge:** Die Alarmkette für fehlgeschlagene Backups war seit dem 13.08.2026 nie
+geschlossen. Der Punkt bleibt offen und steht als 2.1 in
+[09 — Empfehlungen](09-empfehlungen.md). Nach Absprache mit Simon **nicht dringend**.
+
+**Warum das hier steht und der alte Eintrag stehen bleibt:** Verlaufsdateien werden
+nicht umgeschrieben. Eine Korrektur, die die falsche Aussage verschwinden ließe,
+würde auch verschwinden lassen, dass derselbe Denkfehler zweimal an einem Tag
+gemacht wurde — und der ist die eigentliche Lehre.
+
+---
+
 ## 23.08.2026 — Passwörter erneuert, ntfy-Token gewechselt
 
 | | |

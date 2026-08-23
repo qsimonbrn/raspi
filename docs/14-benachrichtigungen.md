@@ -76,13 +76,48 @@ will, ob das Backup letzte Woche durchlief.
 ntfy läuft **ausschließlich lokal**. Es gibt keine Portfreigabe nach außen, und das
 soll auch so bleiben.
 
-**Was das bedeutet:** Das Handy erhält Nachrichten, solange es im WLAN zu Hause ist
-oder Tailscale aktiv ist. Unterwegs ohne VPN kommt nichts an — die
-Nachricht wird aber nachgeliefert, sobald das Gerät wieder erreichbar ist
-(`cache-duration: 24h`).
+### 🔴 Befund vom 23.08.2026: Auf dem iPhone kommt nichts an
 
-Für den Zweck reicht das: Das Backup läuft um 03:17 Uhr nachts, das Handy liegt
-üblicherweise im heimischen WLAN.
+**Bis zum 23.08.2026 stand hier, das Handy erhalte Nachrichten, solange es im
+heimischen WLAN ist. Das ist nachweislich falsch.** Simon hat an diesem Tag
+**keine einzige** Meldung erhalten, obwohl der Server 32 Nachrichten angenommen und
+sechs im Cache hat.
+
+Gemessen wurde:
+
+| | |
+|---|---|
+| `subscribers` über den Abend | **0** in allen 287 Stichproben |
+| `upstream-base-url` in `server.yml` | **nicht gesetzt** |
+| `base-url` | `http://192.168.178.80:2586` — eine Heimnetz-Adresse |
+| Fehlgeschlagene Anmeldungen | keine |
+| Versand vom Pi aus | `http=200` — der Server nimmt an |
+
+**Die Ursache ist die fehlende `upstream-base-url`.** iOS erlaubt Apps keine
+dauerhafte Hintergrundverbindung. Die ntfy-App empfängt von einem *selbst
+gehosteten* Server im Hintergrund nur dann, wenn der Server einen Anstoß über
+`ntfy.sh` schickt, der per Apple-Push zugestellt wird; die App holt den Inhalt
+danach direkt beim eigenen Server ab. Ohne diese Zeile sieht das iPhone Meldungen
+allenfalls, solange die App im Vordergrund offen ist.
+
+**Damit war die Kette, deretwegen ntfy überhaupt existiert, seit dem 13.08.2026 nie
+geschlossen.** Der Zweck aus Abschnitt 1 — „das Backup kann fehlschlagen, ohne dass
+es jemand bemerkt" — ist bis heute unerfüllt: Ein Fehlschlag hätte niemanden
+erreicht.
+
+**Dass es so lange unbemerkt blieb, hat einen Grund:** Geprüft wurde immer nur, ob
+der Server die Nachricht *annimmt*. Ein `http=200` beweist die Annahme, nicht die
+Zustellung. Am 23.08.2026 wurde dieser Fehler ein zweites Mal gemacht — der offene
+Punkt galt nach einem `200` kurzzeitig als erledigt und musste zurückgenommen
+werden.
+
+Maßnahme und Aufwand in [09 — Empfehlungen](09-empfehlungen.md), Punkt 2.1.
+**Nicht dringend** (Simon, 23.08.2026), aber offen.
+
+### Was unabhängig davon gilt
+
+Unterwegs ohne Tailscale kommt ohnehin nichts an; die Nachricht bliebe bis zu
+24 Stunden im Cache (`cache-duration: 24h`).
 
 **Wer Benachrichtigungen zuverlässig auch unterwegs will**, hat drei Möglichkeiten:
 

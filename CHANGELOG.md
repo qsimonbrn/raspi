@@ -9,6 +9,30 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.8.2] — 2026-08-23
+
+### Richtiggestellt
+
+- **`docs/14-benachrichtigungen.md`, Abschnitt 4: Die Aussage „Das Handy erhält
+  Nachrichten, solange es im WLAN zu Hause ist" war falsch.** Am 23.08.2026 kam auf
+  dem iPhone keine einzige von 32 angenommenen Meldungen an. Ursache: fehlende
+  `upstream-base-url`; ohne sie empfängt die iOS-App von einem selbst gehosteten
+  Server im Hintergrund nichts. Die Alarmkette für fehlgeschlagene Backups war damit
+  seit dem 13.08.2026 nie geschlossen.
+- **Die Abhakung des offenen Punkts „ntfy-Meldung einmal echt auslösen" ist
+  zurückgenommen.** Sie stützte sich auf ein `http=200` beim Versand — das beweist
+  die Annahme durch den Server, nicht die Zustellung ans Gerät. Korrektureintrag in
+  `docs/15-aenderungshistorie.md`.
+
+### Hinzugefügt
+
+- **`docs/09-empfehlungen.md`: 2.1 „ntfy-Zustellung aufs iPhone reparieren"** —
+  Befund, Weg in vier Schritten und ausdrücklich die Vorgabe, wie nachzumessen ist
+  (bei geschlossener App und gesperrtem Gerät, mit `subscribers` als Gegenprobe).
+  Rund 45 Minuten, nach Absprache nicht dringend.
+
+---
+
 ## [2.8.1] — 2026-08-23
 
 Passwortwechsel und Token-Erneuerung nachgezogen.
