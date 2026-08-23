@@ -9,6 +9,20 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.8.1] — 2026-08-23
+
+Passwortwechsel und Token-Erneuerung nachgezogen.
+
+### Geändert
+
+- **`docs/14-benachrichtigungen.md`:** Der Verweis `grep NTFY_PASSWORD ~/stacks/ntfy/.env`
+  ist entfallen — die Datei enthält seit dem 23.08.2026 keine Zugangsdaten mehr. Statt
+  dessen der Weg zum Neusetzen und ein Kasten, der erklärt, warum die Zweitschrift weg ist.
+- **`docs/15-aenderungshistorie.md`:** Eintrag zum Passwortwechsel und zur
+  Token-Erneuerung, samt der Nachmessung ohne Kenntnis der Passwörter.
+
+---
+
 ## [2.8.0] — 2026-08-23
 
 Passwort-Tresor Vaultwarden aufgesetzt und dokumentiert. Zwei Prüfungen, die nichts

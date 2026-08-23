@@ -1,6 +1,6 @@
 # 14 — Benachrichtigungen (ntfy)
 
-*Eingerichtet: 13.08.2026*
+*Eingerichtet: 13.08.2026 · Zugangsdaten ausgelagert: 23.08.2026*
 
 Push-Nachrichten aufs Handy, ohne Umweg über einen fremden Dienst.
 
@@ -25,7 +25,15 @@ Arbeitsspeicher), der Nachrichten entgegennimmt und an Apps ausliefert.
 | Weboberfläche | `http://192.168.178.80:2586` |
 | Benutzer | `simon` (Rolle `admin`) |
 | Thema | `raspberrypi` |
-| Passwort ausgeben | `grep NTFY_PASSWORD ~/stacks/ntfy/.env` |
+| Passwort | im Vaultwarden-Tresor, Eintrag „ntfy" — **nicht mehr in der `.env`** |
+| Passwort neu setzen | `sudo docker exec -it ntfy ntfy user change-pass simon` |
+
+> **Seit dem 23.08.2026 stehen Benutzer, Passwort und Token nicht mehr in
+> `stacks/ntfy/.env`.** Der Container hat kein `env_file` und liest die Datei gar
+> nicht — die Benutzer liegen in `/mnt/usb-hdd/ntfy/lib/user.db`. Die Zeilen waren
+> eine Zweitschrift, die niemand pflegt: Beim Passwortwechsel am 23.08.2026 wurde
+> sie noch am selben Tag still falsch. Der Token liegt weiterhin in
+> `/root/.ntfy-token`, weil die Skripte ihn von dort lesen.
 
 ---
 

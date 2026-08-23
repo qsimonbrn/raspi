@@ -19,6 +19,37 @@ Backup.
 
 ---
 
+## 23.08.2026 — Passwörter erneuert, ntfy-Token gewechselt
+
+| | |
+|---|---|
+| Betroffen | Pi-hole, Samba, Paperless, ntfy |
+| Anlass | Nach dem Aufsetzen von Vaultwarden sollten die Dienstpasswörter durch starke, im Tresor erzeugte ersetzt werden |
+
+**Geändert:** Weboberflächen-Passwort von Pi-hole, Samba-Passwort für `simon`,
+Paperless-Anmeldung `admin`, ntfy-Benutzer `simon`. Portainer steht noch aus.
+Bichon bleibt bewusst unangetastet — das Verschlüsselungspasswort ist laut Hersteller
+nicht änderbar, ohne das Archiv unlesbar zu machen.
+
+**Nachgemessen**, ohne die Passwörter zu kennen: `pihole.toml` (22:28),
+`passdb.tdb` (22:30) und `user.db` (22:41) sind neu geschrieben; der
+Paperless-Hash weicht von dem im Snapshot `143d751d` (21:41) ab.
+
+**Der ntfy-Zugriffstoken wurde ersetzt.** Grund war ein Fehler von Claude: Der alte
+Token wurde bei einer Prüfung im Klartext ausgegeben und war damit verbrannt. Ablauf
+in der Reihenfolge neu → prüfen → alt löschen → Gegenprobe: Versand mit dem neuen
+Token `200`, mit dem alten danach `401`, über `/root/.ntfy-token` `200`.
+
+**Damit erledigt sich ein offener Punkt:** Der ntfy-Zustellweg ist zum ersten Mal
+tatsächlich ausgelöst worden. Bis dahin waren nur die Voraussetzungen geprüft.
+
+**`stacks/ntfy/.env` enthält keine Zugangsdaten mehr.** Der Container hat kein
+`env_file` und hat die Datei nie gelesen — die drei Zeilen waren eine Zweitschrift,
+die beim Passwortwechsel am selben Tag still falsch wurde. Ein Ort für ein Geheimnis
+ist besser als zwei, von denen einer niemandem auffällt.
+
+---
+
 ## 23.08.2026 — Vaultwarden aufgesetzt
 
 | | |
