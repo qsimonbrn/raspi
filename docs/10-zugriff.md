@@ -48,7 +48,7 @@ Alle Zugangswege zum System auf einen Blick.
 | Eingehender Port | **keiner** |
 | Tailnet | `tailf372ec.ts.net` |
 | Pi im Tailnet | `100.108.219.87` bzw. `raspberrypi.tailf372ec.ts.net` |
-| Verbundene Geräte | 2 (`raspberrypi`, `iphone-sibr`) |
+| Verbundene Geräte | 3 (`raspberrypi`, `iphone-sibr`, `simons-macbook-pro`) |
 | Heimnetz über VPN | ja — `192.168.178.0/24` per Subnetz-Router |
 | DNS über VPN | Pi-hole, tailnetweit erzwungen |
 
@@ -60,6 +60,50 @@ ansprechbar. Dank Subnetz-Router funktionieren unterwegs auch die gewohnten
 Der Anschluss läuft über DS-Lite und hat gar keine eigene öffentliche IPv4-Adresse;
 Tailscale baut die Verbindung deshalb von innen nach außen auf. Siehe
 [04 — Systemdienste](04-dienste-system.md).
+
+---
+
+## HTTPS im Tailnet
+
+Seit dem 23.08.2026 ist HTTPS für das Tailnet freigeschaltet (Admin-Konsole →
+DNS → HTTPS Certificates). Der Pi hat ein echtes Let's-Encrypt-Zertifikat auf
+`raspberrypi.tailf372ec.ts.net`, gültig bis 18.11.2026, abgelegt unter
+`/var/lib/tailscale/certs/`. Ausgestellte Zertifikate stehen im öffentlichen
+Certificate-Transparency-Log — der Tailnet- und Gerätename sind damit weltweit
+nachschlagbar, die Adresse selbst bleibt ohne Tailnet-Mitgliedschaft nutzlos.
+
+**Gebraucht wird das für Vaultwarden**, dessen Clients die Web-Crypto-API nutzen und
+nur in einem „secure context" arbeiten. Für die bestehenden Dienste ist HTTPS **kein
+Sicherheitsgewinn**: Ihr Verkehr läuft ohnehin durch Tailscale und ist per WireGuard
+verschlüsselt.
+
+> **`tailscale serve --https=443` funktioniert auf diesem Pi NICHT — und meldet
+> trotzdem Erfolg.** `pihole-FTL` ist an `0.0.0.0:80` und `0.0.0.0:443` gebunden, auch
+> auf der Tailscale-Adresse. `serve` kommt nie an den Socket, gibt aber „Serve started
+> and running in the background" aus. Nachgemessen am 23.08.2026: Port 443 lieferte
+> danach weiterhin Pi-holes selbstsigniertes `CN=pi.hole`.
+
+**Für neue Dienste gilt deshalb Port 8443:**
+
+```bash
+sudo tailscale serve --bg --https=8443 http://127.0.0.1:<port>
+sudo tailscale serve status
+sudo tailscale serve reset          # zuruecknehmen
+```
+
+Nachgemessen: `http=200`, `tls_verify=0`, Zertifikat sauber validiert. Negativkontrolle
+aus dem Heimnetz (`192.168.178.80:8443`): `http=000` — `serve` ist tailnet-only.
+
+Pi-hole von 443 zu verdrängen wurde verworfen: Der Eingriff in `pihole.toml` würde bei
+jedem Core-Update überschrieben, wie schon bei `/etc/cron.d/pihole`.
+
+> **`tailscale cert` von Hand aufzurufen ist unnötig** — `tailscale serve` holt und
+> erneuert das Zertifikat selbst. Der Handaufruf legt zusätzlich eine Kopie des
+> **privaten Schlüssels** ins Arbeitsverzeichnis; am 23.08.2026 lagen dadurch `.key` und
+> `.crt` in `/home/claude` und wurden gelöscht.
+
+**Stand:** Der Weg ist erprobt, es läuft aber nichts dauerhaft darüber
+(`No serve config`). Ob `serve --bg` einen Neustart überlebt, ist offen.
 
 ---
 

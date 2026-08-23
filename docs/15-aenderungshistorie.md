@@ -19,6 +19,97 @@ Backup.
 
 ---
 
+## 23.08.2026 — HTTPS im Tailnet freigeschaltet, Weg über Port 8443 erprobt
+
+| | |
+|---|---|
+| Betroffen | Tailscale, Pi-hole (Portbelegung), Vorbereitung Vaultwarden |
+| Kapitel | [10 — Zugriff](10-zugriff.md) |
+
+**Anlass.** Vaultwarden soll auf den Pi. Die Bitwarden-Clients nutzen die
+Web-Crypto-API, und die läuft nur in einem „secure context" — über `http://`
+verweigern sie den Dienst. HTTPS ist hier ausdrücklich **kein Sicherheitsgewinn**:
+Der Verkehr zu Paperless, Portainer und Bichon läuft schon durch Tailscale und ist
+per WireGuard verschlüsselt. HTTPS ist reine Freischaltbedingung.
+
+**Befund.** Vor der Freischaltung war `CertDomains` leer, es lag kein Zertifikat vor,
+kein Reverse Proxy war installiert — und **`pihole-FTL` belegt `0.0.0.0:80` und
+`0.0.0.0:443`**, auch auf der Tailscale-Adresse. Eine Anfrage an
+`https://raspberrypi.tailf372ec.ts.net/` scheiterte mit `tls_verify=20`, weil Pi-hole
+sein selbstsigniertes `CN=pi.hole` auslieferte.
+
+**Entscheidung.** `tailscale serve` auf **8443** statt Pi-hole von 443 zu verdrängen.
+Der Eingriff in `pihole.toml` würde bei jedem Pi-hole-Core-Update überschrieben — wie
+schon bei `/etc/cron.d/pihole` — und brächte außer einer schöneren URL nichts. Preis:
+ein Port in der URL. Ebenfalls verworfen: eine Sicherung des Zertifikatsschlüssels auf
+dem Mac, weil `tailscale serve` das Zertifikat selbsttätig holt und erneuert; eine
+Kopie vergrößert nur die Zahl der Orte mit Schlüsselmaterial.
+
+**Durchgeführt.** Simon hat HTTPS in der Tailscale-Admin-Konsole freigeschaltet
+(DNS → HTTPS Certificates → Enable HTTPS). Danach `tailscale cert` einmal von Hand,
+`tailscale serve` testweise auf 443 und auf 8443, anschließend `tailscale serve reset`.
+Die vom Handaufruf zusätzlich in `/home/claude` abgelegte Kopie des privaten Schlüssels
+wurde gelöscht.
+
+**Nachgemessen.**
+
+| Messung | Ergebnis |
+|---|---|
+| `CertDomains` nach der Freischaltung | `['raspberrypi.tailf372ec.ts.net']` |
+| Zertifikat | Let's Encrypt, gültig bis 18.11.2026, in `/var/lib/tailscale/certs/` |
+| `serve` auf **443** | **meldet Erfolg, wirkt nicht** — 443 liefert weiter `CN=pi.hole` |
+| `serve` auf **8443** | `http=200`, `tls_verify=0`, Let's-Encrypt-Zertifikat validiert |
+| Negativkontrolle aus dem LAN (`192.168.178.80:8443`) | `http=000` — tailnet-only |
+| Zustand danach | `No serve config`, 443 wieder bei Pi-hole |
+
+> **Fallstrick:** `tailscale serve --https=443` gibt „Serve started and running in the
+> background" aus und ändert nichts, weil `pihole-FTL` schon am Socket sitzt. Es gibt
+> **keine** Fehlermeldung. Wer nur die Erfolgsmeldung liest, hält HTTPS für eingerichtet.
+
+> **Zweiter Fallstrick:** `tailscale cert` von Hand aufgerufen schreibt den privaten
+> Schlüssel zusätzlich ins Arbeitsverzeichnis. Für `tailscale serve` ist der Handaufruf
+> ohnehin unnötig.
+
+**Offen geblieben.** Ob `tailscale serve --bg` einen Neustart überlebt, ist **nicht**
+geprüft — beim Neustart am selben Tag bestand gar keine serve-Konfiguration mehr. Die
+Frage klärt sich beim Aufsetzen von Vaultwarden.
+
+---
+
+## 23.08.2026 — Neustartverhalten geprüft
+
+| | |
+|---|---|
+| Betroffen | Pi-hole, Docker, `pi-guard` |
+| Kapitel | [04 — Dienste](04-dienste-system.md) |
+
+**Anlass.** Kontrollierter Neustart, um das Verhalten der Dienste nach einem Kaltstart
+zu kennen.
+
+**Befund.** 8/8 Container hoch, `pi-guard` unbeschädigt (alle vier Ketten, IPv4 und IPv6,
+je `DOCKER-USER` und `INPUT`), fünf Timer aktiv, Zertifikat unverändert.
+
+**Aber: Pi-hole blockt in den ersten ein bis zwei Minuten nach dem Boot nicht.**
+`dig doubleclick.net @127.0.0.1` lieferte bei einer Minute Uptime die echte Google-IP
+(`142.251.13.113`), bei drei Minuten `0.0.0.0`. `sudo pihole -q doubleclick.net` bestätigte
+durchgehend, dass die Domain auf zwei Listen steht, und `pihole status` meldete die ganze
+Zeit „blocking is enabled". FTL reicht Anfragen also an den Upstream durch, bis die
+gravity-Liste im Speicher ist — ohne dass irgendeine Statusabfrage das anzeigt.
+
+**Nachgemessen.** `/var/log/pihole/pihole.log` nach dem Ladevorgang:
+`gravity blocked doubleclick.net is 0.0.0.0`.
+
+> **Fallstrick:** Vor jeder Blocklisten-Messung `uptime` prüfen. Wer direkt nach einem
+> Neustart misst, hält Pi-hole für kaputt.
+
+**Neu offen.** Vier von acht Blocklisten stehen auf `status=2`. Ob das „upstream
+unverändert, Cache benutzt" (harmlos) oder „Download fehlgeschlagen, Cache benutzt"
+(nicht harmlos) bedeutet, ist ungeklärt. `pihole -g` endet in beiden Fällen mit Exit 0,
+und `pi-gravity.sh` achtet nur auf Schrumpfen um mehr als ein Viertel — der zweite Fall
+wäre still. Gravity zählt 1.039.885 Domains gegenüber 1.115.658 am 20.08.
+
+---
+
 ## 20.08.2026 — Speicher-Limits gesetzt, Tailscale aktualisiert
 
 | | |

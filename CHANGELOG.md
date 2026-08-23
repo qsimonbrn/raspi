@@ -9,6 +9,27 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.7.0] — 2026-08-23
+
+HTTPS im Tailnet freigeschaltet und der tragfähige Weg dorthin nachgemessen.
+
+### Hinzugefügt
+
+- **`docs/10-zugriff.md`: Abschnitt „HTTPS im Tailnet".** Zertifikat, der Weg über
+  Port 8443 und zwei Fallstricke: `tailscale serve --https=443` meldet auf diesem Pi
+  Erfolg und wirkt nicht, weil `pihole-FTL` am Socket sitzt; `tailscale cert` von Hand
+  legt zusätzlich eine Kopie des privaten Schlüssels ins Arbeitsverzeichnis.
+- **`docs/15-aenderungshistorie.md`: zwei Einträge vom 23.08.2026** — HTTPS-Freischaltung
+  und Neustartverhalten. Letzterer hält fest, dass Pi-hole in den ersten ein bis zwei
+  Minuten nach dem Boot nicht blockt und dabei durchgehend „blocking is enabled" meldet.
+
+### Korrigiert
+
+- **`docs/10-zugriff.md`: drei Tailnet-Geräte statt zwei.** `simons-macbook-pro` fehlte;
+  an `tailscale status` nachgemessen.
+
+---
+
 ## [2.6.0] — 2026-08-20
 
 Die Backup-Prüfung prüft jetzt die Nutzdaten, nicht nur die Buchführung darüber.
