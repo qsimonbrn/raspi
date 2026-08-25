@@ -55,10 +55,10 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 
 | | |
 |---|---|
-| Uptime | wenige Minuten (Neustart am 23.08.2026 zur Prüfung der `tailscale serve`-Persistenz) |
-| Load (1/5/15 min) | 0,64 / 2,15 / 1,42 bei 4 Kernen — erhöht durch den Startvorgang |
-| Temperatur | 51,6 °C — nie gedrosselt (`throttled=0x0`) |
-| RAM verfügbar | 2,1 von 3,7 GiB (23.08.2026) |
+| Uptime | 1 Tag, 8 Stunden (25.08.2026) |
+| Load (1/5/15 min) | 0,58 / 0,20 / 0,13 bei 4 Kernen |
+| Temperatur | 46,2 °C — nie gedrosselt (`throttled=0x0`) |
+| RAM verfügbar | 2,0 von 3,7 GiB (25.08.2026) |
 | Systemdatenträger | 4 % belegt (8,2 G von 235 G) |
 | Datenspeicher SSD | 36 % belegt (311 G von 916 G) |
 | Ausstehende OS-Updates | 0 — `tailscale` am 20.08.2026 von Hand auf 1.102.3 gezogen (Fremd-Repository, von `unattended-upgrades` nie erfasst) |
@@ -71,6 +71,7 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
 | Speicher-Limits | **seit 20.08.2026 gesetzt** für alle neun Container, Summe 3.360 von 3.796 MiB — nicht überbucht |
 | Passwort-Tresor | **Vaultwarden 1.37.2** seit 23.08.2026, nur über Tailscale auf Port 8443 ([18](docs/18-vaultwarden.md)) |
+| Benachrichtigungen | **ntfy stellt seit 25.08.2026 nachweislich aufs iPhone zu** — Alarmkette erstmals geschlossen ([14](docs/14-benachrichtigungen.md)) |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 
@@ -85,6 +86,10 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
    erfolgreich getestet und auf Wunsch zurückgenommen — soll gemeinsam mit Vorlauf
    erfolgen. `AllowUsers` muss dabei **beide** Konten nennen (`simon claude`), sonst ist
    die Automatisierung ausgesperrt. → [Kapitel 07](docs/07-sicherheit.md)
+
+Am 25.08.2026 erledigt: **Die Alarmkette trägt.** ntfy stellt nachweislich aufs
+gesperrte iPhone zu; ein fehlgeschlagenes Backup erreicht seitdem jemanden.
+→ [Kapitel 14](docs/14-benachrichtigungen.md)
 
 Am 23.08.2026 erledigt: **Passwort-Tresor Vaultwarden** aufgesetzt, ausschließlich über
 Tailscale erreichbar, mit konsistenter Sicherung der Tresor-Datenbank.

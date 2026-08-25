@@ -9,6 +9,49 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.9.0] — 2026-08-25
+
+### Behoben
+
+- **Die Alarmkette ist zum ersten Mal geschlossen.** `stacks/ntfy/server.yml` hat
+  `upstream-base-url: "https://ntfy.sh"` bekommen; eine Meldung erscheint seitdem auf
+  dem gesperrten iPhone. Nachweis über den Netzverkehr des Containers (13 Pakete an
+  `ntfy.sh`, Negativkontrolle auf eine unbeteiligte Adresse: 0) und über die Anzeige
+  auf dem Gerät. Gesendet wurde über denselben Pfad, den `pi-backup.sh` benutzt.
+  → [14 — Benachrichtigungen](docs/14-benachrichtigungen.md) Abschnitt 4 neu
+  geschrieben, [09 — Empfehlungen](docs/09-empfehlungen.md) Punkt 2.1 auf erledigt.
+
+### Hinzugefügt
+
+- **`docs/05-docker.md`: neuer Abschnitt „Fallstrick: eine einzelne Datei im
+  Bind-Mount".** Hängt eine einzelne Datei im Mount, klebt der Container an ihrer
+  Inode. `sed -i` erzeugt eine neue — der Container liest danach unbemerkt weiter die
+  alte Fassung. Am 25.08.2026 an `server.yml` nachgemessen (Inode innen 256054, außen
+  256855) und beim Prüfen der eigenen Änderung aufgefallen.
+- **`inventar/collect.sh`: zwölfte Prüfung „ntfy kann an iOS zustellen".** Prüfung 2
+  belegt nur, dass der Server annimmt — genau der blinde Fleck, der die Alarmkette
+  zwei Wochen lang still ausfallen ließ. Die neue Prüfung misst die *notwendige*
+  Bedingung: Sie liest `server.yml` **aus dem laufenden Container**, nicht aus dem
+  Repository, und meldet drei Fälle getrennt — Zeile fehlt, Zeile nur im Container
+  (geht beim nächsten `compose up` verloren), Container liest eine andere Fassung als
+  das Repository. Alle drei Zweige wurden gegen einen erzeugten Fehlerfall gemessen,
+  der Positivfall gegen den echten Zustand.
+
+### Richtiggestellt
+
+- **`docs/09-empfehlungen.md`, Punkt 2.1, Schritt 3 („App neu einrichten") war
+  überflüssig.** Die ntfy-App berechnet das Upstream-Thema selbst und empfing sofort
+  nach dem Neustart des Servers. Der Schritt hätte Simon unnötig Arbeit gemacht.
+
+### Geändert
+
+- `README.md`: Kennzahlen vom 25.08.2026, neue Zeile „Benachrichtigungen" im Kasten
+  „Zustand auf einen Blick".
+- `docs/15-aenderungshistorie.md`: Eintrag zum 25.08.2026 mit der Abwägung, warum die
+  `base-url` **nicht** auf `tailscale serve` umgestellt wurde.
+
+---
+
 ## [2.8.3] — 2026-08-23
 
 ### Hinzugefügt

@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 23.08.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 25.08.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,37 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 25.08.2026 — ntfy stellt zu: `upstream-base-url` ergänzt
+
+| | |
+|---|---|
+| Geändert | `stacks/ntfy/server.yml`: `upstream-base-url: "https://ntfy.sh"` ergänzt, Container neu gestartet |
+| Unverändert | `base-url` bleibt `http://192.168.178.80:2586` |
+| Nachweis | Meldung auf dem gesperrten iPhone erschienen, App vorher geschlossen |
+| Gegenprobe | iptables-Zählregel: 13 Pakete des Containers an `ntfy.sh`, Kontrollregel auf eine unbeteiligte Adresse 0 |
+
+**Warum so und nicht anders:** Die `base-url` hätte auf einen `tailscale serve`-Port
+umgestellt werden können — mit echtem TLS statt Klartext-HTTP im WLAN. Dagegen sprach,
+dass beide Wege gleichermaßen von aktivem Tailscale auf dem Handy abhängen: Der Pi
+bietet `192.168.178.0/24` ins Tailnet an, die Route ist freigegeben. Der TLS-Gewinn
+beträfe nur den Transport im Heimnetz, der Aufwand hätte sich verdreifacht. Bei
+sensiblerem Inhalt als „Backup fehlgeschlagen“ wäre die Abwägung eine andere.
+
+**Was dabei auffiel und die Prüfung entwertete:** Ein erfundener Konfigurationsschlüssel
+(`quatsch-option-negativkontrolle`) hindert ntfy **nicht** am Start — der Server
+übergeht Unbekanntes kommentarlos. „Container läuft nach dem Neustart“ beweist also
+nicht, dass er die geänderte Datei gelesen hat. Der Nachweis musste über den
+tatsächlichen Netzverkehr geführt werden.
+
+**Rechtsstellung des Vortags:** Der Eintrag vom 23.08.2026 bleibt unverändert stehen.
+Er beschreibt den damaligen Zustand richtig.
+
+**Nachgezogen:** [14 — Benachrichtigungen](14-benachrichtigungen.md) Abschnitt 4 neu
+geschrieben, [09 — Empfehlungen](09-empfehlungen.md) Punkt 2.1 auf erledigt,
+`inventar/collect.sh` um eine Prüfung der Zustellvoraussetzung erweitert.
 
 ---
 

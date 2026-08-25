@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 23.08.2026*
+*Stand: 25.08.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -119,38 +119,34 @@ Container-Ports müssen zusätzlich über die `DOCKER-USER`-Chain abgesichert od
 
 ## Stufe 3 — Betrieb und Komfort
 
-### 2.1 ntfy-Zustellung aufs iPhone reparieren — 🔴 offen, nicht dringend
+### 2.1 ntfy-Zustellung aufs iPhone reparieren — ✅ erledigt am 25.08.2026
 
-*Aufgenommen am 23.08.2026*
+> Behoben mit einer Zeile `upstream-base-url: "https://ntfy.sh"` in
+> `stacks/ntfy/server.yml`. Zustellung am gesperrten iPhone nachgewiesen, Upstream-
+> Verkehr über eine iptables-Zählregel gemessen (13 Pakete, Negativkontrolle 0).
+> Die `base-url` blieb unverändert — die Tailscale-Subnetzroute macht
+> `192.168.178.80` auch von unterwegs erreichbar. Aufwand tatsächlich rund
+> 25 Minuten. Siehe [14 — Benachrichtigungen](14-benachrichtigungen.md), Abschnitt 4.
+>
+> **Damit ist auch 2.7 (Diun) nicht mehr blockiert**: Update-Meldungen hätten bis
+> heute niemanden erreicht.
+
+<details>
+<summary>Ursprünglicher Befund vom 23.08.2026</summary>
 
 **Befund:** Es kommt nichts an. Am 23.08.2026 hat der Server 32 Nachrichten
 angenommen, auf dem iPhone erschien keine einzige. Ursache ist die fehlende
 `upstream-base-url` in `stacks/ntfy/server.yml` — ohne sie kann die iOS-App von einem
-selbst gehosteten Server im Hintergrund nichts empfangen. Vollständig in
-[14 — Benachrichtigungen](14-benachrichtigungen.md), Abschnitt 4.
+selbst gehosteten Server im Hintergrund nichts empfangen.
 
 **Warum das zählt:** ntfy ist die einzige Stelle, an der ein fehlgeschlagenes Backup
 sichtbar würde. Ein stiller Alarmweg ist schlimmer als keiner — er erzeugt das
 Gefühl, überwacht zu sein.
 
-**Weg:**
+Der ursprünglich geplante Schritt 3 („App neu einrichten“) erwies sich als
+überflüssig: Die App berechnet das Upstream-Thema selbst und empfing sofort.
 
-1. `upstream-base-url: "https://ntfy.sh"` in `server.yml` ergänzen. Dabei geht nur
-   die Nachrichten-Kennung an ntfy.sh, nicht der Inhalt — die App holt den Text
-   danach beim eigenen Server.
-2. `base-url` prüfen: Sie muss für das iPhone im Moment der Zustellung erreichbar
-   sein. Über den Tailscale-Subnetzrouter gilt das auch für `192.168.178.80`, solange
-   Tailscale auf dem Handy aktiv ist. Alternativ ntfy hinter `tailscale serve` legen,
-   wie Vaultwarden.
-3. App neu einrichten, Zugangsdaten aus dem Tresor.
-4. **Nachmessen, und zwar richtig:** Eine Meldung auslösen, während die App
-   geschlossen ist und das Handy gesperrt. `http=200` ist kein Nachweis — nur das
-   Erscheinen auf dem Sperrbildschirm zählt. Gegenprobe: `subscribers` in den
-   Server-Statistiken muss dabei von 0 verschieden sein.
-
-**Aufwand: rund 45 Minuten.** Abhängig davon ist Punkt 2 der Sicherheitsliste
-(Alarmierung bei verdächtigen Anmeldungen) — derselbe Zustellweg, und er trägt
-derzeit nicht.
+</details>
 
 ### 3.1 Dashboard richtig aufsetzen — ✅ erledigt am 13.08.2026
 
@@ -290,6 +286,7 @@ Woche 2   2.6 Container-Updates          ✅ erledigt 16.08.2026
           2.8 Datenbank-Tags pinnen      ✅ erledigt 16.08.2026
           2.7 Diun — jetzt wichtiger: mit festen Tags erfährt man
               von neuen Versionen sonst gar nichts mehr
+              (seit 25.08.2026 nicht mehr blockiert — ntfy stellt zu)
           2.9 Ersatz für filebrowser (Frist: 01.09.2026)
           3.1 Dashboard
 

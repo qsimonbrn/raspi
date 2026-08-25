@@ -71,39 +71,75 @@ will, ob das Backup letzte Woche durchlief.
 
 ---
 
-## 4. ⚠️ Wichtige Einschränkung: nur im Heimnetz
+## 4. Zustellung aufs iPhone
+
+*Gemessen am 25.08.2026.*
 
 ntfy läuft **ausschließlich lokal**. Es gibt keine Portfreigabe nach außen, und das
-soll auch so bleiben.
+soll auch so bleiben. Die Zustellung an das iPhone läuft trotzdem — über einen Umweg,
+den iOS erzwingt.
 
-### 🔴 Befund vom 23.08.2026: Auf dem iPhone kommt nichts an
+### Wie es funktioniert
 
-**Bis zum 23.08.2026 stand hier, das Handy erhalte Nachrichten, solange es im
-heimischen WLAN ist. Das ist nachweislich falsch.** Simon hat an diesem Tag
-**keine einzige** Meldung erhalten, obwohl der Server 32 Nachrichten angenommen und
-sechs im Cache hat.
+iOS erlaubt Apps keine dauerhafte Hintergrundverbindung. Die ntfy-App empfängt von
+einem *selbst gehosteten* Server im Hintergrund deshalb nur dann, wenn dieser einen
+Anstoß über `ntfy.sh` schickt, der per Apple-Push zugestellt wird. Den Inhalt holt
+die App danach direkt beim eigenen Server ab. Dafür sorgt eine einzige Zeile in
+`stacks/ntfy/server.yml`:
 
-Gemessen wurde:
+```yaml
+upstream-base-url: "https://ntfy.sh"
+```
+
+An `ntfy.sh` geht dabei die Nachrichten-Kennung mit gehashtem Thema, **nicht der
+Inhalt**. Die `base-url` bleibt `http://192.168.178.80:2586`; erreichbar ist sie
+für das Handy auch von unterwegs, weil der Pi die Route `192.168.178.0/24` ins
+Tailnet anbietet und diese freigegeben ist (`PrimaryRoutes`, gemessen 25.08.2026).
+
+### Nachweis vom 25.08.2026
+
+| Messung | Ergebnis |
+|---|---|
+| Versand über den Pfad von `pi-backup.sh` (gleiche URL, Thema `raspberrypi`, gleicher Token) | `http=200` |
+| Pakete des ntfy-Containers an `ntfy.sh` (iptables-Zählregel `172.24.0.2 → 159.203.148.75:443`) | **13** |
+| Negativkontrolle: dieselbe Zählregel auf eine unbeteiligte Adresse | **0** |
+| Anzeige auf dem gesperrten iPhone, App vorher geschlossen | **erschienen** (Simon bestätigt) |
+
+**Damit ist die Kette, deretwegen ntfy existiert, zum ersten Mal geschlossen.** Der
+Versand aus `pi-backup.sh` nimmt keinen anderen Weg als der Test — gleicher Server,
+gleiches Thema, gleicher Token, gleiche URL.
+
+Die App musste **nicht** neu eingerichtet werden: Sie berechnet das Upstream-Thema
+selbst und war nach der Serveränderung sofort erreichbar.
+
+### Was die Änderung nicht leistet
+
+- **Ohne Tailscale auf dem iPhone kommt unterwegs nichts an.** Der Apple-Push trägt
+  nur die Kennung; den Text holt die App beim Pi, und dorthin führt von außerhalb
+  des WLAN nur das Tailnet. Die Meldung bleibt bis zu 24 Stunden im Cache
+  (`cache-duration: 24h`) und wird nachgeholt.
+- **Der Verkehr im WLAN ist unverschlüsselt** (`http`, Port 2586). Wer das ändern
+  will, legt ntfy wie Vaultwarden hinter `tailscale serve` auf einen eigenen Port;
+  am 25.08.2026 bewusst nicht getan, weil es dieselbe Abhängigkeit von Tailscale
+  hat und nur den Transport im Heimnetz betrifft.
+
+### Vorgeschichte — warum es zwei Wochen lang still ausfiel
+
+<details>
+<summary>Befund vom 23.08.2026 (behoben am 25.08.2026)</summary>
+
+Bis zum 23.08.2026 stand hier, das Handy erhalte Nachrichten, solange es im
+heimischen WLAN ist. Das war nachweislich falsch. Simon hat an diesem Tag **keine
+einzige** Meldung erhalten, obwohl der Server 32 Nachrichten angenommen hatte.
 
 | | |
 |---|---|
 | `subscribers` über den Abend | **0** in allen 287 Stichproben |
 | `upstream-base-url` in `server.yml` | **nicht gesetzt** |
-| `base-url` | `http://192.168.178.80:2586` — eine Heimnetz-Adresse |
-| Fehlgeschlagene Anmeldungen | keine |
 | Versand vom Pi aus | `http=200` — der Server nimmt an |
 
-**Die Ursache ist die fehlende `upstream-base-url`.** iOS erlaubt Apps keine
-dauerhafte Hintergrundverbindung. Die ntfy-App empfängt von einem *selbst
-gehosteten* Server im Hintergrund nur dann, wenn der Server einen Anstoß über
-`ntfy.sh` schickt, der per Apple-Push zugestellt wird; die App holt den Inhalt
-danach direkt beim eigenen Server ab. Ohne diese Zeile sieht das iPhone Meldungen
-allenfalls, solange die App im Vordergrund offen ist.
-
-**Damit war die Kette, deretwegen ntfy überhaupt existiert, seit dem 13.08.2026 nie
-geschlossen.** Der Zweck aus Abschnitt 1 — „das Backup kann fehlschlagen, ohne dass
-es jemand bemerkt" — ist bis heute unerfüllt: Ein Fehlschlag hätte niemanden
-erreicht.
+**Die Kette war seit dem 13.08.2026 nie geschlossen.** Ein fehlgeschlagenes Backup
+hätte niemanden erreicht.
 
 **Dass es so lange unbemerkt blieb, hat einen Grund:** Geprüft wurde immer nur, ob
 der Server die Nachricht *annimmt*. Ein `http=200` beweist die Annahme, nicht die
@@ -111,23 +147,11 @@ Zustellung. Am 23.08.2026 wurde dieser Fehler ein zweites Mal gemacht — der of
 Punkt galt nach einem `200` kurzzeitig als erledigt und musste zurückgenommen
 werden.
 
-Maßnahme und Aufwand in [09 — Empfehlungen](09-empfehlungen.md), Punkt 2.1.
-**Nicht dringend** (Simon, 23.08.2026), aber offen.
+Daraus folgt die Prüfung, die `inventar/collect.sh` seit dem 25.08.2026 zusätzlich
+fährt: Sie misst nicht die Zustellung — das kann kein Skript —, sondern ob die
+Voraussetzung dafür überhaupt noch vorhanden ist.
 
-### Was unabhängig davon gilt
-
-Unterwegs ohne Tailscale kommt ohnehin nichts an; die Nachricht bliebe bis zu
-24 Stunden im Cache (`cache-duration: 24h`).
-
-**Wer Benachrichtigungen zuverlässig auch unterwegs will**, hat drei Möglichkeiten:
-
-| Weg | Abwägung |
-|---|---|
-| Tailscale dauerhaft aktiv | Kein zusätzlicher Dienst, kostet etwas Akku. Seit dem 18.08.2026 auch tatsächlich von unterwegs nutzbar |
-| Öffentliches `ntfy.sh` als Relay | Funktioniert überall, aber die Meldungen laufen über einen fremden Server. Bei „Backup fehlgeschlagen" ist der Inhalt unkritisch — Metadaten fallen trotzdem an |
-| Reverse Proxy mit HTTPS und Portfreigabe | Volle Funktion, öffnet aber einen weiteren Weg von außen ins Heimnetz |
-
-Solange nur das Backup meldet, ist die erste Variante die richtige: nichts tun.
+</details>
 
 ---
 

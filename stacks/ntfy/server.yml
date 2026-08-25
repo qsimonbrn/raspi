@@ -6,6 +6,11 @@
 # zu verbinden -- sie muss exakt zur tatsaechlichen Adresse passen.
 base-url: "http://192.168.178.80:2586"
 
+# Zustellung an die iOS-App: ohne diese Zeile empfaengt die App von einem
+# selbst gehosteten Server im Hintergrund nichts. Es geht nur die
+# Nachrichten-Kennung mit gehashtem Thema an ntfy.sh, nicht der Inhalt.
+upstream-base-url: "https://ntfy.sh"
+
 # Zwischenspeicher fuer Nachrichten. 24 Stunden reichen: Wer eine Meldung
 # laenger nicht gesehen hat, hat ohnehin ein anderes Problem.
 cache-file: "/var/cache/ntfy/cache.db"

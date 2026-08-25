@@ -564,6 +564,44 @@ case "$NT" in
   *)   pruef "ntfy nimmt Meldungen an" "ACHTUNG" "ntfy antwortete mit HTTP $NT" ;;
 esac
 
+# --- 2b. Kann ntfy ueberhaupt ans iPhone zustellen? -------------------------
+# Pruefung 2 belegt nur die Annahme durch den Server. Vom 13.08. bis zum
+# 25.08.2026 war genau das der blinde Fleck: Der Server nahm an, das Handy
+# bekam nichts, weil "upstream-base-url" fehlte. Ohne diese Zeile kann die
+# iOS-App von einem selbst gehosteten Server im Hintergrund nichts empfangen.
+# Gemessen wird die NOTWENDIGE Bedingung, nicht die Zustellung selbst -- und
+# zwar an der Datei, die der Container tatsaechlich liest, nicht an der im
+# Repository. Beides kann auseinanderlaufen.
+UPY="/home/simon/raspi/stacks/ntfy/server.yml"
+if ! sudo -n docker ps --format '{{.Names}}' 2>/dev/null | grep -qx ntfy; then
+  pruef "ntfy kann an iOS zustellen" "?" \
+    "Container ntfy laeuft nicht -- Konfiguration nicht pruefbar"
+else
+  # Massgeblich ist die Fassung, die der Container liest. Sie kann von der im
+  # Repository abweichen: server.yml haengt als EINZELNE Datei im Bind-Mount,
+  # und "sed -i" erzeugt eine neue Inode. Der Container behaelt dann die alte,
+  # bis er neu gestartet wird -- am 25.08.2026 nachgemessen.
+  UP_C="$(sudo -n docker exec ntfy grep -cE '^[[:space:]]*upstream-base-url:[[:space:]]*"?https' /etc/ntfy/server.yml 2>/dev/null || echo 0)"
+  UP_R="$(grep -cE '^[[:space:]]*upstream-base-url:[[:space:]]*"?https' "$UPY" 2>/dev/null || echo 0)"
+  UP_DIFF=1
+  sudo -n docker exec ntfy cat /etc/ntfy/server.yml 2>/dev/null > /tmp/.ntfy-innen.$$ \
+    && diff -q /tmp/.ntfy-innen.$$ "$UPY" >/dev/null 2>&1 && UP_DIFF=0
+  rm -f /tmp/.ntfy-innen.$$
+  if [ "$UP_C" -lt 1 ]; then
+    pruef "ntfy kann an iOS zustellen" "ACHTUNG" \
+      "upstream-base-url fehlt in der Fassung, die der Container liest -- die iOS-App empfaengt im Hintergrund nichts, alle Alarme bleiben unsichtbar"
+  elif [ "$UP_R" -lt 1 ]; then
+    pruef "ntfy kann an iOS zustellen" "ACHTUNG" \
+      "upstream-base-url laeuft im Container, fehlt aber im Repository -- geht beim naechsten compose up verloren"
+  elif [ "$UP_DIFF" -ne 0 ]; then
+    pruef "ntfy kann an iOS zustellen" "ACHTUNG" \
+      "Zustellung moeglich, aber der Container liest eine ANDERE Fassung von server.yml als das Repository -- Neustart fehlt"
+  else
+    pruef "ntfy kann an iOS zustellen" "ok" \
+      "upstream-base-url gesetzt, Container und Repository inhaltsgleich -- notwendige Bedingung erfuellt, die Anzeige auf dem Geraet kann ein Skript nicht messen"
+  fi
+fi
+
 # --- 3. Endet jeder Timer-Dienst erfolgreich? -------------------------------
 # list-timers zeigt nur den naechsten Lauf. Der Backup-Dienst endete tagelang
 # mit Code 1, ohne dass es auffiel.

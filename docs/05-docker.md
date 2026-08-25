@@ -321,6 +321,35 @@ der Paperless-Zwischenschritt über 2.20.15 ist das Lehrstück dazu.
 
 ---
 
+## ⚠️ Fallstrick: eine einzelne Datei im Bind-Mount
+
+*Nachgemessen am 25.08.2026 an `stacks/ntfy/server.yml`.*
+
+Wird eine **einzelne Datei** in einen Container gebunden — nicht ihr Verzeichnis —,
+hängt der Mount an der Inode, nicht am Pfad. `sed -i`, `cp` mit anschließendem
+Umbenennen und die meisten Editoren erzeugen beim Speichern eine **neue** Inode. Der
+Container liest danach weiter die alte Fassung, ohne dass irgendetwas eine Warnung
+ausgibt.
+
+| Messung vom 25.08.2026 | |
+|---|---|
+| Inode der Datei im Repository nach `sed -i` | 256855 |
+| Inode, die der Container gemountet hat | 256054 |
+| Sichtbare Folge | keine — der Dienst läuft normal weiter |
+
+Docker löst den Mount **bei jedem Containerstart** neu auf. Ein `docker compose
+restart` genügt also, um die geänderte Datei wirksam zu machen — nur passiert ohne
+diesen Schritt eben gar nichts, und das fällt nicht auf.
+
+**Betroffen sind hier:** `stacks/ntfy/server.yml` und jede weitere Einzeldatei aus der
+`volumes:`-Liste eines Stacks. Verzeichnis-Mounts (`/mnt/usb-hdd/...`) haben das
+Problem nicht.
+
+**Konsequenz für Prüfungen:** Der Blick ins Repository beweist nichts über den
+laufenden Dienst. `inventar/collect.sh` vergleicht deshalb seit dem 25.08.2026 den
+**Inhalt der Datei im Container** mit dem im Repository und meldet eine Abweichung als
+`ACHTUNG`.
+
 ## Volumes
 
 | Volume | Genutzt von |
