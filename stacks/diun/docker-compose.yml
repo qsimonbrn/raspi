@@ -1,0 +1,110 @@
+# --- Logrotation -------------------------------------------------------------
+#  Docker dreht Logdateien NUR, wenn es beim Erstellen des Containers gesetzt
+#  ist. Die Vorgabe in /etc/docker/daemon.json greift erst nach einem echten
+#  Daemon-Neustart (ein reload uebernimmt log-opts nicht) -- deshalb steht sie
+#  hier ausdruecklich.
+# -----------------------------------------------------------------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+
+  # ---------------------------------------------------------------------------
+  #  Socket-Proxy -- eigener, nicht der von Homepage
+  #
+  #  Warum ein zweiter statt des vorhandenen? Der von Homepage haengt am
+  #  Netz homepage_default. Diun dort anzuhaengen wuerde die Ueberwachung von
+  #  einem fremden Stack abhaengig machen: Wer den Homepage-Stack einmal mit
+  #  "down" abraeumt, nimmt Diun stumm die Datenquelle weg -- und Diun meldet
+  #  Stille nicht. Ein Ueberwachungsdienst muss dann funktionieren, wenn
+  #  niemand hinschaut. Preis: 48 MiB.
+  #
+  #  Warum ueberhaupt ein Proxy? Ein Bind-Mount des Docker-Sockets mit ":ro"
+  #  macht NUR die Socket-Datei schreibgeschuetzt -- die API dahinter bleibt
+  #  voll beschreibbar. Wer den Socket erreicht, ist faktisch root auf dem
+  #  Host. Der Proxy laesst per Allowlist nur lesende Container-Abfragen durch.
+  # ---------------------------------------------------------------------------
+  dockerproxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:v0.5.0
+    container_name: diun-dockerproxy
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    mem_limit: 48m
+
+    environment:
+      CONTAINERS: 1        # erlaubt: Container auflisten und inspizieren
+      INFO: 1              # erlaubt: Docker-Version und Systeminfo
+      POST: 0              # verboten: jede schreibende Anfrage
+      # IMAGES muss 1 sein. Am 25.08.2026 mit 0 gemessen: Diun startete
+      # klaglos, meldete "No image found" und ueberwachte NULL Container --
+      # der Dienst lief und tat nichts. Diun braucht ImageInspect, um den
+      # lokal laufenden Digest zu kennen; die Registry-Abfrage selbst laeuft
+      # am Docker-Daemon vorbei. Lesend, POST bleibt 0.
+      IMAGES: 1
+      SERVICES: 0
+      TASKS: 0
+      VOLUMES: 0
+      NETWORKS: 0
+      EXEC: 0
+      SECRETS: 0
+      CONFIGS: 0
+      NODES: 0
+      SWARM: 0
+      SYSTEM: 0
+      AUTH: 0
+      BUILD: 0
+      COMMIT: 0
+      DISTRIBUTION: 0
+      PLUGINS: 0
+      SESSION: 0
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    # Bewusst KEIN ports-Eintrag: nur im Stack-Netz erreichbar.
+
+  # ---------------------------------------------------------------------------
+  #  Diun
+  # ---------------------------------------------------------------------------
+  diun:
+    image: crazymax/diun:4.33.0
+    container_name: diun
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    # Erster Anhaltspunkt; nach ein bis zwei Wochen an der Messung nachziehen.
+    mem_limit: 128m
+
+    depends_on:
+      - dockerproxy
+
+    command: serve
+
+    environment:
+      TZ: "Europe/Berlin"
+      LOG_LEVEL: "info"
+      LOG_JSON: "false"
+
+    volumes:
+      # Zustandsdatenbank. Sie merkt sich, welchen Digest Diun zuletzt gesehen
+      # hat -- ohne sie meldet jeder Neustart alles noch einmal. Bewusst NICHT
+      # im Backup: vollstaendig rekonstruierbar, im schlimmsten Fall kommt eine
+      # Meldungswelle.
+      - /mnt/usb-hdd/diun:/data
+      # Konfiguration liegt im Repo und ist damit versioniert.
+      # ACHTUNG: einzelne Datei im Bind-Mount -- nach jeder Aenderung
+      # "compose restart diun", sonst liest der Container die alte Inode weiter
+      # (nachgemessen am 25.08.2026, siehe docs/05-docker.md).
+      - ./diun.yml:/diun.yml:ro
+      # Der ntfy-Token des Dienstkontos "diun". Liegt ausserhalb des Git,
+      # gehoert 1000:1000 mit Modus 600.
+      - /etc/diun/ntfy-token:/run/secrets/ntfy-token:ro
+
+    # Bewusst KEIN ports-Eintrag: Diun hat keine Oberflaeche und muss von
+    # aussen nicht erreichbar sein. Damit taucht es in pi-guard gar nicht auf.

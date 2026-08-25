@@ -155,6 +155,27 @@ Voraussetzung dafür überhaupt noch vorhanden ist.
 
 ---
 
+### Wer außer dem Backup noch sendet
+
+Seit dem 25.08.2026 gibt es ein **zweites Absenderkonto**: `diun`. Es ist bewusst kein
+zweiter Token des Admin-Kontos, sondern ein eigener Benutzer mit dem kleinstmöglichen
+Recht.
+
+| | `simon` | `diun` |
+|---|---|---|
+| Rolle | `admin` | `user` |
+| Rechte | alles | **nur schreiben**, nur auf `raspberrypi` |
+| Token | `/root/.ntfy-token` | `/etc/diun/ntfy-token` |
+| Wer benutzt ihn | `pi-backup.sh`, `pi-abgleich.sh`, Handbetrieb | ausschließlich der Diun-Container |
+
+Am 25.08.2026 gegen alle drei Fälle gemessen: schreiben auf `raspberrypi` → `200`,
+schreiben auf ein anderes Thema → `403`, lesen → `403`. Ein verfälschter Token → `401`.
+
+**Der Nutzen ist die getrennte Widerrufbarkeit.** Wird der Diun-Container einmal
+kompromittiert, kostet das Sperren dieses Kontos nichts — der Backup-Alarm läuft
+weiter. Mit einem gemeinsamen Token hätte man die Wahl zwischen „alles sperren" und
+„nichts tun".
+
 ## 5. Was das Backup meldet
 
 Im Skript `pi-backup.sh` steckt eine Funktion `notify()`. Drei Fälle:

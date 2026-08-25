@@ -100,7 +100,7 @@ Ausführliche Begründungen in [07 — Sicherheit](07-sicherheit.md).
 | ~~2.5~~ | ~~`ufw` mit LAN-/VPN-Regelwerk~~ — ✅ **erledigt am 18.08.2026** als `pi-guard`. Kein `ufw`, weil Docker dessen Regeln umgeht; stattdessen Ketten in `DOCKER-USER` und `INPUT` | — | — |
 | 2.5b | Alarmierung über ntfy: Anmeldungen, sudo-Nutzung, Änderungen an `/etc/passwd` und `/etc/sudoers` | 1–2 h | hoch |
 | ~~2.6~~ | ~~Container-Updates einspielen~~ — **erledigt 16.08.2026**, siehe [05](05-docker.md) | — | — |
-| 2.7 | **Diun** installieren (meldet neue Images, aktualisiert nicht) | 20 min | mittel |
+| ~~2.7~~ | ~~**Diun** installieren~~ — ✅ **erledigt am 25.08.2026.** `crazymax/diun:4.33.0`, täglich 06:15, Meldung über ntfy, eigener Socket-Proxy, ntfy-Konto nur mit Schreibrecht. Überwacht 11 Images. Siehe [05](05-docker.md) | — | — |
 | ~~2.8~~ | ~~Datenbank-Images auf feste Tags pinnen~~ — **erledigt 16.08.2026**: `postgres:15.19`, `redis:7.4`, alle übrigen ebenfalls gepinnt | — | — |
 | 2.9 | **Ersatz für `filebrowser`** — Dienst am 18.08.2026 abgeschaltet (CVE-2026-32759 ohne Patch), Nachfolger noch offen | 1 h | mittel |
 | 2.10 | **homepage auf v2.0.0** — Breaking Change bei der Authentifizierung, Release Notes lesen | 30 min | mittel |

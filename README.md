@@ -65,13 +65,14 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 | Fehlgeschlagene Dienste | 0 |
 | Backup | täglich, 14 Snapshots; zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
 | Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
-| Container | **9**, alle mit Logrotation und `no-new-privileges` (23.08.2026) |
+| Container | **11**, alle mit Logrotation und `no-new-privileges` (25.08.2026) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
 | Speicher-Limits | **seit 20.08.2026 gesetzt** für alle neun Container, Summe 3.360 von 3.796 MiB — nicht überbucht |
 | Passwort-Tresor | **Vaultwarden 1.37.2** seit 23.08.2026, nur über Tailscale auf Port 8443 ([18](docs/18-vaultwarden.md)) |
 | Benachrichtigungen | **ntfy stellt seit 25.08.2026 nachweislich aufs iPhone zu** — Alarmkette erstmals geschlossen ([14](docs/14-benachrichtigungen.md)) |
+| Update-Meldungen | **Diun 4.33.0** seit 25.08.2026, täglich 06:15, überwacht 11 Images ([05](docs/05-docker.md)) |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 
@@ -89,7 +90,9 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 
 Am 25.08.2026 erledigt: **Die Alarmkette trägt.** ntfy stellt nachweislich aufs
 gesperrte iPhone zu; ein fehlgeschlagenes Backup erreicht seitdem jemanden.
-→ [Kapitel 14](docs/14-benachrichtigungen.md)
+→ [Kapitel 14](docs/14-benachrichtigungen.md) · Darauf aufbauend **Diun**: meldet
+täglich neue Image-Versionen, aktualisiert nichts.
+→ [Kapitel 05](docs/05-docker.md)
 
 Am 23.08.2026 erledigt: **Passwort-Tresor Vaultwarden** aufgesetzt, ausschließlich über
 Tailscale erreichbar, mit konsistenter Sicherung der Tresor-Datenbank.

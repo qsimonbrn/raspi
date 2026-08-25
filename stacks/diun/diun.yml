@@ -1,0 +1,59 @@
+# =============================================================================
+#  Diun -- meldet neue Container-Versionen, aktualisiert NICHTS
+# =============================================================================
+#  Alle Images auf diesem Pi sind auf feste Versionen gepinnt. Das ist eine
+#  bewusste Entscheidung -- und sie hat einen Preis: Ohne :latest erfaehrt man
+#  von einer neuen Version gar nichts mehr, auch nicht von einer, die eine
+#  Sicherheitsluecke schliesst. Diun schliesst genau diese Luecke: Es fragt die
+#  Registries ab und meldet, was es findet. Eingespielt wird weiter von Hand
+#  ueber den Skill "docker-updates", mit vorherigem Backup.
+#
+#  ACHTUNG, Fallstrick vom 25.08.2026: Diese Datei haengt als EINZELNE Datei im
+#  Bind-Mount. "sed -i" und die meisten Editoren erzeugen beim Speichern eine
+#  neue Inode -- der Container liest danach unbemerkt die alte Fassung weiter.
+#  Nach jeder Aenderung: sudo docker compose restart diun. Docker loest den
+#  Mount bei jedem Containerstart neu auf. Siehe docs/05-docker.md.
+# =============================================================================
+
+db:
+  path: /data/diun.db
+
+watch:
+  workers: 5
+  # Taeglich um 06:15. Bewusst NACH dem Backup (03:17) und nach dem
+  # Blocklisten-Lauf (03:02) -- so kollidiert die Registry-Abfrage nicht mit
+  # den beiden Jobs, die Bandbreite brauchen.
+  schedule: "15 6 * * *"
+  # Beim allerersten Lauf NICHT alles melden. Sonst kommen neun Meldungen auf
+  # einmal an und niemand liest die zehnte. Der Erstlauf legt nur den
+  # Ausgangszustand an; gemeldet wird ab der ersten echten Aenderung.
+  firstCheckNotif: false
+  # Streut die Abfragen, damit nicht alle Registries gleichzeitig angefragt
+  # werden.
+  jitter: 30s
+
+notif:
+  ntfy:
+    endpoint: "http://192.168.178.80:2586"
+    topic: "raspberrypi"
+    # Der Token steht NICHT hier, sondern in einer Datei ausserhalb des Git.
+    # Er gehoert dem ntfy-Konto "diun", das ausschliesslich auf das Thema
+    # raspberrypi SCHREIBEN darf -- nicht lesen, kein anderes Thema. Am
+    # 25.08.2026 gegen alle drei Faelle gemessen.
+    tokenFile: "/run/secrets/ntfy-token"
+    priority: 3
+    tags: ["package"]
+
+providers:
+  docker:
+    # Kein Docker-Socket im Container. Der Weg fuehrt ueber den Socket-Proxy
+    # nebenan, der ausschliesslich lesende Container-Abfragen durchlaesst.
+    endpoint: "tcp://dockerproxy:2375"
+    # Alle laufenden Container beobachten, ohne dass jeder ein Label braucht.
+    # Ein neuer Dienst wird dadurch automatisch mit ueberwacht -- eine Liste,
+    # die jemand pflegen muesste, waere genau die Art stiller Luecke, die hier
+    # vermieden werden soll.
+    watchByDefault: true
+    # Auch angehaltene Container. Ein abgeschalteter Dienst kann trotzdem eine
+    # Sicherheitsluecke haben, die vor dem Wiederanschalten zaehlt.
+    watchStopped: true

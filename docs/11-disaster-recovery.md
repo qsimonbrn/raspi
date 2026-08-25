@@ -19,7 +19,25 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | 7 | **ntfy** (Benutzer, Zugriffsregeln, Nachrichten-Cache) | ✅ **ja** | restic-Backup, seit 18.08.2026 |
 | 8 | **Portainer-Konfiguration** (Volume) | ✅ **ja** | restic-Backup, seit 18.08.2026 — absturzkonsistent, da im laufenden Betrieb gesichert |
 | 9 | **Vaultwarden** (Tresor-Datenbank und JWT-Schlüssel) | ✅ **ja** | restic-Backup, seit 23.08.2026 — konsistenter SQLite-Abzug, nicht die laufende Datei |
-| 10 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
+| 10 | **Diun-Zustand und ntfy-Token** (`/mnt/usb-hdd/diun`, `/etc/diun/ntfy-token`) | ❌ **nein, bewusst** | In zwei Minuten neu erzeugt, siehe unten |
+| 11 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
+
+**Zu 10 — Diun nach einem Totalverlust wiederherstellen.** Das ntfy-Konto `diun`
+selbst ist gesichert (es liegt in `user.db` unter `/mnt/usb-hdd/ntfy`), nur sein
+Token nicht. Drei Befehle:
+
+```bash
+sudo mkdir -p /etc/diun
+sudo docker exec ntfy ntfy token add --label diun-updatemeldungen diun \
+  | grep -oE 'tk_[A-Za-z0-9_]+' | tr -d '\n' | sudo tee /etc/diun/ntfy-token >/dev/null
+sudo chmod 600 /etc/diun/ntfy-token && sudo chown 1000:1000 /etc/diun/ntfy-token
+```
+
+**Das `tr -d '\n'` ist nicht kosmetisch.** Ohne es steht ein Zeilenumbruch in der
+Datei, Diun setzt ihn in den `Authorization`-Header, und der Versand scheitert mit
+`invalid header field value` — am 25.08.2026 genau so passiert. Die leere
+Zustandsdatenbank baut sich beim ersten Lauf neu auf; sie kostet höchstens eine
+Meldungswelle.
 
 **Neun von zehn** — seit Einrichtung des Backups am 13.08.2026, um Position 7 und 8
 erweitert am 18.08.2026, um Position 9 am 23.08.2026. Am 20.08.2026 erstmals nachgewiesen, dass sich das Gesicherte

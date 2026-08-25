@@ -19,6 +19,50 @@ Backup.
 
 ---
 
+## 25.08.2026 — Diun eingerichtet: Update-Meldungen ohne `:latest`
+
+| | |
+|---|---|
+| Neu | `stacks/diun/` mit `crazymax/diun:4.33.0` und einem eigenen `docker-socket-proxy:v0.5.0` |
+| Zeitplan | täglich 06:15 — nach Backup (03:17) und Blocklisten-Lauf (03:02) |
+| Meldeweg | ntfy, Thema `raspberrypi`, über das **neue Dienstkonto `diun`** |
+| Zustand | `/mnt/usb-hdd/diun/diun.db`, bewusst nicht im Backup |
+| Ports | keine — Diun hat keine Oberfläche und taucht in `pi-guard` nicht auf |
+| Nachweis | `Jobs completed added=11 failed=0`, Testmeldung über `diun notif test` vom Server angenommen |
+
+**Warum überhaupt:** Alle Images sind auf feste Versionen gepinnt. Ohne `:latest`
+erfährt man von einer neuen Version gar nichts mehr — auch nicht von einer, die eine
+Lücke schließt. Seit dem 23.08.2026 liegt ein Passwort-Tresor auf diesem Pi; dort soll
+eine Lücke am selben Tag auffallen, nicht beim nächsten Blick ins Repository.
+
+**Warum ein eigener Socket-Proxy und nicht der von Homepage:** Diun am Netz
+`homepage_default` wäre von einem fremden Stack abhängig. Wer Homepage einmal mit `down`
+abräumt, nimmt Diun stumm die Datenquelle weg — **und Stille meldet Diun nicht.** Preis
+48 MiB, dafür steht die Überwachung für sich.
+
+**Warum ein eigenes ntfy-Konto und nicht der vorhandene Token:** `diun` darf
+ausschließlich auf `raspberrypi` schreiben, nicht lesen, kein anderes Thema. Gegen alle
+drei Fälle gemessen. Damit ist der Zugang einzeln widerrufbar, ohne den Backup-Alarm
+mitzunehmen.
+
+**Zwei eigene Fehler, beide erst durch Nachmessen sichtbar geworden:**
+
+1. **`IMAGES: 0` im Socket-Proxy** — die Annahme, Diun brauche nur die Container-Liste,
+   war falsch. Es braucht `ImageInspect`. Der Dienst startete klaglos, schrieb elfmal
+   `403` ins Log und meldete `added=0`: **er lief und überwachte nichts.** Auf `IMAGES: 1`
+   korrigiert, danach `added=11`.
+2. **Zeilenumbruch in der Tokendatei** — `ntfy token add | tee` hängt `\n` an, Diun
+   setzt es in den `Authorization`-Header, Versand scheitert. Der vorherige Test mit
+   `curl -H "… $(cat datei)"` war blind dafür, weil die Kommandosubstitution den Umbruch
+   schluckt. Gefunden erst durch `diun notif test`.
+
+**Offen geblieben:** Ob eine *echte* Update-Meldung auf dem iPhone erscheint, ist erst
+nachweisbar, wenn eine neue Version herauskommt. Der Zustellweg selbst wurde am selben
+Tag mit der ntfy-Reparatur bewiesen, der Absender `diun` bis zur Annahme durch den
+Server.
+
+---
+
 ## 25.08.2026 — ntfy stellt zu: `upstream-base-url` ergänzt
 
 | | |

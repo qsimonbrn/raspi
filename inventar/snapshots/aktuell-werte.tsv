@@ -1,8 +1,8 @@
-root_used_mb	8386
+root_used_mb	8445
 ssd_used_mb	317016
-journal_kb	31232
-container_laufend	9
-container_gesamt	9
-images_anzahl	10
-images_mb	3986
+journal_kb	39424
+container_laufend	11
+container_gesamt	11
+images_anzahl	11
+images_mb	4036
 gravity_domains	1020031

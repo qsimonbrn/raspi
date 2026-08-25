@@ -9,6 +9,27 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.10.0] — 2026-08-25
+
+### Hinzugefügt
+
+- **Diun** (`crazymax/diun:4.33.0`) meldet neue Image-Versionen über ntfy und
+  aktualisiert nichts. Neuer Abschnitt in
+  [05 — Docker](docs/05-docker.md), Eintrag im Betriebstagebuch, Punkt 2.7 in
+  [09 — Empfehlungen](docs/09-empfehlungen.md) auf erledigt.
+- **`docs/14-benachrichtigungen.md`: Abschnitt „Wer außer dem Backup noch sendet".**
+  Zweites ntfy-Konto `diun` mit reinem Schreibrecht auf ein einziges Thema, gegen alle
+  drei Fälle gemessen — getrennt widerrufbar, ohne den Backup-Alarm mitzunehmen.
+- **`docs/11-disaster-recovery.md`: Zeile 10** — Diun-Zustand und Token sind bewusst
+  **nicht** im Backup, dafür steht dort der Dreizeiler, der sie neu erzeugt.
+
+### Geändert
+
+- `README.md` und `docs/05-docker.md`: elf Container statt neun, Images 11 (3,94 GB),
+  sechs aktive Compose-Stacks.
+
+---
+
 ## [2.9.0] — 2026-08-25
 
 ### Behoben

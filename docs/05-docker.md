@@ -7,12 +7,12 @@
 | | |
 |---|---|
 | Docker-Version | 29.7.2 (build a7dcaa6) |
-| Laufende Container | 8 von 8 |
-| Compose-Stacks | 5 aktiv, 2 archiviert |
-| Images gesamt | **8 (3,63 GB), nichts freigebbar** — aufgeräumt am 18.08.2026 |
+| Laufende Container | 11 von 11 (25.08.2026) |
+| Compose-Stacks | 6 aktiv, 2 archiviert |
+| Images gesamt | **11 (3,94 GB)** — zuletzt aufgeräumt am 18.08.2026 |
 | Alle Images | auf feste Versionen bzw. Digests gepinnt (vollständig seit 18.08.2026) |
 | Logrotation | 10 MB je Datei, 3 Dateien — in jeder Compose-Datei gesetzt |
-| Speicher-Limits | **gesetzt am 20.08.2026** für alle acht Container, auf Grundlage einer Messung über zwei Tage |
+| Speicher-Limits | **gesetzt für alle elf Container** — die acht vom 20.08.2026 auf Grundlage einer Zweitagesmessung, Vaultwarden (23.08.) und die beiden Diun-Container (25.08.) als Erstanhaltspunkt |
 
 ## Container
 
@@ -27,12 +27,14 @@
 | **ntfy** | `binwiederhier/ntfy:v2.27.0` | 2586 | Push-Benachrichtigungen | `unless-stopped` |
 | homepage-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Homepage | `unless-stopped` |
 | **vaultwarden** | `vaultwarden/server:1.37.2` | 8222 nur auf `127.0.0.1` 🔒 | Passwort-Tresor, siehe [18](18-vaultwarden.md) | `unless-stopped` |
+| **diun** | `crazymax/diun:4.33.0` | — (keiner) | Meldet neue Image-Versionen, aktualisiert nicht | `unless-stopped` |
+| diun-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Diun | `unless-stopped` |
 
-**Neun Container** (seit 23.08.2026). 🔒 markiert Dienste, die seit dem 18.08.2026 nur
+**Elf Container** (seit 25.08.2026). 🔒 markiert Dienste, die seit dem 18.08.2026 nur
 noch über Tailscale erreichbar sind — siehe [07 — Sicherheit](07-sicherheit.md).
 
 Kein Container läuft mit `privileged`, kein Container nutzt `network_mode: host`,
-alle neun laufen mit `no-new-privileges`.
+alle elf laufen mit `no-new-privileges`.
 
 **Vaultwarden ist der einzige Container, der ausdrücklich an `127.0.0.1` gebunden ist.**
 Bei allen übrigen sorgt `pi-guard` für die Abschottung; bei einem Passwort-Tresor soll
@@ -320,6 +322,50 @@ Entscheidung bleibt bei dir. Watchtower mit Auto-Update bleibt die falsche Antwo
 der Paperless-Zwischenschritt über 2.20.15 ist das Lehrstück dazu.
 
 ---
+
+## Diun — Update-Meldungen (seit 25.08.2026)
+
+*Eingerichtet am 25.08.2026.*
+
+Alle Images sind auf feste Versionen gepinnt. Das ist eine bewusste Entscheidung, und
+sie hat einen Preis: **Ohne `:latest` erfährt man von einer neuen Version gar nichts
+mehr** — auch nicht von einer, die eine Sicherheitslücke schließt. Genau diese Lücke
+schließt Diun. Es fragt täglich um 06:15 die Registries ab und meldet über ntfy, was es
+findet. **Es aktualisiert nichts.** Eingespielt wird weiter von Hand über den Skill
+`docker-updates`, mit vorherigem Backup.
+
+| | |
+|---|---|
+| Stack | `stacks/diun/` — `docker-compose.yml` und `diun.yml` |
+| Zustandsdatenbank | `/mnt/usb-hdd/diun/diun.db` — **bewusst nicht im Backup**, vollständig rekonstruierbar |
+| Docker-Zugriff | über einen **eigenen** Socket-Proxy, nicht über den von Homepage |
+| ntfy-Konto | `diun` — darf **nur** auf das Thema `raspberrypi` schreiben, nicht lesen |
+| Token | `/etc/diun/ntfy-token`, Modus 600, `1000:1000`, außerhalb des Git |
+| Überwacht | 11 Images (25.08.2026), `watchByDefault` — ein neuer Dienst kommt von selbst dazu |
+
+**Warum ein zweiter Socket-Proxy statt des vorhandenen?** Der von Homepage hängt am Netz
+`homepage_default`. Diun dort anzuhängen würde die Überwachung von einem fremden Stack
+abhängig machen: Wer den Homepage-Stack einmal mit `down` abräumt, nimmt Diun stumm die
+Datenquelle weg — und **Stille meldet Diun nicht**. Ein Überwachungsdienst muss dann
+funktionieren, wenn niemand hinschaut. Preis: 48 MiB.
+
+### Zwei Fehler beim Einrichten, beide lehrreich
+
+**`IMAGES: 0` im Proxy ließ Diun leerlaufen.** Die Annahme war, Diun brauche nur die
+Container-Liste, weil es die Versionen ohnehin bei den Registries erfragt. Falsch: Es
+braucht `ImageInspect`, um den lokal laufenden Digest zu kennen. Mit `IMAGES: 0` startete
+der Dienst klaglos, schrieb elfmal `Cannot inspect image … 403` ins Log, meldete dann
+`No image found` und `Jobs completed added=0` — **er lief und überwachte nichts.** Wer
+nur auf `docker ps` geschaut hätte, hätte einen gesunden Container gesehen. Der Fehler
+war nur im Log sichtbar, und Diun meldet ihn nicht über ntfy.
+
+**Der Token in der Datei endete auf einen Zeilenumbruch.** `ntfy token add … | tee`
+schreibt ihn mit `\n`; Diun liest die Datei roh und setzt den Umbruch in den
+`Authorization`-Header, was mit `invalid header field value` scheitert. Aufgefallen ist
+das erst beim `diun notif test` — der vorherige Test mit
+`curl -H "… $(cat datei)"` war **blind dafür**, weil die Kommandosubstitution den Umbruch
+verschluckt. **Ein Test, der den echten Konsumenten nicht nachbildet, prüft die falsche
+Sache.**
 
 ## ⚠️ Fallstrick: eine einzelne Datei im Bind-Mount
 
