@@ -9,6 +9,20 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.11.1] — 2026-09-03
+
+### Behoben
+
+- **`docs/09-empfehlungen.md`, Punkt 3.8 auf erledigt.** Der unbrauchbare
+  `adlist`-Eintrag `bild.de` ist weg — beim Ausführen des Löschbefehls war er allerdings
+  schon nicht mehr da, er wurde zwischen dem 02.09. gegen 11 Uhr und dem 03.09. um 01 Uhr
+  an anderer Stelle entfernt. Festgehalten ist, was gemessen wurde, nicht was der Befehl
+  bewirkt haben soll.
+- **Nachweis dazu:** `pi-gravity.service` mit `Result=success` und Exit 0, alle acht
+  Blocklisten mit Status 1 oder 2 — keine mit 3 oder 4.
+
+---
+
 ## [2.11.0] — 2026-09-02
 
 ### Hinzugefügt

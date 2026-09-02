@@ -241,7 +241,7 @@ sudo docker rmi portainer/helper-reset-password:latest
 
 **Aufwand: eine Minute.**
 
-### 3.8 Unbrauchbaren Blocklisten-Eintrag `bild.de` entfernen — 🟡 Aufräumen
+### 3.8 Unbrauchbaren Blocklisten-Eintrag `bild.de` entfernen — ✅ erledigt am 03.09.2026
 
 *Aufgenommen am 02.09.2026*
 
@@ -258,8 +258,15 @@ sudo pihole-FTL sqlite3 /etc/pihole/gravity.db "DELETE FROM adlist WHERE id=9;"
 sudo systemctl start pi-gravity.service
 ```
 
-**Aufwand: zwei Minuten.** Nicht ausgeführt — der Eintrag stammt nicht aus dieser Sitzung,
-die Entscheidung liegt bei Simon.
+**Erledigt am 03.09.2026, aber nicht durch diesen Befehl.** Beim Ausführen war der Eintrag
+bereits verschwunden: Die Abfrage unmittelbar vor dem `DELETE` zeigte nur noch die acht
+Listen 1–8. Er ist also zwischen dem 02.09. gegen 11 Uhr — da wurde er gemessen — und dem
+03.09. um 01 Uhr an anderer Stelle entfernt worden, vermutlich über die Weboberfläche. Das
+`DELETE` traf ins Leere.
+
+Nachgemessen im selben Zug: `pi-gravity.service` läuft mit `Result=success` und Exit 0
+durch, alle acht Listen melden Status 1 oder 2 — **keine** mit Status 3 oder 4, also kein
+fehlgeschlagener Download mehr.
 
 ### 3.4 Aufräumen
 
