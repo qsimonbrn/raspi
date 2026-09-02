@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 25.08.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 02.09.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,36 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 02.09.2026 — Pi-hole: Gerätegruppe `bild-frei` für zwei Geräte
+
+| | |
+|---|---|
+| Neu | Gruppe `bild-frei` (id 1) in `gravity.db`, neun Regex-Allowlist-Einträge |
+| Mitglieder | `192.168.178.96` (Notebook Vater), `192.168.178.142` (Smart-TV) |
+| Wirkung auf übrige Geräte | keine — gegen einen unbeteiligten Client nachgemessen |
+| Nachweis | Notebook `.96` am 02.09. zwischen 11 und 18 Uhr mehrere hundert bild-Anfragen, davon null geblockt; um 09 Uhr, vor der Einrichtung, 62 von 88 |
+
+**Warum:** BILD zeigt statt der Inhalte eine Anti-Blocker-Schranke, wenn seine Werbe- und
+Consent-Dienste nicht laden. `bild.de` selbst war nie gesperrt — die Domain löste von
+Anfang an auf. Freigegeben ist deshalb nicht die Seite, sondern der Satz Prüfpunkte, den
+sie abfragt: Sourcepoint (`html-load.com`, `content-loader.com` und drei rotierende
+Wegwerfnamen), das Consent-Banner (`cookielaw.org`) und der Adition-Werbeserver
+(`asadcdn.com`). Werbeauslieferung und Profilbildung bleiben auch für diese beiden Geräte
+gesperrt. Einzelheiten und das Runbook für den Wiederholungsfall in
+[04 — Systemdienste](04-dienste-system.md).
+
+**Was dabei schiefging und behoben wurde:** Pi-hole hängt jede neu angelegte Freigabe per
+Datenbank-Trigger zusätzlich in die Gruppe `Default` — also netzweit. Das ist beim Anlegen
+zweimal passiert und erst bei der Kontrollabfrage aufgefallen; die Default-Zuordnungen
+wurden entfernt und der Zustand gegen einen unbeteiligten Client nachgemessen. Zwischen
+etwa 10:17 und 10:40 Uhr war die Regex für `bild.de` dadurch für alle Geräte wirksam.
+
+**Verworfen:** Simons MacBook war zum Testen kurzzeitig Mitglied und wurde am selben Tag
+wieder entfernt. Es fragt über Tailscale (`100.69.172.65`), nicht unter seiner
+Heimnetz-Adresse — eine Regel für `192.168.178.94` hätte nie gewirkt.
 
 ---
 

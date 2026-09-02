@@ -241,6 +241,26 @@ sudo docker rmi portainer/helper-reset-password:latest
 
 **Aufwand: eine Minute.**
 
+### 3.8 Unbrauchbaren Blocklisten-Eintrag `bild.de` entfernen — 🟡 Aufräumen
+
+*Aufgenommen am 02.09.2026*
+
+In der Tabelle `adlist` der `gravity.db` steht seit dem 01.09.2026, 12:37 Uhr ein Eintrag
+mit der Adresse `bild.de` (id 9, aktiv, 0 Domains). Das ist keine gültige Listen-URL —
+offenbar ist bild.de bei einem Versuch über die Weboberfläche unter „Blocklisten" statt
+unter „Allowlist" gelandet. Wirkung hat er keine, aber `pihole -g` läuft dadurch bei jedem
+nächtlichen Lauf in einen Download-Fehler, und `pi-gravity.sh` bewertet Fehlerzeilen mit.
+Ein Eintrag, der immer scheitert, macht die Meldung wertlos, die einen echten Ausfall
+anzeigen soll.
+
+```bash
+sudo pihole-FTL sqlite3 /etc/pihole/gravity.db "DELETE FROM adlist WHERE id=9;"
+sudo systemctl start pi-gravity.service
+```
+
+**Aufwand: zwei Minuten.** Nicht ausgeführt — der Eintrag stammt nicht aus dieser Sitzung,
+die Entscheidung liegt bei Simon.
+
 ### 3.4 Aufräumen
 
 | Maßnahme | Aufwand | Nutzen |

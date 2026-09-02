@@ -1,6 +1,6 @@
 # 04 — Systemdienste
 
-*Erfasst: 18.08.2026 · Blocklisten 20.08.2026*
+*Erfasst: 18.08.2026 · Blocklisten 20.08.2026 · Gerätegruppen 02.09.2026*
 
 Dienste, die **direkt auf dem Betriebssystem** laufen — nicht in Containern.
 Container siehe [05 — Docker](05-docker.md).
@@ -196,6 +196,153 @@ Gerätegruppen zugewiesen werden können, ließe sich beides trennen:
 Ergebnis: Gäste kommen ohne Warnung ins Netz und verlieren dabei die Safari-Filterung,
 die eigenen Geräte bleiben vollständig gefiltert. **Bewusst nicht umgesetzt** — die
 volle Filterwirkung wiegt schwerer als die gelegentliche Erklärung an Gäste.
+
+---
+
+### Gerätegruppe `bild-frei` — bild.de für zwei Geräte entsperrt
+
+*Eingerichtet 02.09.2026*
+
+| | |
+|---|---|
+| Gruppe | `bild-frei` (id 1 in `gravity.db`) |
+| Mitglieder | `192.168.178.96` (Notebook Vater), `192.168.178.142` (Smart-TV) |
+| Freigaben | neun Regex-Allowlist-Einträge, **ausschließlich** dieser Gruppe zugewiesen |
+| Wirkung auf alle übrigen Geräte | keine — gegen einen unbeteiligten Client nachgemessen |
+
+**Der Anlass war nicht, was er zu sein schien.** `bild.de` stand in keiner Blockliste und
+löste von Anfang an auf. Was die Seite verhinderte, war ihre Anti-Blocker-Schranke: BILD
+prüft im Browser, ob Werbe- und Consent-Dienste laden, und zeigt sonst statt der Inhalte
+die Aufforderung, den Blocker abzuschalten oder BILD Pur zu abonnieren. Geblockt waren
+also nicht die Inhalte, sondern die Prüfpunkte. Eine Allowlist für `bild.de` allein ändert
+daran nichts — das war der erste Fehlschlag.
+
+Freigegeben ist deshalb dieser Satz, alles als Regex, alles nur in Gruppe 1:
+
+```
+(\.|^)bild\.de$            alle Subdomains: as., jnt., whoami-web.prod.ps.
+(\.|^)html-load\.com$      Sourcepoint, prüft ob Werbung durchkommt
+(\.|^)content-loader\.com$ Sourcepoint, zweite Domainfamilie
+(\.|^)nicelyfrom\.com$     rotierender Wegwerfname von Sourcepoint
+(\.|^)aroundsadly\.com$    dito
+(\.|^)hencewafer\.com$     dito
+(\.|^)dl8\.me$             dito
+(\.|^)cookielaw\.org$      OneTrust -- das Consent-Banner selbst
+(\.|^)asadcdn\.com$        Adition-Werbeserver (Ströer)
+```
+
+**Bewusst nicht freigegeben:** Google Ad Manager (`securepubads`, `pagead2`,
+`googletagmanager`, `googleadservices`), Outbrain, Criteo, Permutive, ID5, Confiant,
+AB Tasty, Mixpanel, Adobe Analytics (`omtrdc.net`) und die Springer-Telemetrie
+(`rusty-heartbeat`, `simetra.tracking`). Die Seite lädt damit vollständig; es fehlen die
+Empfehlungskästen unter den Artikeln, das ist bezahlte Contentwerbung.
+
+**Nachweis (02.09.2026):** Notebook `.96` zwischen 11 und 18 Uhr mehrere hundert
+bild-Anfragen, davon **null** geblockt. Um 09 Uhr, vor der Einrichtung, waren es 62 von
+88. Smart-TV `.142` ab 14 Uhr ebenso ohne Blockade, während seine LG-Werbedomains
+(`de.ad.lgsmartad.com`, `prov-lg.alphonso.tv`) weiter gesperrt bleiben.
+
+#### Zwei Fallstricke, die beim Einrichten zugeschlagen haben
+
+**Pi-hole hängt jede neue Freigabe zusätzlich in die Gruppe `Default`.** Das erledigt ein
+Datenbank-Trigger, ungefragt und ohne Meldung. Wer eine Freigabe per SQL anlegt und nicht
+nachsieht, hat sie **netzweit** geöffnet, nicht nur für die gedachte Gruppe. Beim Anlegen
+dieser neun Einträge ist das zweimal passiert und erst bei der Kontrollabfrage aufgefallen.
+Zu jeder neuen Freigabe gehört deshalb der zweite Schritt:
+
+```bash
+sudo pihole-FTL sqlite3 /etc/pihole/gravity.db \
+  "DELETE FROM domainlist_by_group WHERE group_id=0
+    AND domainlist_id IN (SELECT id FROM domainlist WHERE type=2);"
+sudo pihole reloadlists
+```
+
+**Die Gruppe greift nur, wenn Pi-hole das Gerät auch sieht.** Maßgeblich ist die
+Absenderadresse der DNS-Anfrage, nicht die, die im Router steht:
+
+| Weg des Geräts | Was Pi-hole als Client sieht |
+|---|---|
+| direkt per DHCP auf den Pi gezeigt | die Heimnetz-Adresse, z. B. `192.168.178.96` |
+| über die FRITZ!Box als Weiterleiter | `192.168.178.1` — die Gruppe greift **nicht** |
+| über Tailscale | die Tailscale-Adresse `100.x.x.x` |
+
+Simons MacBook tauchte deshalb als `100.69.172.65` auf; eine Regel für seine
+Heimnetz-Adresse `.94` hätte nie gewirkt. Vor jeder Gruppenregel prüfen, unter welcher
+Adresse das Gerät tatsächlich fragt:
+
+```bash
+sudo pihole-FTL sqlite3 /etc/pihole/pihole-FTL.db \
+  "select client, count(*) from queries
+    where timestamp > strftime('%s','now')-600 group by client order by 2 desc;"
+```
+
+#### Runbook: Die Schranke ist wieder da
+
+Sourcepoint rotiert seine Domains — `nicelyfrom.com`, `aroundsadly.com`, `dl8.me` sind
+Wegwerfnamen. Wenn BILD auf dem Notebook wieder die Schranke zeigt, ist die wahrschein­
+lichste Ursache ein neuer Name, der noch nicht freigegeben ist. Vier Schritte:
+
+**1. Betroffenes Gerät auf der Seite neu laden lassen**, dann ansehen, was in diesem
+Zeitraum für dieses Gerät geblockt wurde:
+
+```bash
+sudo pihole-FTL sqlite3 /etc/pihole/pihole-FTL.db \
+  "select domain, status, count(*) n from queries
+    where client='192.168.178.96'
+      and timestamp > strftime('%s','now')-600
+      and status in (1,4,5,9,10,11,16)
+    group by domain, status order by n desc limit 40;"
+```
+
+Wichtig: **nur** diese Statuswerte sind Blockaden. 17 heißt „aus veraltetem Cache" und
+sieht in einer nachlässig gefilterten Abfrage wie eine Blockade aus — dieser Irrtum hat
+hier einmal zu einer falschen Diagnose geführt.
+
+**2. Kandidaten erkennen.** Verdächtig sind Namen, die es so nur einmal gibt: zufällige
+Zeichenfolgen (`5baf1288cf.dl8.me`) und Wortpaare ohne Bezug zum Angebot
+(`role.nicelyfrom.com`, `hope.aroundsadly.com`, `veto.hencewafer.com`). Sie gehören
+Sourcepoint. Werbenetze wie `doubleclick` oder `criteo` sind **nicht** die Ursache — die
+sind auch jetzt gesperrt, und die Seite läuft trotzdem.
+
+**3. Freigeben, in Gruppe 1, nie in Default:**
+
+```bash
+DB=/etc/pihole/gravity.db
+sudo pihole-FTL sqlite3 $DB \
+  "INSERT OR IGNORE INTO domainlist (type,domain,enabled,comment)
+   VALUES (2,'(\.|^)neuedomain\.example\$',1,'JJJJ-MM-TT Sourcepoint fuer bild.de');"
+sudo pihole-FTL sqlite3 $DB \
+  "INSERT OR IGNORE INTO domainlist_by_group (domainlist_id,group_id)
+   SELECT id,1 FROM domainlist WHERE type=2;"
+sudo pihole-FTL sqlite3 $DB \
+  "DELETE FROM domainlist_by_group WHERE group_id=0
+    AND domainlist_id IN (SELECT id FROM domainlist WHERE type=2);"
+sudo pihole reloadlists
+```
+
+**4. Nachmessen, mit Kontrolle.** Ein Test ohne Gegenprobe beweist hier nichts, weil die
+Gruppenzuordnung genau der Teil ist, der still danebengehen kann. `dig` kann die
+Client-Adresse per EDNS mitschicken, damit lässt sich beides vom Pi aus prüfen:
+
+```bash
+# muss auflösen -- Gruppenmitglied
+dig +short +subnet=192.168.178.96/32 neuedomain.example @192.168.178.80
+# muss 0.0.0.0 liefern -- unbeteiligtes Gerät, die Kontrolle
+dig +short +subnet=192.168.178.55/32 neuedomain.example @192.168.178.80
+# muss auch für das Gruppenmitglied 0.0.0.0 liefern -- Werbung bleibt gesperrt
+dig +short +subnet=192.168.178.96/32 doubleclick.net @192.168.178.80
+```
+
+Immer die **volle** Antwort ansehen, nicht nur die erste Zeile: `as.bild.de` antwortet
+zuerst mit dem CNAME `bild.de.ssl.sc.omtrdc.net`, und `omtrdc.net` ist gesperrt. Wer nach
+dem CNAME abbricht, hält eine Blockade für einen Erfolg — auch dieser Fehler ist hier
+passiert.
+
+**Wenn das Nachpflegen lästig wird**, ist die wartungsfreie Variante, das Notebook aus der
+Gruppe `Default` zu nehmen und **nur** in `bild-frei` zu belassen. Da dieser Gruppe keine
+Blockliste zugewiesen ist, filtert Pi-hole für dieses Gerät dann gar nichts mehr. Preis:
+kein Werbeschutz auf allen Seiten, und die fünf Jugendschutz-Regex greifen dort ebenfalls
+nicht mehr. Bewusst nicht umgesetzt.
 
 ---
 

@@ -9,6 +9,27 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.11.0] — 2026-09-02
+
+### Hinzugefügt
+
+- **`docs/04-dienste-system.md`: Abschnitt „Gerätegruppe `bild-frei`".** Warum eine
+  Allowlist für `bild.de` allein nichts bewirkt, welche neun Freigaben die
+  Anti-Blocker-Schranke tatsächlich aushebeln, und was bewusst gesperrt bleibt. Dazu ein
+  **Runbook für den Wiederholungsfall** — Sourcepoint rotiert seine Domains, die Freigabe
+  bricht absehbar wieder.
+- **Zwei Fallstricke im selben Abschnitt**, beide in dieser Sitzung eingetreten: Pi-hole
+  hängt neue Freigaben per Trigger zusätzlich in die Gruppe `Default` (also netzweit), und
+  eine Gerätegruppe greift nur unter der Adresse, unter der das Gerät wirklich fragt —
+  über die FRITZ!Box ist das `192.168.178.1`, über Tailscale eine `100.x`-Adresse.
+- **`docs/09-empfehlungen.md`: Punkt 3.8** — unbrauchbarer Blocklisten-Eintrag `bild.de`
+  (id 9, angelegt am 01.09.2026) lässt `pihole -g` täglich in einen Download-Fehler
+  laufen. Nicht ausgeführt, Entscheidung liegt beim Nutzer.
+- **`docs/15-aenderungshistorie.md`: Eintrag vom 02.09.2026** mit Nachweis, Fehlgriff und
+  verworfener Variante.
+
+---
+
 ## [2.10.0] — 2026-08-25
 
 ### Hinzugefügt
