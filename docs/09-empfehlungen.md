@@ -269,6 +269,36 @@ Nachgemessen im selben Zug: `pi-gravity.service` läuft mit `Result=success` und
 durch, alle acht Listen melden Status 1 oder 2 — **keine** mit Status 3 oder 4, also kein
 fehlgeschlagener Download mehr.
 
+### 3.9 Abgleich Repo ↔ System in die Behauptungsprüfung aufnehmen — 🟡 offen, klein
+
+`inventar/collect.sh` **misst** den Abgleich und schreibt ihn in die Kennzahlen, zählt
+ihn aber nicht in die Ampel. Am 04.09.2026 stand deshalb nebeneinander:
+
+```
+Behauptungspruefung: 12 ok · 0 abweichend · 0 nicht pruefbar
+| Abgleich Repo <-> System | 1 von 24 Paaren weichen ab: |
+```
+
+Wer nur die Zusammenfassung liest — und dafür ist sie da — hält den Zustand für sauber,
+während eine Systemdatei und ihre Repo-Kopie auseinanderlaufen. Genau der Fall, den die
+Tabelle abdecken soll: etwas, das **still scheitert**.
+
+**Zu tun:** eine dreizehnte Prüfung, die `pi-abgleich.sh check` auswertet und bei
+Abweichung `ACHTUNG` meldet, bei nicht ausführbarem Aufruf `?`. Rund 15 Minuten.
+
+### 3.10 Gruppenzugehörigkeit von `system/backup/pi-backup.sh` klären — 🟡 offen, klein
+
+Die Datei gehört `simon:simon` mit Modus 755, während die Nachbardateien im selben
+Verzeichnis `simon:pi-admin` mit 664 gehören und das Verzeichnis das setgid-Bit trägt.
+Folge: Das Konto `claude` kann die Repo-Kopie **nicht** schreiben und muss den Umweg über
+`sudo install -o simon -g simon -m 755` nehmen — am 04.09.2026 aufgefallen, als die Kopie
+nachzuziehen war.
+
+Ob die abweichende Gruppe Absicht ist (das Skript enthält keine Geheimnisse, wohl aber
+Pfade), ist ungeklärt. **Zu tun:** entscheiden und entweder angleichen
+(`sudo chgrp pi-admin && chmod 664`) oder die Ausnahme in
+[07 — Sicherheit](07-sicherheit.md) begründen. Fünf Minuten plus die Entscheidung.
+
 ### 3.4 Aufräumen
 
 | Maßnahme | Aufwand | Nutzen |

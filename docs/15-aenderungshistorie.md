@@ -19,6 +19,50 @@ Backup.
 
 ---
 
+## 03.09.2026 — Second Brain als Sicherungsziel aufgenommen
+
+| | |
+|---|---|
+| Angelegt | `/mnt/usb-hdd/second-brain/{unterlagen,literatur}`, `claude:claude`, Modus 750 |
+| Dazu | bare Repository `/mnt/usb-hdd/second-brain/vault.git` |
+| Geändert | `pi-backup.sh` um `second-brain/unterlagen` und `second-brain/vault.git` erweitert |
+| Sicherungskopie | `/usr/local/bin/pi-backup.sh.bak-vor-secondbrain-20260903` |
+| Nicht gesichert | `second-brain/literatur` (263 MB Fachbücher) — ersetzbar, bewusst außen vor |
+
+**Worum es geht.** Simons Obsidian-Vault (Wissensdatenbank und Dokumentenablage) liegt
+auf seinem Mac unter `~/Projects/SecondBrain`. Der Pi ist sein Sicherungsziel: Die
+Notizen landen als Git-Push im bare Repository, die Anhänge per `rsync` unter
+`unterlagen/`. Beides läuft über ein Skript **auf dem Mac** (launchd, täglich 21:30) —
+der Pi zieht nichts, er nimmt entgegen.
+
+**Warum das Skript auf dem Mac läuft und nicht hier.** Die Cowork-VM, in der Claude auf
+Simons Mac arbeitet, hat **kein lokales Netz** und erreicht den Pi nicht — gemessen am
+03.09.2026, Gegenprobe auf eine unbeteiligte Adresse im Heimnetz verhält sich gleich.
+Der MCP-Server `pi-ssh` läuft dagegen auf dem Mac selbst und kommt durch. Alles, was vom
+Mac aus den Pi ansprechen muss, gehört deshalb in ein Skript dort, nicht in einen
+Cowork-Aufruf.
+
+**Nachweise.** Der Schreibzugriff ist eng: `claude` darf in `second-brain/` schreiben,
+daneben auf `/mnt/usb-hdd` nicht (gegengeprüft). Das bare Repository nimmt Pushes an —
+mit einem Testcommit geprüft, danach wieder entfernt, `git ls-remote` war leer. Der erste
+Sync am 03.09. übertrug 863 Dateien; Soll auf dem Mac und Ist auf dem Pi stimmten exakt
+überein.
+
+**Ein Fehler dabei, weil er sich wiederholen kann:** Die Kopie unter `system/` wurde
+zunächst nicht nachgezogen. `pi-abgleich.sh check` meldete `1 von 24 Paaren weichen ab`;
+der Timer um 09:15 hätte das am Folgetag als ntfy-Meldung geschickt. **Die
+`system/`-Regel gilt in beide Richtungen** — wer die installierte Fassung ändert und die
+Repo-Kopie vergisst, erzeugt denselben Alarm wie umgekehrt.
+
+**Und ein zweiter, der beim Beheben auffiel:** `system/backup/pi-backup.sh` gehört
+`simon:simon` mit Modus 755, während die Nachbardateien im selben Verzeichnis
+`simon:pi-admin` mit 664 gehören und das Verzeichnis das setgid-Bit trägt. Das Konto
+`claude` kann die Datei deshalb **nicht** schreiben — `sudo install -o simon -g simon
+-m 755` ist der Weg. Ob die abweichende Gruppe Absicht ist, ist ungeklärt; als Punkt in
+[09 — Empfehlungen](09-empfehlungen.md) aufgenommen.
+
+---
+
 ## 03.09.2026 — Richtigstellung: Diun meldet keine neuen Versionen
 
 | | |

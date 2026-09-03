@@ -9,6 +9,29 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.13.0] — 2026-09-04
+
+### Hinzugefügt
+
+- **Second Brain als Sicherungsziel** in [12 — Backup](docs/12-backup.md): die beiden
+  neuen restic-Pfade `second-brain/unterlagen` und `second-brain/vault.git`, warum
+  `literatur` bewusst außen vor bleibt, und warum das treibende Skript auf dem Mac läuft
+  und nicht auf dem Pi. Eintrag im Betriebstagebuch
+  [15](docs/15-aenderungshistorie.md) mit den Nachweisen.
+
+### Richtiggestellt
+
+- **Die Pfadliste in Kapitel 12 war an zwei Stellen falsch.** Sie nannte
+  `/home/simon/raspi` zweimal (Rest aus der Zeit vor der Zusammenlegung der Repositories
+  am 18.08.2026) und `/mnt/usb-hdd/claude-skills` gar nicht, obwohl es seit demselben Tag
+  mitgesichert wird. Gemessen an `system/backup/pi-backup.sh`, nicht am Text.
+
+### Nachgezogen
+
+- `system/backup/pi-backup.sh` an die installierte Fassung angeglichen.
+  `pi-abgleich.sh check` meldete vorher `1 von 24 Paaren weichen ab`, danach
+  `alle 24 Paare identisch`.
+
 ## [2.12.1] — 2026-09-03
 
 ### Richtiggestellt

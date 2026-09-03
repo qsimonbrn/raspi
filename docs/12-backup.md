@@ -1,6 +1,7 @@
 # 12 — Backup
 
-*Eingerichtet: 13.08.2026 · Prüfung erweitert: 20.08.2026 · Vaultwarden ergänzt: 23.08.2026*
+*Eingerichtet: 13.08.2026 · Prüfung erweitert: 20.08.2026 · Vaultwarden ergänzt: 23.08.2026 ·
+Second Brain ergänzt: 03.09.2026*
 
 Vollständige Beschreibung der Sicherungsstrategie: was gesichert wird, was
 bewusst nicht, wie wiederhergestellt wird — und wo die Lücken bleiben.
@@ -141,16 +142,42 @@ Wiederaufbau.
 **Schritt 5 — restic-Lauf** über die Zwischenablage plus:
 
 ```
-/mnt/usb-hdd/bichon              E-Mail-Archiv
-/mnt/usb-hdd/ntfy                Benutzer, Zugriffsregeln, Nachrichten-Cache
-/mnt/usb-hdd/paperless/export    Dokumentenexport
-/mnt/usb-hdd/paperless/media     Originaldateien
-/mnt/usb-hdd/vaultwarden         Tresor: JWT-Schluessel und Anhaenge
-                                 (db.sqlite3* ausgeschlossen, siehe unten)
+/mnt/usb-hdd/bichon                   E-Mail-Archiv
+/mnt/usb-hdd/ntfy                     Benutzer, Zugriffsregeln, Nachrichten-Cache
+/mnt/usb-hdd/paperless/export         Dokumentenexport
+/mnt/usb-hdd/paperless/media          Originaldateien
+/mnt/usb-hdd/vaultwarden              Tresor: JWT-Schluessel und Anhaenge
+                                      (db.sqlite3* ausgeschlossen, siehe unten)
 /var/lib/docker/volumes/portainer_portainer_data/_data
-/home/simon/raspi        Compose-Dateien
-/home/simon/raspi           diese Dokumentation
+/mnt/usb-hdd/claude-skills            Skills und MCP-Server (eigenes Repository)
+/home/simon/raspi                     Compose-Dateien, Systemkonfiguration, Doku
+/mnt/usb-hdd/second-brain/unterlagen  Second Brain: Kursunterlagen, eigene Arbeiten
+/mnt/usb-hdd/second-brain/vault.git   Second Brain: Notizen samt Versionsgeschichte
 ```
+
+**Richtiggestellt am 04.09.2026.** Die Liste nannte `/home/simon/raspi` zweimal — ein
+Rest aus der Zeit vor der Zusammenlegung der beiden Repositories am 18.08.2026 — und
+`/mnt/usb-hdd/claude-skills` gar nicht, obwohl es seit demselben Tag mitgesichert wird.
+Gemessen an `system/backup/pi-backup.sh`, nicht am Text.
+
+**Geändert am 03.09.2026.** Zwei Pfade des **Second Brain** kamen dazu:
+`second-brain/unterlagen` (Kursunterlagen und eigene Arbeiten, 351 MB in 863 Dateien)
+und `second-brain/vault.git` (das bare Repository mit den Notizen und ihrer
+Versionsgeschichte).
+
+Der Vault selbst liegt auf Simons Mac unter `~/Projects/SecondBrain`; der Pi ist sein
+Sicherungsziel. Befüllt wird `/mnt/usb-hdd/second-brain/` von einem `rsync`- und
+`git push`-Skript **auf dem Mac** (launchd, täglich 21:30) — nicht vom Pi aus. Der Ordner
+gehört `claude:claude` mit Modus 750; gegengeprüft: `claude` darf daneben auf
+`/mnt/usb-hdd` nichts anlegen.
+
+Bewusst **nicht** gesichert wird `second-brain/literatur` (263 MB Fachbücher). Sie sind
+ersetzbar und kosten bei jedem OneDrive-Lauf Übertragungszeit; sie liegen nur auf der
+USB-HDD. Wer den Vault vollständig zurückholen will, holt die Notizen und Unterlagen aus
+restic und die Bücher aus der Quelle.
+
+> Der erste Lauf danach meldet `no parent snapshot found, will read all files`. Das ist
+> **erwartet** — eine Pfadänderung setzt den Elternbezug zurück, siehe Abschnitt 6a.
 
 **Geändert am 23.08.2026.** `/mnt/usb-hdd/vaultwarden` kam dazu, zusammen mit einem
 eigenen Schritt für den Tresor (siehe unten).

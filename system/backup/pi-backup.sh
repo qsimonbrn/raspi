@@ -193,7 +193,9 @@ restic backup \
   /mnt/usb-hdd/vaultwarden \
   /var/lib/docker/volumes/portainer_portainer_data/_data \
   /mnt/usb-hdd/claude-skills \
-  /home/simon/raspi
+  /home/simon/raspi \
+  /mnt/usb-hdd/second-brain/unterlagen \
+  /mnt/usb-hdd/second-brain/vault.git
 RC=$?
 
 if [ $RC -ne 0 ]; then

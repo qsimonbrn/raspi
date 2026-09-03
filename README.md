@@ -2,7 +2,7 @@
 
 Vollständige Dokumentation des Heimservers `raspberrypi` (`192.168.178.80`).
 
-> **Stand:** 20.08.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
+> **Stand:** 04.09.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
 > **Nächste Prüfung empfohlen:** bei jeder Änderung am Setup, mindestens quartalsweise
 
 ---
@@ -55,17 +55,17 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 
 | | |
 |---|---|
-| Uptime | 1 Tag, 8 Stunden (25.08.2026) |
-| Load (1/5/15 min) | 0,58 / 0,20 / 0,13 bei 4 Kernen |
-| Temperatur | 46,2 °C — nie gedrosselt (`throttled=0x0`) |
-| RAM verfügbar | 2,0 von 3,7 GiB (25.08.2026) |
-| Systemdatenträger | 4 % belegt (8,2 G von 235 G) |
+| Uptime | 1 Woche, 4 Tage (04.09.2026) |
+| Load (1/5/15 min) | 0,65 / 0,32 / 0,22 bei 4 Kernen |
+| Temperatur | 47,2 °C — nie gedrosselt (`throttled=0x0`) |
+| RAM verfügbar | 2,0 von 3,7 GiB (04.09.2026) |
+| Systemdatenträger | 4 % belegt (8,5 G von 235 G) |
 | Datenspeicher SSD | 36 % belegt (311 G von 916 G) |
-| Ausstehende OS-Updates | 0 — `tailscale` am 20.08.2026 von Hand auf 1.102.3 gezogen (Fremd-Repository, von `unattended-upgrades` nie erfasst) |
+| Ausstehende OS-Updates | **2** (04.09.2026) — `tailscale` wird von `unattended-upgrades` nie erfasst (Fremd-Repository), zuletzt am 20.08.2026 von Hand auf 1.102.3 gezogen |
 | Fehlgeschlagene Dienste | 0 |
-| Backup | täglich, 14 Snapshots; zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
+| Backup | täglich, 21 Snapshots (04.09.2026); zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
 | Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
-| Container | **11**, alle mit Logrotation und `no-new-privileges` (25.08.2026) |
+| Container | **12**, alle mit Logrotation und `no-new-privileges` (04.09.2026) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
