@@ -70,6 +70,22 @@
   th{color:var(--schwach);font-weight:500;font-size:12px}
   tr:hover{background:var(--karte)}
   .leer{color:var(--schwach);padding:40px;text-align:center}
+  .panel{background:var(--karte);border:1px solid var(--rand);border-radius:10px;
+         padding:14px;display:flex;flex-direction:column;gap:10px}
+  .panel b{font-size:14px}
+  .drop{border:2px dashed var(--rand);border-radius:10px;padding:26px 18px;text-align:center;
+        cursor:pointer;transition:border-color .12s,background .12s;background:var(--bg)}
+  .drop:hover{border-color:var(--akzent)}
+  .drop.drueber{border-color:var(--akzent);background:#182131}
+  .drop .gross{font-size:15px;font-weight:600;margin-bottom:4px}
+  .drop .klein{color:var(--schwach);font-size:12px}
+  .dateiliste{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--schwach)}
+  .dateiliste .ok::before{content:"✓ ";color:var(--behalten)}
+  pre.log{white-space:pre-wrap;margin:0;font-size:12px;color:var(--schwach);
+          background:var(--bg);border:1px solid var(--rand);border-radius:6px;padding:8px;
+          max-height:220px;overflow:auto}
+  .balken{height:6px;background:var(--karte2);border-radius:99px;overflow:hidden}
+  .balken i{display:block;height:100%;background:var(--akzent);width:0;transition:width .3s}
 </style>
 </head>
 <body>
@@ -248,49 +264,59 @@ async function zeigeDaten(){
   $("#trefferzahl").textContent = "";
   $("#inhalt").className = "";
   $("#inhalt").innerHTML = `
-    <div style="max-width:720px;display:flex;flex-direction:column;gap:18px">
-      <div class="karte">
+    <div style="max-width:760px;display:flex;flex-direction:column;gap:18px">
+      <div class="panel">
         <b>1 — JSON-Dateien einlesen</b>
-        <p class="zaehler" style="margin:0">
-          Aus dem Instagram-Datenexport: <code>following.json</code>,
-          <code>followers_1.json</code>, <code>close_friends.json</code>.
-          Dazu die <code>following_profile.json</code> aus der Browser-Abfrage
-          (Klarnamen und Profilbilder). Mehrere Dateien auf einmal sind erlaubt,
-          erneutes Einlesen überschreibt keine Entscheidungen.
-        </p>
-        <input type="file" id="dateien" multiple accept=".json">
-        <button id="hochladen">einlesen</button>
-        <pre id="uplog" class="zaehler" style="white-space:pre-wrap;margin:0"></pre>
+        <div class="zaehler">
+          Aus dem Instagram-Datenexport (Ordner <code>connections/followers_and_following/</code>):
+          <code>following.json</code>, <code>followers_1.json</code>, <code>close_friends.json</code>.
+          Dazu <code>following_profile.json</code> aus der Browser-Abfrage und
+          <code>kategorien.json</code> mit den Vorschlägen. Alle auf einmal sind erlaubt.
+          Erneutes Einlesen überschreibt keine Entscheidungen.
+        </div>
+        <div class="drop" id="ablage">
+          <div class="gross">Dateien hierher ziehen</div>
+          <div class="klein">oder klicken, um sie auszuwählen · nur .json</div>
+        </div>
+        <input type="file" id="dateien" multiple accept=".json,application/json" hidden>
+        <div class="dateiliste" id="dateiliste"></div>
+        <pre class="log" id="uplog" hidden></pre>
       </div>
-      <div class="karte">
+      <div class="panel">
         <b>2 — Profilbilder holen</b>
-        <p class="zaehler" style="margin:0">
+        <div class="zaehler">
           Lädt die Bilder einmalig von der Instagram-CDN auf den Pi. Nötig, weil die
-          URLs signiert sind und nach Stunden ablaufen. Läuft im Hintergrund.
-        </p>
+          URLs signiert sind und nach Stunden ablaufen. Läuft im Hintergrund weiter,
+          auch wenn du den Reiter wechselst.
+        </div>
         <div class="zeile">
           <button id="bilder">Bilder holen</button>
           <span class="zaehler" id="bildstand"></span>
         </div>
-        <pre id="bildlog" class="zaehler" style="white-space:pre-wrap;margin:0"></pre>
+        <div class="balken"><i id="bildbalken"></i></div>
+        <pre class="log" id="bildlog" hidden></pre>
       </div>
     </div>`;
 
-  $("#hochladen").onclick = async () => {
-    const f = $("#dateien").files;
-    if (!f.length) return;
-    const fd = new FormData();
-    for (const d of f) fd.append("dateien", d);
-    $("#uplog").textContent = "wird eingelesen …";
-    try {
-      const r = await hole("/api/upload", { method: "POST", body: fd });
-      $("#uplog").textContent = r.log;
-      await ladeStand();
-    } catch (e) { $("#uplog").textContent = "Fehler: " + e.message; }
-  };
+  const ablage = $("#ablage"), feld = $("#dateien");
+
+  ablage.onclick = () => feld.click();
+  feld.onchange = () => { if (feld.files.length) sendeDateien(feld.files); };
+
+  ablage.addEventListener("dragover", e => {
+    e.preventDefault(); ablage.classList.add("drueber");
+  });
+  ablage.addEventListener("dragleave", () => ablage.classList.remove("drueber"));
+  ablage.addEventListener("drop", e => {
+    e.preventDefault(); ablage.classList.remove("drueber");
+    const f = [...e.dataTransfer.files].filter(d => d.name.toLowerCase().endsWith(".json"));
+    if (!f.length) return meldung("Keine .json-Datei dabei.");
+    sendeDateien(f);
+  });
 
   $("#bilder").onclick = async () => {
     await hole("/api/bilder", { method: "POST" });
+    $("#bildlog").hidden = false;
     $("#bildlog").textContent = "läuft …";
     clearInterval(window._bt);
     window._bt = setInterval(bildstand, 3000);
@@ -298,19 +324,51 @@ async function zeigeDaten(){
   bildstand();
 }
 
+function meldung(t){
+  const el = $("#uplog"); if (!el) return;
+  el.hidden = false; el.textContent = t;
+}
+
+async function sendeDateien(dateien){
+  const liste = $("#dateiliste");
+  liste.innerHTML = [...dateien].map(d =>
+    `<div>${d.name} · ${(d.size/1024).toFixed(0)} KB</div>`).join("");
+  meldung("wird eingelesen …");
+  const fd = new FormData();
+  for (const d of dateien) fd.append("dateien", d);
+  try {
+    const r = await hole("/api/upload", { method: "POST", body: fd });
+    meldung(r.log.trim());
+    liste.innerHTML = r.dateien.map(n => `<div class="ok">${n}</div>`).join("");
+    await ladeStand();
+    bildstand();
+  } catch (e) {
+    meldung("Fehler beim Einlesen: " + e.message);
+  }
+}
+
 async function bildstand(){
   if (ansicht !== "daten") return clearInterval(window._bt);
   try {
     const r = await hole("/api/bilder/log");
     const el = $("#bildstand"); if (!el) return;
-    el.textContent = `${r.geladen} geladen, ${r.offen} offen`;
-    $("#bildlog").textContent = r.log.split("\n").slice(-6).join("\n");
+    const gesamt = r.geladen + r.offen;
+    el.textContent = gesamt
+      ? `${r.geladen} von ${gesamt} geladen, ${r.offen} offen`
+      : "noch keine Bild-URLs in der Datenbank — zuerst einlesen";
+    const b = $("#bildbalken");
+    if (b) b.style.width = gesamt ? (r.geladen / gesamt * 100) + "%" : "0";
+    if (r.log) {
+      $("#bildlog").hidden = false;
+      $("#bildlog").textContent = r.log.split("\n").filter(Boolean).slice(-8).join("\n");
+    }
     if (r.offen === 0) clearInterval(window._bt);
   } catch {}
 }
 
 // --- Ereignisse ----------------------------------------------------------
 $("#inhalt").addEventListener("click", async e => {
+  if (ansicht !== "sichten") return;   // sonst zeichnet ein Klick im Daten-Reiter das Gitter
   const b = e.target.closest("button[data-w]");
   if (b) return markiere([b.dataset.u], "entscheidung", b.dataset.w);
   const k = e.target.closest(".karte");
@@ -374,6 +432,12 @@ $("#alle-sichtbar").addEventListener("click", () => {
   liste.forEach(a => gewaehlt.add(a.username)); zeichne();
 });
 $("#auswahl-leeren").addEventListener("click", () => { gewaehlt.clear(); zeichne(); });
+
+for (const ev of ["dragover", "drop"]) {
+  window.addEventListener(ev, e => {
+    if (!e.target.closest || !e.target.closest("#ablage")) e.preventDefault();
+  });
+}
 
 (async () => { await ladeStand(); await lade(); })();
 </script>
