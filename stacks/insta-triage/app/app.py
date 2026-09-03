@@ -112,6 +112,7 @@ def importiere():
         return
 
     following, followers, close, profile = {}, set(), {}, {}
+    kategorien = {}
 
     for p in dateien:
         name = p.name.lower()
@@ -121,7 +122,11 @@ def importiere():
             print(f"  ! {p.name}: nicht lesbar ({e})")
             continue
 
-        if isinstance(daten, dict) and "relationships_following" in daten:
+        if isinstance(daten, dict) and "kategorien" in daten:
+            kategorien.update(daten["kategorien"])
+            print(f"  + {p.name}: {len(daten['kategorien'])} Kategorievorschlaege")
+
+        elif isinstance(daten, dict) and "relationships_following" in daten:
             for e in daten["relationships_following"]:
                 ts = (e.get("string_list_data") or [{}])[0].get("timestamp")
                 following[_uname(e)] = ts
@@ -148,8 +153,13 @@ def importiere():
         else:
             print(f"  - {p.name}: unbekanntes Format, uebersprungen")
 
-    if not following and not profile:
+    if not following and not profile and not kategorien:
         print("Weder Abo-Liste noch Profildaten gefunden — nichts zu tun.")
+        return
+    if not following and not profile:
+        alle, neu_n, geaendert_n = set(), 0, 0
+        _setze_kategorien(kategorien)
+        _stand()
         return
 
     # Profildaten allein reichen auch, falls der Export fehlt
@@ -198,7 +208,30 @@ def importiere():
                       f"aber nicht mehr im Export (entfolgt oder geloescht)")
 
     print(f"Fertig: {neu} neu, {geaendert} aktualisiert.")
+    _setze_kategorien(kategorien)
     _stand()
+
+
+def _setze_kategorien(kategorien):
+    """Vorschlaege uebernehmen — aber nur dort, wo noch nichts entschieden ist."""
+    if not kategorien:
+        return
+    gesetzt = uebersprungen = unbekannt = 0
+    with db() as c:
+        for u, k in kategorien.items():
+            if k not in KATEGORIEN:
+                unbekannt += 1
+                continue
+            cur = c.execute(
+                "UPDATE accounts SET kategorie=? WHERE username=? AND kategorie='unklar'",
+                (k, u))
+            if cur.rowcount:
+                gesetzt += 1
+            else:
+                uebersprungen += 1
+    print(f"  + Kategorien: {gesetzt} gesetzt, {uebersprungen} unveraendert "
+          f"(schon eingestuft oder nicht in der Datenbank)"
+          + (f", {unbekannt} unbekannte Kategorie" if unbekannt else ""))
 
 
 def _stand():
