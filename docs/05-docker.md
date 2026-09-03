@@ -7,8 +7,8 @@
 | | |
 |---|---|
 | Docker-Version | 29.7.2 (build a7dcaa6) |
-| Laufende Container | 11 von 11 (25.08.2026) |
-| Compose-Stacks | 6 aktiv, 2 archiviert |
+| Laufende Container | 12 von 12 (03.09.2026) |
+| Compose-Stacks | 7 aktiv, 2 archiviert |
 | Images gesamt | **11 (3,94 GB)** — zuletzt aufgeräumt am 18.08.2026 |
 | Alle Images | auf feste Versionen bzw. Digests gepinnt (vollständig seit 18.08.2026) |
 | Logrotation | 10 MB je Datei, 3 Dateien — in jeder Compose-Datei gesetzt |
@@ -29,9 +29,20 @@
 | **vaultwarden** | `vaultwarden/server:1.37.2` | 8222 nur auf `127.0.0.1` 🔒 | Passwort-Tresor, siehe [18](18-vaultwarden.md) | `unless-stopped` |
 | **diun** | `crazymax/diun:4.33.0` | — (keiner) | Meldet neue Image-Versionen, aktualisiert nicht | `unless-stopped` |
 | diun-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Diun | `unless-stopped` |
+| **insta-triage** | `insta-triage:1.0.0` (lokal gebaut, Basis `python:3.12.8-slim-bookworm`) | 8080 🔒 | Instagram-Abos sichten und sortieren, siehe [Stack-README](../stacks/insta-triage/README.md) | `unless-stopped` |
 
-**Elf Container** (seit 25.08.2026). 🔒 markiert Dienste, die seit dem 18.08.2026 nur
-noch über Tailscale erreichbar sind — siehe [07 — Sicherheit](07-sicherheit.md).
+**Zwölf Container** (seit 03.09.2026). 🔒 markiert Dienste, die nur über Tailscale
+erreichbar sind — siehe [07 — Sicherheit](07-sicherheit.md).
+
+**insta-triage schottet sich anders ab als die übrigen 🔒-Dienste.** Bei ihnen bindet
+Docker an `0.0.0.0` und `pi-guard` sperrt den Port gegen `eth0`; bei insta-triage ist
+der Port in der Compose-Datei an die Tailscale-Adresse `100.108.219.87` gebunden und
+lauscht im LAN gar nicht erst. Der Grund ist die Bauart von `pi-guard`: Es arbeitet mit
+einer festen Portliste (`GESPERRT`), die für jeden neuen Dienst von Hand zu erweitern
+wäre — vergisst man es, ist der Dienst still im ganzen Heimnetz offen. Die Bindung an
+die Adresse kann man dagegen nicht vergessen: Sie steht in derselben Datei, die den
+Dienst startet. Preis dafür ist eine harte Abhängigkeit von dieser Adresse — ändert
+sich die Tailscale-Adresse des Pi, startet der Container nicht mehr.
 
 Kein Container läuft mit `privileged`, kein Container nutzt `network_mode: host`,
 alle elf laufen mit `no-new-privileges`.

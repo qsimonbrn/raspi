@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 02.09.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 03.09.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -18,6 +18,36 @@ Backup.
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
 
 ---
+
+## 03.09.2026 — Neuer Dienst: insta-triage
+
+| | |
+|---|---|
+| Neu | Stack `stacks/insta-triage`, Container `insta-triage`, Image lokal gebaut `insta-triage:1.0.0` |
+| Port | 8080, gebunden an `100.108.219.87` (Tailscale) — **nicht** an `0.0.0.0` |
+| Daten | `/mnt/usb-hdd/insta-triage/` (SQLite, Profilbilder, Import-Ablage) |
+| Grenzen | `mem_limit: 256m`, `no-new-privileges`, Logrotation über den üblichen YAML-Anker |
+| Nachweis | Container läuft, Upload- und Importweg mit Testdaten durchgespielt, Testdaten danach entfernt; Datenbank beim Eintrag leer |
+
+**Wozu:** Der Instagram-Hauptaccount folgt 1955 Accounts, über zehn Jahre gewachsen. Die
+App liest den Instagram-Datenexport samt einer im Browser gezogenen Profilliste ein, zeigt
+die Abos mit Bild und Klarnamen an und führt drei Listen: behalten, entfolgen, auf einen
+Zweitaccount migrieren. **Sie hat keinen Zugang zu Instagram und entfolgt selbst nichts** —
+es gibt keine offizielle Schnittstelle dafür, und alles Inoffizielle riskiert einen zehn
+Jahre alten Account, ohne schneller zu sein als Handarbeit (Instagram lässt rund 100–150
+Unfollows am Tag durch). Die App sagt nur, was als Nächstes dran ist, und merkt sich, was
+erledigt wurde.
+
+**Warum die Bindung an die Tailscale-Adresse und nicht `pi-guard`:** `pi-guard` sperrt
+Ports anhand einer festen Liste im Skript. Ein neuer Dienst wäre so lange im ganzen
+Heimnetz offen, bis jemand daran denkt, die Liste zu ergänzen — und das Skript ist ein
+laufender Sicherheitsbaustein, an dem für einen Nebendienst nichts geändert werden sollte.
+Die Bindung an `100.108.219.87` erreicht dasselbe Ziel in der Datei, die den Dienst
+ohnehin startet. Einzelheiten in [05 — Docker](05-docker.md).
+
+**Offen:** ob `/mnt/usb-hdd/insta-triage/` ins restic-Backup gehört. Die Entscheidungen
+darin sind Handarbeit, die Bilder sind nachladbar — die Frage ist in
+[12 — Backup](12-backup.md) noch nicht beantwortet.
 
 ## 02.09.2026 — Pi-hole: Gerätegruppe `bild-frei` für zwei Geräte
 

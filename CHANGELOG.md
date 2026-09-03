@@ -9,6 +9,24 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.12.0] — 2026-09-03
+
+### Hinzugefügt
+
+- **`stacks/insta-triage/`** — neuer Stack samt `README.md`: Weboberfläche zum Sichten
+  der eigenen Instagram-Abos, FastAPI und SQLite in einem lokal gebauten Image.
+- **`docs/15-aenderungshistorie.md`: Eintrag vom 03.09.2026** — warum der Dienst nichts
+  automatisiert (keine offizielle Schnittstelle, Handarbeit ist gleich schnell und
+  gefährdet den Account nicht) und warum sein Port an die Tailscale-Adresse gebunden ist
+  statt in die Portliste von `pi-guard` aufgenommen zu werden.
+
+### Geändert
+
+- **`docs/05-docker.md`** — Containerzahl von elf auf zwölf, Stacks von sechs auf sieben,
+  neue Tabellenzeile und ein Absatz zum abweichenden Abschottungsweg von insta-triage.
+
+---
+
 ## [2.11.1] — 2026-09-03
 
 ### Behoben

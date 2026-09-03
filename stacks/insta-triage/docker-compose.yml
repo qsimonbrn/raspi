@@ -1,0 +1,31 @@
+# insta-triage — Sichten und Sortieren der eigenen Instagram-Abos.
+#
+# Nur ueber Tailscale erreichbar: Der Port ist ausdruecklich an die Tailscale-Adresse
+# gebunden, nicht an 0.0.0.0. Damit haengt die Abschottung nicht an pi-guard, dessen
+# Portliste sonst haette erweitert werden muessen — siehe system/firewall/pi-guard.sh.
+# Aendert sich die Tailscale-Adresse des Pi, startet der Container nicht mehr; die
+# Adresse steht dann hier und in docs/05-docker.md nach.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  insta-triage:
+    build: .
+    image: insta-triage:1.0.0
+    container_name: insta-triage
+    restart: unless-stopped
+    ports:
+      - "100.108.219.87:8080:8080"
+    volumes:
+      - /mnt/usb-hdd/insta-triage:/data
+    environment:
+      TZ: Europe/Berlin
+      DATA_DIR: /data
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    logging: *logging

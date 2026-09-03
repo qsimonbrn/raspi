@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>insta-triage</title>
+<style>
+  :root{
+    --bg:#14161a; --karte:#1c1f26; --karte2:#232732; --rand:#2e3440;
+    --text:#e8eaed; --schwach:#9aa3b2;
+    --behalten:#3fb950; --entfolgen:#f0603a; --migrieren:#d29922; --offen:#6b7280;
+    --akzent:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  header{position:sticky;top:0;z-index:10;background:#11131799;backdrop-filter:blur(8px);
+         border-bottom:1px solid var(--rand);padding:10px 16px}
+  h1{font-size:15px;margin:0 0 8px;font-weight:600;letter-spacing:.2px}
+  h1 span{color:var(--schwach);font-weight:400}
+  .zeile{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  select,input,button{background:var(--karte2);color:var(--text);border:1px solid var(--rand);
+        border-radius:6px;padding:5px 9px;font:inherit;font-size:13px}
+  input[type=search]{min-width:180px}
+  button{cursor:pointer}
+  button:hover{border-color:var(--akzent)}
+  .tab{background:transparent;border:1px solid transparent;color:var(--schwach)}
+  .tab.aktiv{color:var(--text);border-color:var(--rand);background:var(--karte2)}
+  .zaehler{color:var(--schwach);font-size:12px}
+  .pill{display:inline-block;padding:1px 7px;border-radius:99px;font-size:11px;
+        border:1px solid var(--rand);color:var(--schwach)}
+  .pill.b{color:var(--behalten);border-color:#2c5c37}
+  .pill.e{color:var(--entfolgen);border-color:#6b3226}
+  .pill.m{color:var(--migrieren);border-color:#6b5316}
+
+  main{padding:14px 16px 90px}
+  .gitter{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:10px}
+  .karte{background:var(--karte);border:1px solid var(--rand);border-radius:10px;padding:10px;
+         display:flex;flex-direction:column;gap:8px;position:relative}
+  .karte.cursor{outline:2px solid var(--akzent);outline-offset:1px}
+  .karte.gewaehlt{background:var(--karte2);border-color:var(--akzent)}
+  .karte[data-e=behalten]{border-left:3px solid var(--behalten)}
+  .karte[data-e=entfolgen]{border-left:3px solid var(--entfolgen)}
+  .karte[data-e=migrieren]{border-left:3px solid var(--migrieren)}
+  .kopf{display:flex;gap:9px;align-items:center;min-width:0}
+  .kopf img{width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--karte2);flex:0 0 auto}
+  .kopf .platzhalter{width:44px;height:44px;border-radius:50%;background:var(--karte2);
+        display:flex;align-items:center;justify-content:center;color:var(--schwach);flex:0 0 auto}
+  .namen{min-width:0}
+  .u{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .u a{color:inherit;text-decoration:none}
+  .u a:hover{color:var(--akzent);text-decoration:underline}
+  .fn{color:var(--schwach);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .marken{display:flex;gap:4px;flex-wrap:wrap}
+  .knoepfe{display:flex;gap:5px}
+  .knoepfe button{flex:1;padding:4px 0;font-size:12px}
+  .knoepfe button.an[data-w=behalten]{background:#1d3b25;border-color:var(--behalten);color:var(--behalten)}
+  .knoepfe button.an[data-w=entfolgen]{background:#3d1f18;border-color:var(--entfolgen);color:var(--entfolgen)}
+  .knoepfe button.an[data-w=migrieren]{background:#3a2f10;border-color:var(--migrieren);color:var(--migrieren)}
+  select.kat{width:100%;font-size:12px;padding:3px 6px}
+
+  .fuss{position:fixed;left:0;right:0;bottom:0;background:#111317f2;backdrop-filter:blur(8px);
+        border-top:1px solid var(--rand);padding:9px 16px;display:flex;gap:10px;
+        align-items:center;flex-wrap:wrap;font-size:13px}
+  .hilfe{color:var(--schwach);font-size:12px;margin-left:auto}
+  kbd{background:var(--karte2);border:1px solid var(--rand);border-bottom-width:2px;
+      border-radius:4px;padding:0 5px;font:inherit;font-size:11px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--rand)}
+  th{color:var(--schwach);font-weight:500;font-size:12px}
+  tr:hover{background:var(--karte)}
+  .leer{color:var(--schwach);padding:40px;text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>insta-triage <span id="kopfzahl"></span></h1>
+  <div class="zeile">
+    <button class="tab aktiv" data-ansicht="sichten">Sichten</button>
+    <button class="tab" data-ansicht="haupt">Arbeitsliste Hauptaccount</button>
+    <button class="tab" data-ansicht="zweit">Arbeitsliste Zweitaccount</button>
+    <button class="tab" data-ansicht="daten">Daten</button>
+  </div>
+  <div class="zeile" id="filter" style="margin-top:8px">
+    <select id="f-kat"><option value="">alle Kategorien</option></select>
+    <select id="f-ent">
+      <option value="">alle Entscheidungen</option>
+      <option value="offen">offen</option>
+      <option value="behalten">behalten</option>
+      <option value="entfolgen">entfolgen</option>
+      <option value="migrieren">migrieren</option>
+    </select>
+    <select id="f-back">
+      <option value="">folgt zurück: egal</option>
+      <option value="1">folgt zurück</option>
+      <option value="0">folgt nicht zurück</option>
+    </select>
+    <select id="f-sort">
+      <option value="followed_at">älteste Abos zuerst</option>
+      <option value="neu">neueste zuerst</option>
+      <option value="username">nach Name</option>
+    </select>
+    <input type="search" id="f-q" placeholder="suchen …">
+    <span class="zaehler" id="trefferzahl"></span>
+  </div>
+</header>
+
+<main>
+  <div id="inhalt" class="gitter"></div>
+</main>
+
+<div class="fuss">
+  <span id="auswahlzahl">0 ausgewählt</span>
+  <button data-bulk="behalten">behalten</button>
+  <button data-bulk="entfolgen">entfolgen</button>
+  <button data-bulk="migrieren">migrieren</button>
+  <button data-bulk="offen">zurücksetzen</button>
+  <select id="bulk-kat"><option value="">Kategorie setzen …</option></select>
+  <button id="alle-sichtbar">alle sichtbaren wählen</button>
+  <button id="auswahl-leeren">Auswahl leeren</button>
+  <span class="hilfe">
+    <kbd>j</kbd><kbd>k</kbd> bewegen · <kbd>1</kbd> behalten · <kbd>2</kbd> entfolgen ·
+    <kbd>3</kbd> migrieren · <kbd>0</kbd> offen · <kbd>Leer</kbd> auswählen
+  </span>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let stand = {}, liste = [], cursor = 0, gewaehlt = new Set(), ansicht = "sichten";
+
+async function hole(u, o){ const r = await fetch(u, o); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+
+async function ladeStand(){
+  stand = await hole("/api/stats");
+  const e = stand.entscheidungen || {};
+  $("#kopfzahl").textContent =
+    `— ${stand.gesamt} Accounts · offen ${e.offen||0} · behalten ${e.behalten||0} · `
+    + `entfolgen ${e.entfolgen||0} · migrieren ${e.migrieren||0}`;
+  for (const sel of [$("#f-kat"), $("#bulk-kat")]) {
+    if (sel.dataset.gefuellt) continue;
+    for (const k of stand.alle_kategorien) {
+      const o = document.createElement("option");
+      o.value = k; o.textContent = k + (stand.kategorien[k] ? ` (${stand.kategorien[k]})` : "");
+      sel.append(o);
+    }
+    sel.dataset.gefuellt = "1";
+  }
+}
+
+function param(){
+  const p = new URLSearchParams();
+  if ($("#f-kat").value)  p.set("kategorie", $("#f-kat").value);
+  if ($("#f-ent").value)  p.set("entscheidung", $("#f-ent").value);
+  if ($("#f-back").value) p.set("follows_back", $("#f-back").value);
+  if ($("#f-q").value)    p.set("q", $("#f-q").value);
+  p.set("sort", $("#f-sort").value);
+  p.set("limit", "600");
+  return p;
+}
+
+async function lade(){
+  if (ansicht !== "sichten") return ladeArbeit();
+  const d = await hole("/api/accounts?" + param());
+  liste = d.accounts; cursor = Math.min(cursor, liste.length - 1);
+  $("#trefferzahl").textContent = `${liste.length} von ${d.gesamt} angezeigt`;
+  zeichne();
+}
+
+function bild(a){
+  return a.pic_file
+    ? `<img src="/pics/${a.pic_file}" loading="lazy" alt="">`
+    : `<div class="platzhalter">${(a.username[0]||"?").toUpperCase()}</div>`;
+}
+
+function zeichne(){
+  const c = $("#inhalt");
+  c.className = "gitter";
+  if (!liste.length){ c.innerHTML = `<div class="leer">Nichts gefunden.</div>`; return; }
+  c.innerHTML = liste.map((a,i) => `
+    <div class="karte ${i===cursor?"cursor":""} ${gewaehlt.has(a.username)?"gewaehlt":""}"
+         data-e="${a.entscheidung}" data-i="${i}">
+      <div class="kopf">
+        ${bild(a)}
+        <div class="namen">
+          <div class="u"><a href="https://www.instagram.com/${a.username}" target="_blank"
+             rel="noopener">${a.username}</a></div>
+          <div class="fn">${a.full_name || "—"}</div>
+        </div>
+      </div>
+      <div class="marken">
+        <span class="pill">${a.followed_at || "?"}</span>
+        ${a.follows_back ? '<span class="pill b">folgt zurück</span>' : ""}
+        ${a.close_friend ? '<span class="pill b">enger Freund</span>' : ""}
+        ${a.is_private ? '<span class="pill">privat</span>' : ""}
+        ${a.is_verified ? '<span class="pill">verifiziert</span>' : ""}
+      </div>
+      <select class="kat" data-u="${a.username}">
+        ${stand.alle_kategorien.map(k =>
+          `<option value="${k}" ${k===a.kategorie?"selected":""}>${k}</option>`).join("")}
+      </select>
+      <div class="knoepfe">
+        <button data-w="behalten"  class="${a.entscheidung==="behalten"?"an":""}"  data-u="${a.username}">behalten</button>
+        <button data-w="entfolgen" class="${a.entscheidung==="entfolgen"?"an":""}" data-u="${a.username}">entfolgen</button>
+        <button data-w="migrieren" class="${a.entscheidung==="migrieren"?"an":""}" data-u="${a.username}">migrieren</button>
+      </div>
+    </div>`).join("");
+  $("#auswahlzahl").textContent = `${gewaehlt.size} ausgewählt`;
+  const k = c.querySelector(".karte.cursor");
+  if (k) k.scrollIntoView({block:"nearest"});
+}
+
+async function markiere(usernames, feld, wert){
+  if (!usernames.length) return;
+  const koerper = {usernames}; koerper[feld] = wert;
+  await hole("/api/markieren", {method:"POST", headers:{"Content-Type":"application/json"},
+                                body: JSON.stringify(koerper)});
+  for (const a of liste) if (usernames.includes(a.username)) a[feld] = wert;
+  zeichne(); ladeStand();
+}
+
+// --- Arbeitslisten -------------------------------------------------------
+async function ladeArbeit(){
+  if (ansicht === "daten") return zeigeDaten();
+  const d = await hole("/api/arbeitsliste?schritt=" + ansicht + "&limit=150");
+  const feld = ansicht === "haupt" ? "erledigt_haupt" : "erledigt_zweit";
+  const was = ansicht === "haupt" ? "entfolgen" : "auf dem Zweitaccount folgen";
+  $("#trefferzahl").textContent = `${d.anzahl} offen`;
+  $("#inhalt").className = "";
+  $("#inhalt").innerHTML = d.anzahl === 0
+    ? `<div class="leer">Nichts offen. </div>`
+    : `<p class="zaehler" style="margin:0 0 10px">
+         Heute ${was}: höchstens 100–150, mit Pausen. Häkchen setzen, sobald erledigt.
+       </p>
+       <table><thead><tr><th style="width:34px"></th><th>Account</th><th>Name</th>
+       <th>Kategorie</th><th>Entscheidung</th></tr></thead><tbody>
+       ${d.accounts.map(a => `<tr>
+          <td><input type="checkbox" data-fertig="${a.username}" data-feld="${feld}"></td>
+          <td><a href="https://www.instagram.com/${a.username}" target="_blank"
+                 rel="noopener" style="color:var(--akzent)">${a.username}</a></td>
+          <td>${a.full_name || "—"}</td>
+          <td><span class="pill">${a.kategorie}</span></td>
+          <td><span class="pill ${a.entscheidung[0]}">${a.entscheidung}</span></td>
+        </tr>`).join("")}</tbody></table>`;
+}
+
+async function zeigeDaten(){
+  $("#trefferzahl").textContent = "";
+  $("#inhalt").className = "";
+  $("#inhalt").innerHTML = `
+    <div style="max-width:720px;display:flex;flex-direction:column;gap:18px">
+      <div class="karte">
+        <b>1 — JSON-Dateien einlesen</b>
+        <p class="zaehler" style="margin:0">
+          Aus dem Instagram-Datenexport: <code>following.json</code>,
+          <code>followers_1.json</code>, <code>close_friends.json</code>.
+          Dazu die <code>following_profile.json</code> aus der Browser-Abfrage
+          (Klarnamen und Profilbilder). Mehrere Dateien auf einmal sind erlaubt,
+          erneutes Einlesen überschreibt keine Entscheidungen.
+        </p>
+        <input type="file" id="dateien" multiple accept=".json">
+        <button id="hochladen">einlesen</button>
+        <pre id="uplog" class="zaehler" style="white-space:pre-wrap;margin:0"></pre>
+      </div>
+      <div class="karte">
+        <b>2 — Profilbilder holen</b>
+        <p class="zaehler" style="margin:0">
+          Lädt die Bilder einmalig von der Instagram-CDN auf den Pi. Nötig, weil die
+          URLs signiert sind und nach Stunden ablaufen. Läuft im Hintergrund.
+        </p>
+        <div class="zeile">
+          <button id="bilder">Bilder holen</button>
+          <span class="zaehler" id="bildstand"></span>
+        </div>
+        <pre id="bildlog" class="zaehler" style="white-space:pre-wrap;margin:0"></pre>
+      </div>
+    </div>`;
+
+  $("#hochladen").onclick = async () => {
+    const f = $("#dateien").files;
+    if (!f.length) return;
+    const fd = new FormData();
+    for (const d of f) fd.append("dateien", d);
+    $("#uplog").textContent = "wird eingelesen …";
+    try {
+      const r = await hole("/api/upload", { method: "POST", body: fd });
+      $("#uplog").textContent = r.log;
+      await ladeStand();
+    } catch (e) { $("#uplog").textContent = "Fehler: " + e.message; }
+  };
+
+  $("#bilder").onclick = async () => {
+    await hole("/api/bilder", { method: "POST" });
+    $("#bildlog").textContent = "läuft …";
+    clearInterval(window._bt);
+    window._bt = setInterval(bildstand, 3000);
+  };
+  bildstand();
+}
+
+async function bildstand(){
+  if (ansicht !== "daten") return clearInterval(window._bt);
+  try {
+    const r = await hole("/api/bilder/log");
+    const el = $("#bildstand"); if (!el) return;
+    el.textContent = `${r.geladen} geladen, ${r.offen} offen`;
+    $("#bildlog").textContent = r.log.split("\n").slice(-6).join("\n");
+    if (r.offen === 0) clearInterval(window._bt);
+  } catch {}
+}
+
+// --- Ereignisse ----------------------------------------------------------
+$("#inhalt").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-w]");
+  if (b) return markiere([b.dataset.u], "entscheidung", b.dataset.w);
+  const k = e.target.closest(".karte");
+  if (k && !e.target.closest("a,select")) {
+    cursor = +k.dataset.i;
+    if (e.metaKey || e.ctrlKey) {
+      const u = liste[cursor].username;
+      gewaehlt.has(u) ? gewaehlt.delete(u) : gewaehlt.add(u);
+    }
+    zeichne();
+  }
+});
+$("#inhalt").addEventListener("change", async e => {
+  if (e.target.matches("select.kat"))
+    return markiere([e.target.dataset.u], "kategorie", e.target.value);
+  if (e.target.matches("input[data-fertig]")) {
+    await hole("/api/erledigt", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({usernames:[e.target.dataset.fertig],
+                            feld:e.target.dataset.feld, wert: e.target.checked ? 1 : 0})});
+    e.target.closest("tr").style.opacity = e.target.checked ? .4 : 1;
+    ladeStand();
+  }
+});
+
+document.addEventListener("keydown", e => {
+  if (/input|select|textarea/i.test(e.target.tagName)) return;
+  if (ansicht !== "sichten" || !liste.length) return;
+  const u = liste[cursor]?.username;
+  const sprung = { j:1, k:-1, ArrowDown:1, ArrowUp:-1 }[e.key];
+  if (sprung !== undefined){
+    cursor = Math.max(0, Math.min(liste.length-1, cursor + sprung)); zeichne(); e.preventDefault(); return;
+  }
+  const w = { "1":"behalten", "2":"entfolgen", "3":"migrieren", "0":"offen" }[e.key];
+  if (w && u){
+    markiere([u], "entscheidung", w);
+    cursor = Math.min(liste.length-1, cursor+1);
+    e.preventDefault(); return;
+  }
+  if (e.key === " " && u){
+    gewaehlt.has(u) ? gewaehlt.delete(u) : gewaehlt.add(u);
+    cursor = Math.min(liste.length-1, cursor+1); zeichne(); e.preventDefault();
+  }
+});
+
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("aktiv"));
+  t.classList.add("aktiv"); ansicht = t.dataset.ansicht;
+  $("#filter").style.display = ansicht === "sichten" ? "flex" : "none";
+  lade();
+}));
+document.querySelectorAll("#filter select, #filter input").forEach(el => {
+  el.addEventListener("change", () => { cursor = 0; lade(); });
+  el.addEventListener("input", () => { clearTimeout(el._t); el._t = setTimeout(lade, 300); });
+});
+document.querySelectorAll("button[data-bulk]").forEach(b => b.addEventListener("click",
+  () => markiere([...gewaehlt], "entscheidung", b.dataset.bulk)));
+$("#bulk-kat").addEventListener("change", e => {
+  if (e.target.value) { markiere([...gewaehlt], "kategorie", e.target.value); e.target.value = ""; }
+});
+$("#alle-sichtbar").addEventListener("click", () => {
+  liste.forEach(a => gewaehlt.add(a.username)); zeichne();
+});
+$("#auswahl-leeren").addEventListener("click", () => { gewaehlt.clear(); zeichne(); });
+
+(async () => { await ladeStand(); await lade(); })();
+</script>
+</body>
+</html>
