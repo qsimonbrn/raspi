@@ -169,7 +169,7 @@ def importiere():
         vorhanden = {r["username"] for r in c.execute("SELECT username FROM accounts")}
         for u in sorted(alle):
             ts = following.get(u)
-            datum = (datetime.datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d")
+            datum = (datetime.datetime.fromtimestamp(ts, datetime.timezone.utc).strftime("%Y-%m-%d")
                      if ts else None)
             jahr = int(datum[:4]) if datum else None
             pr = profile.get(u, {})
