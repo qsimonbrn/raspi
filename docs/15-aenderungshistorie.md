@@ -19,6 +19,30 @@ Backup.
 
 ---
 
+## 03.09.2026 — Richtigstellung: Diun meldet keine neuen Versionen
+
+| | |
+|---|---|
+| Behauptet seit 25.08.2026 | „Diun meldet neue Image-Versionen" |
+| Gemessen am 03.09.2026 | 9 Läufe, jedes Mal `unchanged=11`, `failed=0` |
+| Gegenprobe | Paperless-ngx 3.1.0 (27.08.), 3.1.1 (31.08.), 3.1.2 (01.09.) — auf dem Pi läuft 3.0.5, gemeldet wurde keine |
+| Ursache | Ohne `diun.watch_repo` beobachtet Diun nur den **Digest des gepinnten Tags**, nicht die Tag-Liste der Registry |
+| Am System geändert | **nichts** — die Umstellung braucht `include_tags` je Image, sonst Meldungsflut. Als Punkt 2.14 aufgenommen |
+
+**Warum das hier steht, obwohl nichts geändert wurde:** Der Befund ist eine
+Richtigstellung, keine Systemänderung — aber er betrifft eine Alarmkette, die seit neun
+Tagen als geschlossen galt. Der Eintrag vom 25.08.2026 bleibt unverändert stehen; er
+beschreibt richtig, was gebaut wurde, und falsch, was es leistet.
+
+**Die Lehre, und sie ist die Schwester der ntfy-Lehre vom 25.08.:** Damals war
+`http=200` die Annahme durch den Server, nicht die Zustellung. Diesmal ist
+`Jobs completed failed=0` der fehlerfreie Lauf, nicht die Erkennung. **Beide Male sah
+die Prüfung gut aus, weil sie die Frage maß, die leicht zu messen war.** Der Nachweis
+für einen Melder ist immer derselbe: eine bekannte Änderung von außen hineingeben und
+sehen, ob sie ankommt.
+
+---
+
 ## 03.09.2026 — Neuer Dienst: insta-triage
 
 | | |

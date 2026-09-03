@@ -336,7 +336,34 @@ der Paperless-Zwischenschritt über 2.20.15 ist das Lehrstück dazu.
 
 ## Diun — Update-Meldungen (seit 25.08.2026)
 
-*Eingerichtet am 25.08.2026.*
+*Eingerichtet am 25.08.2026. **Am 03.09.2026 nachgemessen und richtiggestellt.***
+
+> ### 🔴 Diun meldet derzeit KEINE neuen Versionen
+>
+> **Gemessen am 03.09.2026, neun Tage nach der Einrichtung.** Diun lief an allen neun
+> Tagen fehlerfrei und meldete jedes Mal `unchanged=11`. Im selben Zeitraum sind für
+> Paperless-ngx **drei** Versionen erschienen — 3.1.0 (27.08.), 3.1.1 (31.08.),
+> 3.1.2 (01.09.); auf dem Pi läuft 3.0.5. **Gemeldet wurde keine davon.**
+>
+> **Die Ursache ist keine Störung, sondern die Betriebsart.** Ohne
+> `diun.watch_repo` beobachtet Diun ausschließlich den **Digest des gepinnten Tags**:
+> Es schlägt an, wenn jemand `3.0.5` neu pusht — nicht, wenn `3.1.0` erscheint. Bei
+> festen Versions-Tags passiert Ersteres praktisch nie. Für das Erkennen neuer
+> Versionen muss Diun die **Tag-Liste** der Registry durchsuchen, und das tut es nur
+> mit `diun.watch_repo=true` je Container.
+>
+> **Warum es zwei Wochen unbemerkt blieb:** `Jobs completed added=0 failed=0
+> unchanged=11` liest sich wie ein sauberer Lauf, und das ist er auch. Der Dienst
+> arbeitet fehlerfrei — er beantwortet nur eine andere Frage als die, für die er
+> installiert wurde. **Ein Log ohne Fehler ist kein Nachweis, dass etwas erkannt
+> wird.** Der einzige belastbare Nachweis wäre von Anfang an gewesen: eine bekannte
+> neue Version gegen das zu halten, was Diun meldet.
+>
+> **Was fehlt:** `diun.watch_repo=true` je Container, dazu ein `diun.include_tags`-
+> Ausdruck. Ohne den zweiten Teil meldet Diun **jeden** neuen Tag — bei `postgres`
+> und `redis` sind das Dutzende Varianten je Release, und eine Meldungsflut liest
+> nach zwei Tagen niemand mehr. Aufwand rund eine Stunde, siehe
+> [09 — Empfehlungen](09-empfehlungen.md), Punkt 2.14.
 
 Alle Images sind auf feste Versionen gepinnt. Das ist eine bewusste Entscheidung, und
 sie hat einen Preis: **Ohne `:latest` erfährt man von einer neuen Version gar nichts

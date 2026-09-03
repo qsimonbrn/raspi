@@ -9,6 +9,22 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.12.1] — 2026-09-03
+
+### Richtiggestellt
+
+- **Diun meldet keine neuen Versionen.** Seit dem 25.08.2026 stand in
+  [05 — Docker](docs/05-docker.md), Diun schließe die Lücke, die das Pinnen aufreißt.
+  Am 03.09.2026 nachgemessen: neun fehlerfreie Läufe mit `unchanged=11`, während für
+  Paperless-ngx drei Versionen erschienen sind (3.1.0, 3.1.1, 3.1.2) — keine davon
+  gemeldet. Ohne `diun.watch_repo` beobachtet Diun nur den Digest des gepinnten Tags.
+  Abschnitt in 05 um den Befund ergänzt, Punkt 2.7 in
+  [09 — Empfehlungen](docs/09-empfehlungen.md) von „erledigt" auf „teilweise erledigt"
+  zurückgestuft, neuer Punkt 2.14 für die Umstellung, Eintrag im Betriebstagebuch.
+  **Am System wurde nichts geändert.**
+
+---
+
 ## [2.12.0] — 2026-09-03
 
 ### Hinzugefügt
