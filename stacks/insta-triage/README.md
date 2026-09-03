@@ -22,6 +22,10 @@ Automatisierung also ohnehin nicht — sie wäre nur riskanter.
      `following.json`, `followers_1.json`, `close_friends.json`
    - aus der Browser-Abfrage: `following_profile.json` (Klarnamen, Profilbilder,
      privat/verifiziert)
+   - aus einem zweiten Datenexport (Likes, Kommentare, Gespeichert,
+     Story-Interaktionen): `interaktionen.json`, vorher aus den Rohdateien
+     verdichtet — siehe unten
+   - `kategorien.json` mit vorgeschlagenen Kategorien
 
    Mehrfaches Einlesen ist unschädlich: Entscheidungen und Kategorien bleiben stehen,
    nur Stammdaten werden aufgefrischt.
@@ -41,9 +45,33 @@ Automatisierung also ohnehin nicht — sie wäre nur riskanter.
    Tastatur: `j`/`k` bewegen, `1` behalten, `2` entfolgen, `3` migrieren, `0`
    zurücksetzen, `Leertaste` auswählen. Mehrfachauswahl unten in der Leiste.
 
-4. **Abarbeiten** — Reiter *Arbeitsliste Hauptaccount* und *Zweitaccount*. Jede Zeile
+4. **Filtern** — der schnellste Weg durch die Liste: Interaktion „nie", Sortierung
+   „kälteste zuerst", dazu „folgt nicht zurück". Was dort oben steht, ist seit Jahren
+   totes Gewicht.
+
+5. **Abarbeiten** — Reiter *Arbeitsliste Hauptaccount* und *Zweitaccount*. Jede Zeile
    verlinkt das Profil; Häkchen setzen, sobald erledigt. Höchstens 100–150 Aktionen
    am Tag, mit Pausen.
+
+## Der zweite Export
+
+Der Datenexport mit Likes, Kommentaren, Gespeichertem und Story-Interaktionen ist
+**zu groß, um ihn roh hochzuladen** — `liked_posts.json` allein hat 157 MB, der
+Container hat 256 MB Speicher. Er wird deshalb vorher zu einer Zähltabelle
+verdichtet: je Account die Zahl der Likes, Kommentare, gespeicherten Beiträge,
+Story-Likes und angesehenen Stories plus erstes und letztes Datum. Aus rund
+280 MB werden so 1,7 MB.
+
+Zwei Fallstricke beim Auslesen der Rohdaten:
+
+- Der Account eines Beitrags steht **nicht** unter dem Label `Name` — das sind die
+  Hashtags. Er steht unter `Benutzername` im Block mit dem Titel `Eigentümer`.
+- `liked_comments.json` führt den Account stattdessen im Feld `title`, und bei rund
+  der Hälfte der Kommentare fehlt der Medieninhaber im Export ganz. Diese Einträge
+  sind nicht zuzuordnen und werden gezählt, nicht geraten.
+
+Das Skript dazu läuft dort, wo der Export liegt, und liest die Dateien Eintrag für
+Eintrag statt sie am Stück in den Speicher zu ziehen.
 
 ## Aufbau
 

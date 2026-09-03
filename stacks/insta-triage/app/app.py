@@ -63,6 +63,22 @@ CREATE INDEX IF NOT EXISTS idx_ent ON accounts(entscheidung);
 CREATE INDEX IF NOT EXISTS idx_kat ON accounts(kategorie);
 """
 
+# Spalten aus dem zweiten Export — per ALTER nachgeruestet, damit bestehende
+# Datenbanken samt Entscheidungen erhalten bleiben.
+SPALTEN_NACHTRAG = {
+    "likes":              "INTEGER DEFAULT 0",
+    "kommentare":         "INTEGER DEFAULT 0",
+    "gespeichert":        "INTEGER DEFAULT 0",
+    "story_likes":        "INTEGER DEFAULT 0",
+    "stories_gesehen":    "INTEGER DEFAULT 0",
+    "story_sonstige":     "INTEGER DEFAULT 0",
+    "interaktionen":      "INTEGER DEFAULT 0",
+    "letzte_interaktion": "TEXT DEFAULT ''",
+    "erste_interaktion":  "TEXT DEFAULT ''",
+}
+ZAEHLER = ["likes", "kommentare", "gespeichert",
+           "story_likes", "stories_gesehen", "story_sonstige"]
+
 
 def db():
     c = sqlite3.connect(DB_PATH, timeout=15)
@@ -76,6 +92,10 @@ def init():
         d.mkdir(parents=True, exist_ok=True)
     with db() as c:
         c.executescript(SCHEMA)
+        vorhanden = {r[1] for r in c.execute("PRAGMA table_info(accounts)")}
+        for name, typ in SPALTEN_NACHTRAG.items():
+            if name not in vorhanden:
+                c.execute(f"ALTER TABLE accounts ADD COLUMN {name} {typ}")
 
 
 def jetzt():
@@ -113,6 +133,7 @@ def importiere():
 
     following, followers, close, profile = {}, set(), {}, {}
     kategorien = {}
+    interaktionen = {}
 
     for p in dateien:
         name = p.name.lower()
@@ -122,7 +143,11 @@ def importiere():
             print(f"  ! {p.name}: nicht lesbar ({e})")
             continue
 
-        if isinstance(daten, dict) and "kategorien" in daten:
+        if isinstance(daten, dict) and "interaktionen" in daten:
+            interaktionen.update(daten["interaktionen"])
+            print(f"  + {p.name}: {len(daten['interaktionen'])} Accounts mit Interaktionen")
+
+        elif isinstance(daten, dict) and "kategorien" in daten:
             kategorien.update(daten["kategorien"])
             print(f"  + {p.name}: {len(daten['kategorien'])} Kategorievorschlaege")
 
@@ -153,12 +178,12 @@ def importiere():
         else:
             print(f"  - {p.name}: unbekanntes Format, uebersprungen")
 
-    if not following and not profile and not kategorien:
+    if not following and not profile and not kategorien and not interaktionen:
         print("Weder Abo-Liste noch Profildaten gefunden — nichts zu tun.")
         return
     if not following and not profile:
-        alle, neu_n, geaendert_n = set(), 0, 0
         _setze_kategorien(kategorien)
+        _setze_interaktionen(interaktionen)
         _stand()
         return
 
@@ -209,7 +234,36 @@ def importiere():
 
     print(f"Fertig: {neu} neu, {geaendert} aktualisiert.")
     _setze_kategorien(kategorien)
+    _setze_interaktionen(interaktionen)
     _stand()
+
+
+def _setze_interaktionen(daten):
+    """Zaehlt aus dem zweiten Export ein, wie oft und wann Simon mit dem Account
+    zu tun hatte. Der Export enthaelt auch Konten, denen er nicht folgt — die
+    laufen ins Leere und werden nur gezaehlt."""
+    if not daten:
+        return
+    def datum(ts):
+        if not ts:
+            return ""
+        return datetime.datetime.fromtimestamp(int(ts),
+               datetime.timezone.utc).strftime("%Y-%m-%d")
+    getroffen = daneben = 0
+    setzt = ", ".join(f"{k}=?" for k in ZAEHLER)
+    with db() as c:
+        for u, v in daten.items():
+            werte = [int(v.get(k, 0) or 0) for k in ZAEHLER]
+            cur = c.execute(
+                f"UPDATE accounts SET {setzt}, interaktionen=?, "
+                "letzte_interaktion=?, erste_interaktion=? WHERE username=?",
+                (*werte, sum(werte), datum(v.get("letzte")), datum(v.get("erste")), u))
+            if cur.rowcount:
+                getroffen += 1
+            else:
+                daneben += 1
+    print(f"  + Interaktionen: {getroffen} Accounts zugeordnet, "
+          f"{daneben} nicht in der Abo-Liste (Explore, alte Abos)")
 
 
 def _setze_kategorien(kategorien):
@@ -326,15 +380,20 @@ def stats():
         offen_zweit = c.execute(
             "SELECT COUNT(*) FROM accounts WHERE entscheidung='migrieren' "
             "AND erledigt_zweit=0").fetchone()[0]
+        nie = c.execute("SELECT COUNT(*) FROM accounts "
+                        "WHERE COALESCE(interaktionen,0)=0").fetchone()[0]
+        mit = c.execute("SELECT COUNT(*) FROM accounts "
+                        "WHERE COALESCE(interaktionen,0)>0").fetchone()[0]
     return {"gesamt": gesamt, "entscheidungen": nach_ent, "kategorien": nach_kat,
             "offen_haupt": offen_haupt, "offen_zweit": offen_zweit,
+            "nie_interagiert": nie, "mit_interaktion": mit,
             "alle_kategorien": KATEGORIEN}
 
 
 @app.get("/api/accounts")
 def accounts(kategorie: str = "", entscheidung: str = "", q: str = "",
-             follows_back: str = "", jahr: str = "", sort: str = "followed_at",
-             limit: int = 500, offset: int = 0):
+             follows_back: str = "", jahr: str = "", interaktion: str = "",
+             sort: str = "followed_at", limit: int = 500, offset: int = 0):
     wo, args = [], []
     if kategorie:
         wo.append("kategorie=?"); args.append(kategorie)
@@ -344,11 +403,23 @@ def accounts(kategorie: str = "", entscheidung: str = "", q: str = "",
         wo.append("follows_back=?"); args.append(int(follows_back))
     if jahr:
         wo.append("jahr=?"); args.append(int(jahr))
+    if interaktion == "nie":
+        wo.append("COALESCE(interaktionen,0)=0")
+    elif interaktion == "wenig":
+        wo.append("COALESCE(interaktionen,0) BETWEEN 1 AND 3")
+    elif interaktion == "viel":
+        wo.append("COALESCE(interaktionen,0) >= 20")
     if q:
         wo.append("(username LIKE ? OR full_name LIKE ?)")
         args += [f"%{q}%", f"%{q}%"]
-    sortier = {"followed_at": "followed_at ASC", "neu": "followed_at DESC",
-               "username": "username ASC"}.get(sort, "followed_at ASC")
+    sortier = {
+        "followed_at": "followed_at ASC",
+        "neu":         "followed_at DESC",
+        "username":    "username ASC",
+        "kalt":        "COALESCE(interaktionen,0) ASC, followed_at ASC",
+        "warm":        "COALESCE(interaktionen,0) DESC",
+        "letzte":      "letzte_interaktion ASC, followed_at ASC",
+    }.get(sort, "followed_at ASC")
     sql = "SELECT * FROM accounts"
     if wo:
         sql += " WHERE " + " AND ".join(wo)
