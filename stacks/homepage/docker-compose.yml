@@ -97,9 +97,14 @@ services:
       PUID: 1000                 # simon
       PGID: 1000
       # Ab Homepage v1.0 Pflicht: erlaubte Hostnamen, sonst wird der Zugriff
-      # mit "Host validation failed" abgewiesen.
-      HOMEPAGE_ALLOWED_HOSTS: >-
-        192.168.178.80:3000,raspberrypi.local:3000,10.66.66.1:3000,localhost:3000
+      # mit "Host validation failed" abgewiesen -- und zwar erst im Browser,
+      # der Container startet klaglos durch.
+      # 06.09.2026: Tailscale-Adresse und Tailnet-Name ergaenzt (aus der Ferne
+      # kommt der Zugriff ueber 100.108.219.87, nicht ueber 192.168.178.80).
+      # 10.66.66.1 entfernt -- WireGuard ist seit dem 18.08.2026 abgebaut.
+      # Einzeilig, kein YAML-Faltoperator: ">-" fuegt beim Zusammenfuegen ein
+      # Leerzeichen ein, und der Host hiesse dann " 100.108.219.87:3000".
+      HOMEPAGE_ALLOWED_HOSTS: "192.168.178.80:3000,raspberrypi.local:3000,localhost:3000,100.108.219.87:3000,raspberrypi.tailf372ec.ts.net:3000"
 
     volumes:
       # Konfiguration liegt IM REPO und ist damit persistent und versioniert.

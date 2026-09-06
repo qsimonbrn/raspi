@@ -9,6 +9,30 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.13.1] — 2026-09-06
+
+### Behoben
+
+- **Backup scheiterte seit dem 04.09.** an einer verwaisten restic-Sperre, die ein über
+  die Cowork-Brücke abgebrochener `restic stats`-Aufruf am 03.09. hinterlassen hatte.
+  Entsperrt, Aufräumen nachgeholt. Die Sicherungen selbst liefen durch.
+- **Dashboard war aus dem Tailnet nicht erreichbar** — `HOMEPAGE_ALLOWED_HOSTS` kannte
+  die Tailscale-Adresse nicht. Homepage erlaubt private Bereiche ohne Eintrag, der
+  CGNAT-Bereich `100.64.0.0/10` fällt nicht darunter.
+
+### Geändert
+
+- `pi-backup.sh` verwirft die Fehlerausgabe von `restic forget` nicht mehr nach
+  `/dev/null`; die Warnung nennt jetzt die häufigste Ursache.
+- `stacks/homepage/docker-compose.yml`: Tailscale-Adresse und Tailnet-Name in den
+  erlaubten Hosts, `10.66.66.1` (WireGuard) entfernt, Liste einzeilig statt mit `>-`.
+
+### Dokumentiert
+
+- Betriebstagebuch [15](docs/15-aenderungshistorie.md) mit beiden Störungen, den
+  Ursachen und drei neuen Fallstricken: abgebrochene restic-Aufrufe hinterlassen Sperren ·
+  `>-` fügt Leerzeichen ein · Homepages Host-Prüfung greift nur auf API-Pfaden.
+
 ## [2.13.0] — 2026-09-04
 
 ### Hinzugefügt

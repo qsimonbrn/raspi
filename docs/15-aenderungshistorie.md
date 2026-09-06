@@ -19,6 +19,62 @@ Backup.
 
 ---
 
+## 06.09.2026 — Backup drei Nächte gescheitert; Dashboard aus dem Tailnet unerreichbar
+
+**Zwei unabhängige Störungen, beide behoben.**
+
+### 1. `pi-backup.service` scheiterte seit dem 04.09.
+
+| | |
+|---|---|
+| Symptom | `Failed to start pi-backup.service`, Exit 1, am 04., 05. und 06.09. |
+| Was trotzdem lief | die Sicherung selbst — jeder Lauf schrieb seinen Snapshot |
+| Was nicht lief | `restic forget --prune`; alte Stände blieben, das Repository wuchs |
+| Ursache | verwaiste Sperre im restic-Repository vom **03.09. 13:34:46**, root, PID 310695 |
+| Behoben | `restic unlock`, danach `forget --prune` von Hand nachgeholt — `FORGET-EXIT=0` |
+
+**Woher die Sperre kam:** Am 03.09. wurde `restic stats --mode raw-data` über die
+Cowork-Brücke aufgerufen, um die Repository-Größe zu ermitteln. Der Aufruf lief in die
+**60-Sekunden-Grenze der Brücke** und brach bei „scanning…" ab. Der abgebrochene Prozess
+räumte seine Sperre nicht auf.
+
+**Die Lehre, und sie ist neu:** Ein über die Brücke abgebrochener restic-Aufruf
+hinterlässt eine Sperre, die jeden folgenden `forget --prune` blockiert. **Jeder
+restic-Aufruf, der länger als ein paar Sekunden dauern kann, gehört als Job gestartet** —
+`restic stats` über rclone gegen OneDrive dauert regelmäßig über eine Minute. Nach einem
+abgebrochenen Aufruf `restic list locks` prüfen.
+
+**Zweiter Befund dabei:** Das Skript rief `restic forget … >/dev/null 2>&1 || warn` auf —
+**der Grund des Fehlschlags wurde verworfen**. Drei Nächte lang stand im Journal, dass
+etwas scheiterte, aber nicht warum. Geändert: Die letzten Ausgabezeilen gehen jetzt ins
+Journal, und die Warnung nennt die häufigste Ursache.
+
+### 2. Dashboard über Tailscale: „Host validation failed"
+
+| | |
+|---|---|
+| Symptom | `http://100.108.219.87:3000` zeigte nur eine rote Fehlerkarte |
+| Ursache | `HOMEPAGE_ALLOWED_HOSTS` kannte die Tailscale-Adresse nicht |
+| Behoben | `100.108.219.87:3000` und `raspberrypi.tailf372ec.ts.net:3000` ergänzt, `10.66.66.1:3000` entfernt (WireGuard ist seit dem 18.08.2026 abgebaut) |
+
+**Warum das erst jetzt auffiel:** Homepage erlaubt private Adressbereiche ohne Eintrag.
+`192.168.178.80` funktionierte deshalb immer. Die Tailscale-Adresse liegt im
+CGNAT-Bereich `100.64.0.0/10` und ist **nicht** privat im Sinne dieser Prüfung — sie
+brauchte den Eintrag. Aus dem Heimnetz war nie etwas zu sehen.
+
+**Zwei Fallstricke beim Beheben:**
+
+Der YAML-Faltoperator `>-` fügt beim Zusammenfügen mehrerer Zeilen ein **Leerzeichen**
+ein. Der zweite Host hätte `" 100.108.219.87:3000"` geheißen und wäre weiter abgewiesen
+worden. Die Liste steht deshalb einzeilig in Anführungszeichen; geprüft, dass der Wert
+kein Leerzeichen enthält.
+
+Und die erste Negativkontrolle bewies nichts: Sie rief `/` auf, wo Homepage den Host gar
+nicht prüft. **Die Prüfung greift auf den API-Pfaden.** Gegen `/api/services` gemessen:
+fremde Hosts HTTP 400 mit Logeintrag, die Tailscale-Adresse HTTP 200.
+
+---
+
 ## 03.09.2026 — Second Brain als Sicherungsziel aufgenommen
 
 | | |

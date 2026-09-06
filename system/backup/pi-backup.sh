@@ -214,7 +214,7 @@ log "restic: alte Staende aufraeumen"
 restic forget \
   --tag automatisch \
   --keep-daily 7 --keep-weekly 4 --keep-monthly 6 \
-  --prune >/dev/null 2>&1 || warn "Aufraeumen fehlgeschlagen"
+  --prune > >(tail -3) 2> >(tail -5 >&2) || warn "Aufraeumen fehlgeschlagen -- Grund siehe Zeilen darueber (haeufig: verwaiste Sperre, dann 'restic unlock')"
 
 # --- 8. Aufraeumen und Bericht ------------------------------------------------
 rm -rf "$STAGE"
