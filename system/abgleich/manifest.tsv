@@ -39,3 +39,4 @@ system/pihole/pi-gravity.sh	/usr/local/sbin/pi-gravity.sh	root:root	750	keiner
 system/pihole/pi-gravity.service	/etc/systemd/system/pi-gravity.service	root:root	644	systemd
 system/pihole/pi-gravity.timer	/etc/systemd/system/pi-gravity.timer	root:root	644	systemd
 system/pihole/cron.d-pihole	/etc/cron.d/pihole	root:root	644	keiner
+system/journald/10-limits.conf	/etc/systemd/journald.conf.d/10-limits.conf	root:root	644	systemd

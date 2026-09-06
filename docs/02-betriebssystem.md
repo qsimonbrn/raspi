@@ -176,6 +176,43 @@ user@1000         Benutzersitzung simon
 wpa_supplicant    WLAN-Authentifizierung
 ```
 
+## Journal: Obergrenze 500 MB (seit 07.09.2026)
+
+Bis zum 07.09.2026 stand in `journald.conf` **nichts** — es galt der Standard: 10 % des
+Dateisystems, gedeckelt bei **4 GB**. Auf der SD-Karte von 02/2023, dem wahrscheinlichsten
+Ausfall dieser Anlage, ist das weder nötig noch gewollt.
+
+`/etc/systemd/journald.conf.d/10-limits.conf` (Kopie in `system/journald/`) setzt
+`SystemMaxUse=500M` und `SystemMaxFileSize=100M`. Bei rund 10 MB pro Tag reicht das für
+etwa sieben Wochen Verlauf.
+
+> **Die Grenze ändert nicht, wie viel geschrieben wird** — nur, wie lange Altes aufgehoben
+> wird. Wer sie zur Schonung der Karte setzt, irrt über die Wirkung; wer sie gegen ein
+> volllaufendes Dateisystem setzt, hat recht.
+
+**Anlass:** Die Behauptungsprüfung meldete am 07.09.2026 ein Wachstum von 87 % in drei
+Tagen (39 → 73 MB). Nachgesehen, statt vermutet: Über die Hälfte des Aufkommens ist eine
+**einzige** sich wiederholende Tailscale-Zeile.
+
+| Schreiber, 3 Tage | Zeilen |
+|---|---|
+| `tailscaled` | 14.385 — davon **7.714** mal `magicsock: derp-4 does not know about peer […], removing route` |
+| `systemd` | 5.737 |
+| `CRON` · `sudo` · `sshd` | 1.563 · 1.280 · 710 |
+
+Die Tailscale-Zeile entsteht, wenn ein Gerät ständig schlafen geht und aufwacht — beim
+iPhone der Normalfall. **Kein Defekt, sondern der Grund, warum ohne Deckel nichts von
+selbst aufhört zu wachsen.**
+
+> **Nachweis, dass die Datei wirkt:** journald meldet seine geltende Grenze beim Start
+> selbst. Vorher `System Journal … is 72.0M, max 4.0G`, nachher `… max 500.0M`. **Ein
+> Neustart ohne Fehlermeldung beweist gar nichts** — journald startet auch mit einer
+> Konfiguration klaglos durch, die es nicht gelesen hat.
+>
+> ```bash
+> sudo journalctl -t systemd-journald --since "-2 min" -o cat | grep "max "
+> ```
+
 ## ⚠️ Befund: Zwei konkurrierende Netzwerk-Manager
 
 Sowohl **`dhcpcd`** als auch **`NetworkManager`** laufen und wollen beide `eth0`

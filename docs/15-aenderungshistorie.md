@@ -19,6 +19,44 @@ Backup.
 
 ---
 
+## 07.09.2026 (später) — Journal begrenzt, Geheimnissuche unter root repariert
+
+Beide Punkte stammen aus dem Lauf der Behauptungsprüfung vom selben Abend.
+
+**Journal auf 500 MB begrenzt.** Neue Datei
+`/etc/systemd/journald.conf.d/10-limits.conf` (`SystemMaxUse=500M`,
+`SystemMaxFileSize=100M`), Kopie in `system/journald/`, Zeile im Manifest — der Abgleich
+umfasst jetzt **25 Paare**. Vorher galt der Standard von 4 GB auf der SD-Karte.
+
+*Nachgemessen:* `systemd-analyze cat-config` zeigt die Werte in der zusammengeführten
+Konfiguration, und journald meldet nach dem Neustart selbst `max 500.0M` statt vorher
+`max 4.0G`. Der Vorher-Wert ist die Kontrolle: Bliebe dort `4.0G` stehen, wäre die Datei
+nicht gelesen worden.
+
+*Zur Ursache:* Das gemeldete Wachstum war kein Fehler, sondern eine fehlende Grenze.
+Aufkommen über drei Tage: `tailscaled` 14.385 Zeilen, davon 7.714 mal dieselbe
+`derp-4 does not know about peer …`-Meldung; `systemd` 5.737; `CRON`, `sudo`, `sshd`
+zusammen rund 3.500. Einzelheiten in [02 — Betriebssystem](02-betriebssystem.md).
+
+**`collect.sh`: Geheimnissuche lief als root ins Leere.** `git` verweigert den Dienst,
+wenn der Aufrufer nicht Eigentümer des Repositories ist („detected dubious ownership"),
+und die Prüfung fiel still auf `?` („Suche lief nicht") zurück. **Das war richtig
+gemeldet** — die Prüfung hat nicht behauptet, sauber zu sein — aber sie prüfte eben
+nichts. Behoben über `GIT_CONFIG_*` im Skript, gültig nur für diesen Lauf und nur für die
+beiden bekannten Pfade, statt einer systemweiten Ausnahme in `/etc/gitconfig`.
+
+*Nachgemessen:* als `root` ohne die Variablen → `fatal: detected dubious ownership`
+(Kontrolle, muss scheitern); mit ihnen → 86 Commits, dieselbe Zahl wie als `claude`.
+Vollständiger Lauf danach: **13 ok · 0 abweichend · 0 nicht prüfbar.**
+
+> **Der Anlass war eine eigene Ungenauigkeit:** Die Bestandsaufnahme ist für den Lauf als
+> normaler Benutzer mit `sudo` für Einzelbefehle gedacht; ich hatte sie als `root`
+> gestartet. Aufgefallen ist dadurch trotzdem etwas Echtes — eine Prüfung, deren Ergebnis
+> davon abhängt, wer sie startet, ist eine Prüfung, der man nicht ansieht, ob sie gemessen
+> hat.
+
+---
+
 ## 07.09.2026 — Blocklisten-Status je Liste, Abgleich in der Ampel
 
 **Warum jetzt:** Simon ist rund eine Woche nicht zu Hause. Beide Punkte betreffen

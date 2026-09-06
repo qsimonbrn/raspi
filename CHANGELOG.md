@@ -9,6 +9,24 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.16.0] — 2026-09-07
+
+### Hinzugefügt
+
+- **Kapitel [02](docs/02-betriebssystem.md):** Abschnitt „Journal: Obergrenze 500 MB"
+  mit der Messung, wer das Journal füllt, dem Vorher-Nachher-Nachweis und der
+  Klarstellung, dass eine Grenze die Schreibmenge **nicht** ändert.
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Eintrag zu beiden Änderungen.
+- `system/journald/10-limits.conf` samt Manifestzeile — der Abgleich umfasst jetzt
+  **25 Paare** statt 24.
+
+### Werkzeuge im Repository
+
+- `inventar/collect.sh`: `GIT_CONFIG_*` für `safe.directory`, damit die Geheimnissuche
+  auch als `root` misst statt auf `?` zurückzufallen.
+
+---
+
 ## [2.15.0] — 2026-09-07
 
 ### Hinzugefügt

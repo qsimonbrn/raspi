@@ -97,6 +97,18 @@ restic_() {
   sudo -n bash -c 'set -a; . /etc/pi-backup.env 2>/dev/null; set +a; exec restic "$@"' _ "$@"
 }
 
+# git verweigert den Dienst, wenn der Aufrufer nicht der Eigentuemer des Repositories
+# ist ("detected dubious ownership") -- also immer dann, wenn die Bestandsaufnahme als
+# root laeuft. Die Geheimnissuche fiel dadurch still auf "?" zurueck: richtig gemeldet,
+# aber sie prueft dann eben nichts. Am 07.09.2026 aufgefallen und behoben.
+#
+# Ueber GIT_CONFIG_* statt ueber ~/.gitconfig oder /etc/gitconfig: Die Ausnahme gilt
+# nur fuer diesen Lauf und nur fuer diese beiden Pfade, statt systemweit fuer jeden
+# git-Aufruf jedes Benutzers.
+export GIT_CONFIG_COUNT=2
+export GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/home/simon/raspi
+export GIT_CONFIG_KEY_1=safe.directory GIT_CONFIG_VALUE_1=/mnt/usb-hdd/claude-skills
+
 # Zaehler und Ausgabe der Behauptungspruefung.
 GEPRUEFT=0; ABWEICHUNG=0; UNGEPRUEFT=0
 pruef() {  # $1=Was geprueft wurde  $2=ok|ACHTUNG|?  $3=Befund
