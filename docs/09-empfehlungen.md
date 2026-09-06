@@ -202,7 +202,7 @@ Pi-hole der DNS-Server für den gesamten Haushalt ist — ein unbemerkter Ausfal
 
 **Aufwand:** 30 Minuten. Läuft problemlos auf einem Pi 4.
 
-### 3.5 Blocklisten-Status überwachen — 🟡 offen, klein
+### 3.5 ~~Blocklisten-Status überwachen~~ — ✅ erledigt am 07.09.2026
 
 *Ergänzt am 23.08.2026*
 
@@ -212,10 +212,15 @@ wurde benutzt, weil oben nichts Neues stand. **Harmlos.** Der bedenkliche Fall i
 `status=3` („download failed, using cached"): Die Liste veraltet dann still, und
 `pihole -g` endet trotzdem mit Code 0.
 
-`pi-gravity.sh` prüft bisher nur, ob die Gesamtzahl der Domains um mehr als ein Viertel
-schrumpft. Ein einzelner ausgefallener Download bleibt darunter und damit unbemerkt. Eine
-Abfrage `select count(*) from adlist where enabled=1 and status>=3` in `pi-gravity.sh`
-würde die Lücke schließen. **Aufwand: rund 15 Minuten.**
+`pi-gravity.sh` prüfte bis zum 07.09.2026 nur, ob die Gesamtzahl der Domains um mehr als
+ein Viertel schrumpft. Ein einzelner ausgefallener Download bleibt darunter und damit
+unbemerkt.
+
+**Umgesetzt am 07.09.2026:** Nach dem Lauf fragt das Skript `adlist` ab und meldet jede
+aktive Liste mit `status>=3` samt Adresse. Ein eigener Zweig fängt den Fall ab, in dem die
+Abfrage selbst scheitert — sonst wäre ein leeres Ergebnis nicht von „keine Fehler" zu
+unterscheiden, und die Prüfung erzeugte Vertrauen, das sie nicht deckt. Gegen drei Fälle
+gemessen; Einzelheiten in [04 — Dienste](04-dienste-system.md).
 
 ### 3.6 Zeitpunkt des letzten Gravity-Laufs aus der Datenbank lesen — 🟢 optional
 
@@ -269,7 +274,7 @@ Nachgemessen im selben Zug: `pi-gravity.service` läuft mit `Result=success` und
 durch, alle acht Listen melden Status 1 oder 2 — **keine** mit Status 3 oder 4, also kein
 fehlgeschlagener Download mehr.
 
-### 3.9 Abgleich Repo ↔ System in die Behauptungsprüfung aufnehmen — 🟡 offen, klein
+### 3.9 ~~Abgleich Repo ↔ System in die Behauptungsprüfung aufnehmen~~ — ✅ erledigt am 07.09.2026
 
 `inventar/collect.sh` **misst** den Abgleich und schreibt ihn in die Kennzahlen, zählt
 ihn aber nicht in die Ampel. Am 04.09.2026 stand deshalb nebeneinander:
@@ -283,8 +288,16 @@ Wer nur die Zusammenfassung liest — und dafür ist sie da — hält den Zustan
 während eine Systemdatei und ihre Repo-Kopie auseinanderlaufen. Genau der Fall, den die
 Tabelle abdecken soll: etwas, das **still scheitert**.
 
-**Zu tun:** eine dreizehnte Prüfung, die `pi-abgleich.sh check` auswertet und bei
-Abweichung `ACHTUNG` meldet, bei nicht ausführbarem Aufruf `?`. Rund 15 Minuten.
+**Umgesetzt am 07.09.2026** als Prüfung 12 in `collect.sh` („Repository und System
+stimmen überein"). Sie wertet die Ergebniszeile von `pi-abgleich.sh check` aus: identisch
+→ `ok`, `weichen ab` → `ACHTUNG`, keine auswertbare Zeile → `?`.
+
+> **Beim Bauen selbst hineingelaufen:** Das erste Muster lautete `Paare? weichen ab` und
+> traf die tatsächliche Ausgabe „1 von 24 Paar**en** weichen ab" nicht — die künstlich
+> erzeugte Abweichung landete als `?` statt als `ACHTUNG`. Ohne die Negativkontrolle wäre
+> eine Prüfung eingebaut worden, die im Ernstfall „nicht prüfbar" gemeldet hätte. Alle
+> drei Zweige sind einzeln gemessen: unverändert → `ok` · eine Repo-Kopie künstlich
+> geändert → `ACHTUNG` · Skriptpfad ungültig → `?`.
 
 ### 3.10 Gruppenzugehörigkeit von `system/backup/pi-backup.sh` klären — 🟡 offen, klein
 

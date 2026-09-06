@@ -9,6 +9,31 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.15.0] — 2026-09-07
+
+### Hinzugefügt
+
+- **Kapitel [04](docs/04-dienste-system.md):** Abschnitt zur neuen Statusprüfung je
+  Blockliste in `pi-gravity.sh`, mit den drei Kontrollfällen und dem Hinweis, dass die
+  Abfrage nach `updateGravity` stehen muss.
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Eintrag zum 07.09.2026 für beide
+  Änderungen samt Nachmessung und zwei Nebenbefunden (Journalwachstum, `?` bei der
+  Geheimnissuche unter `sudo`).
+
+### Geändert
+
+- **Kapitel [09](docs/09-empfehlungen.md):** Punkte 3.5 (Blocklisten-Status) und 3.9
+  (Abgleich in der Behauptungsprüfung) auf ✅ erledigt gesetzt. Bei 3.9 ist der eigene
+  Fehlgriff festgehalten — das erste Muster `Paare? weichen ab` traf „Paaren weichen ab"
+  nicht und hätte im Ernstfall `?` statt `ACHTUNG` gemeldet.
+
+### Werkzeuge im Repository
+
+- `inventar/collect.sh`: Prüfung 12 „Repository und System stimmen überein".
+- `system/pihole/pi-gravity.sh`: Statusabfrage je Liste, Datenbankpfad in `GDB`.
+
+---
+
 ## [2.14.0] — 2026-09-06
 
 ### Hinzugefügt

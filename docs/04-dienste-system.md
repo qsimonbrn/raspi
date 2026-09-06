@@ -100,6 +100,20 @@ Zahl der Einträge gegenüber dem Vortag um mehr als ein Viertel fällt. Letzter
 übliche Verlauf, wenn eine Quelle nicht mehr erreichbar ist: `pihole -g` läuft mit
 Exit 0 durch, und die Sperren fallen leise weg.
 
+**Seit dem 07.09.2026 prüft es zusätzlich den Status jeder einzelnen Liste**
+(`adlist`, `status>=3`). Das schließt die Lücke, die die Gesamtzahl offenlässt: Fällt
+eine von sechs Listen aus, fällt Pi-hole still auf seinen Cache zurück — die Summe
+ändert sich kaum, die Liste friert aber ein. Scheitert die Abfrage selbst, meldet das
+Skript ausdrücklich „nicht prüfbar" statt zu schweigen; ohne diesen Zweig wäre ein
+leeres Ergebnis von „keine Fehler" nicht zu unterscheiden. Der Zeitpunkt zählt: Die
+Abfrage steht **nach** `updateGravity`, sonst liest sie die Status des Vortags.
+
+> Geprüft am 07.09.2026 gegen drei Fälle, alle an dem Block, der in der ausgelieferten
+> Datei steht, gegen eine **Kopie** der Datenbank: unveränderte Kopie → keine Meldung ·
+> eine Liste künstlich auf `status=3` → Meldung mit Adresse · ungültiger
+> Datenbankpfad → Meldung „Listenstatus nicht prüfbar". Danach ein echter Lauf über
+> `pi-gravity.service`: Exit 0, Journal `6 aktive Listen, keine mit status>=3`.
+
 ```bash
 systemctl list-timers pi-gravity.timer     # wann als naechstes
 sudo systemctl start pi-gravity.service    # von Hand, rund 15 Sekunden

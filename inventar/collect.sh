@@ -801,6 +801,22 @@ else
   fi
 fi
 
+# --- 12. Laufen Repository und System auseinander? -------------------------
+# Der Abgleich wurde bis zum 07.09.2026 nur als Kennzahl ausgegeben (Teil 2) und
+# ging nicht in die Ampel ein: Am 04.09.2026 stand "12 ok . 0 abweichend" neben
+# "1 von 24 Paaren weichen ab". Wer nur die Zusammenfassung liest -- und dafuer
+# ist sie da --, haelt den Zustand fuer sauber (docs/09, 3.9).
+ABG="$(sudo -n /usr/local/sbin/pi-abgleich.sh check 2>&1)"; ABGRC=$?
+ABGZ="$(printf '%s\n' "$ABG" | grep -E 'alle [0-9]+ Paare identisch|Paaren? weichen ab' | head -1)"
+if [ -z "$ABGZ" ]; then
+  pruef "Repository und System stimmen ueberein" "?" \
+        "pi-abgleich.sh check lieferte keine auswertbare Zeile (Code $ABGRC) -- lief der Aufruf ohne sudo?"
+elif printf '%s\n' "$ABGZ" | grep -q 'weichen ab'; then
+  pruef "Repository und System stimmen ueberein" "ACHTUNG" "$ABGZ"
+else
+  pruef "Repository und System stimmen ueberein" "ok" "$ABGZ"
+fi
+
 echo ""
 echo "**$GEPRUEFT geprueft und in Ordnung · $ABWEICHUNG abweichend · $UNGEPRUEFT nicht pruefbar.**"
 if [ "$UNGEPRUEFT" -gt 0 ]; then

@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 06.09.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 07.09.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,42 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 07.09.2026 — Blocklisten-Status je Liste, Abgleich in der Ampel
+
+**Warum jetzt:** Simon ist rund eine Woche nicht zu Hause. Beide Punkte betreffen
+Prüfungen, die bisher etwas gemessen und dann verschwiegen haben — genau die Klasse
+Fehler, die in einer Abwesenheit teuer wird.
+
+**`pi-gravity.sh` (`/usr/local/sbin`, Kopie in `system/pihole/`).** Nach dem Lauf wird
+`adlist` abgefragt; jede aktive Liste mit `status>=3` wird über ntfy gemeldet. Bisher
+schlug nur ein Einbruch der Gesamtzahl um mehr als ein Viertel an — der Ausfall einer
+von sechs Listen bleibt darunter, weil Pi-hole still auf den Cache zurückfällt. Der Pfad
+zur Datenbank liegt jetzt in `GDB` und ist überschreibbar, damit die Prüfung gegen eine
+Kopie getestet werden kann, ohne die echte anzufassen.
+
+*Nachgemessen:* der Block **aus der ausgelieferten Datei** gegen drei Fälle
+(Kopie unverändert → still · eine Liste auf `status=3` → Meldung mit Adresse · Pfad
+ungültig → „nicht prüfbar"), danach ein echter Lauf über `pi-gravity.service`:
+Result=success, `987111 -> 1007243` Domains, Journal `6 aktive Listen, keine mit
+status>=3`. Abgleich danach 24 von 24 Paaren identisch.
+
+**`inventar/collect.sh`.** Neue Prüfung 12 „Repository und System stimmen überein". Der
+Abgleich wurde vorher nur als Kennzahl ausgegeben; am 04.09.2026 stand deshalb
+„12 ok · 0 abweichend" neben „1 von 24 Paaren weichen ab". Die Zusammenfassung, für die
+sie da ist, hat die gemessene Abweichung verschluckt.
+
+*Nachgemessen:* alle drei Zweige einzeln (unverändert → `ok` · Repo-Kopie künstlich
+geändert → `ACHTUNG` · Skriptpfad ungültig → `?`), danach ein vollständiger Lauf:
+13 Zeilen statt 12, `11 ok · 1 abweichend · 1 nicht prüfbar`.
+
+**Nebenbefund aus diesem Lauf:** Das Journal ist seit dem vorigen Lauf um 87 % gewachsen
+(39 → 73 MB) — vermutlich Nachwirkung der ntfy-Arbeit vom 06.09., nicht geklärt. Und
+„Keine Geheimnisse im Git-Verlauf" stand auf `?` („Suche lief nicht"); der Lauf erfolgte
+als `root` über `sudo`, wo `git` die fremde Verzeichnisgehörigkeit verweigert. Beides ist
+in [09 — Empfehlungen](09-empfehlungen.md) noch nicht als Punkt geführt.
 
 ---
 
