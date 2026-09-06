@@ -34,6 +34,7 @@ MANIFEST="$REPO/system/abgleich/manifest.tsv"
 [ -r "$MANIFEST" ] || { echo "FEHLER: Manifest nicht lesbar: $MANIFEST" >&2; exit 2; }
 
 # --- ntfy (gleiche Anbindung wie das Backup) ---------------------------------
+NOTRUF_CODE=A
 notify() {  # $1=Titel  $2=Text  $3=Prioritaet  $4=Tags
   local cfg=/etc/pi-backup.env
   [ -r "$cfg" ] || return 0
@@ -44,6 +45,19 @@ notify() {  # $1=Titel  $2=Text  $3=Prioritaet  $4=Tags
     -H "Authorization: Bearer $(cat "$NTFY_TOKEN_FILE")" \
     -H "Title: $1" -H "Priority: ${3:-default}" -H "Tags: ${4:-open_file_folder}" \
     -d "$2" "$NTFY_URL/${NTFY_TOPIC:-raspberrypi}" || true
+  # Zweiter, unabhaengiger Weg: inhaltsleerer Notruf ueber ntfy.sh, nur bei
+  # hoher Prioritaet. Der erste Weg setzt voraus, dass Tailscale auf dem Handy
+  # laeuft; faellt das aus, ist dies der einzige Alarm, der noch ankommt.
+  # Bewusst ohne Details -- ntfy.sh ist ein fremder Server. Kennbuchstabe:
+  # B = Backup, A = Abgleich.
+  case "${3:-default}" in
+    high|urgent)
+      [ -r /etc/pi-notruf.url ] && curl -s -m 20 -o /dev/null \
+        -H "Title: Alarm ${NOTRUF_CODE:-?}" \
+        -H "Priority: urgent" -H "Tags: rotating_light" \
+        -d "Auf dem Server ist eine Aufgabe fehlgeschlagen." \
+        "$(cat /etc/pi-notruf.url)" || true ;;
+  esac
 }
 
 # --- Manifest einlesen -------------------------------------------------------

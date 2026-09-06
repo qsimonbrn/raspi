@@ -1,6 +1,7 @@
 # 14 — Benachrichtigungen (ntfy)
 
-*Eingerichtet: 13.08.2026 · Zugangsdaten ausgelagert: 23.08.2026*
+*Eingerichtet: 13.08.2026 · Zugangsdaten ausgelagert: 23.08.2026 ·
+Zustellung auf die Tailnet-Adresse umgestellt und zweiter Alarmweg ergänzt: 06.09.2026*
 
 Push-Nachrichten aufs Handy, ohne Umweg über einen fremden Dienst.
 
@@ -22,7 +23,8 @@ Arbeitsspeicher), der Nachrichten entgegennimmt und an Apps ausliefert.
 
 | | |
 |---|---|
-| Weboberfläche | `http://192.168.178.80:2586` |
+| Weboberfläche im Heimnetz | `http://192.168.178.80:2586` |
+| Adresse für die Handy-App | `https://raspberrypi.tailf372ec.ts.net:8444` — **die App muss diese verwenden**, siehe Abschnitt 4 |
 | Benutzer | `simon` (Rolle `admin`) |
 | Thema | `raspberrypi` |
 | Passwort | im Vaultwarden-Tresor, Eintrag „ntfy" — **nicht mehr in der `.env`** |
@@ -45,11 +47,19 @@ Arbeitsspeicher), der Nachrichten entgegennimmt und an Apps ausliefert.
 1. App installieren: **ntfy** aus dem App Store bzw. Play Store
    (Entwickler: *Philipp C. Heckel*, kostenlos, quelloffen)
 2. In der App: *Einstellungen → Allgemein → **Standard-Server*** auf
-   `http://192.168.178.80:2586` setzen
+   `https://raspberrypi.tailf372ec.ts.net:8444` setzen
 3. *Einstellungen → Benutzerkonten → **Konto hinzufügen***
-   Server `http://192.168.178.80:2586`, Benutzer `simon`, Passwort aus der `.env`
+   Server `https://raspberrypi.tailf372ec.ts.net:8444`, Benutzer `simon`,
+   Passwort aus dem Tresor
 4. Zurück zur Übersicht → **+** → Thema `raspberrypi` abonnieren,
    dabei „Andere Server verwenden" wählen und dieselbe Adresse eintragen
+5. Zusätzlich das Notruf-Thema abonnieren — Server `ntfy.sh`, siehe Abschnitt 4
+
+> **Die LAN-Adresse `192.168.178.80:2586` darf in der App nicht mehr stehen.** Sie
+> ist der Grund, aus dem unterwegs leere Meldungen ankamen. Ein altes Abo auf diese
+> Adresse **löschen**, nicht nur ein neues danebenlegen — die App leitet aus der
+> Serveradresse das Upstream-Thema ab, ein altes Abo wartet also auf einem Thema,
+> das niemand mehr bespielt.
 
 Schritt 3 ist zwingend: Der Server steht auf `auth-default-access: deny-all` — ohne
 Anmeldung liefert er nichts aus und nimmt nichts an.
@@ -92,9 +102,12 @@ upstream-base-url: "https://ntfy.sh"
 ```
 
 An `ntfy.sh` geht dabei die Nachrichten-Kennung mit gehashtem Thema, **nicht der
-Inhalt**. Die `base-url` bleibt `http://192.168.178.80:2586`; erreichbar ist sie
-für das Handy auch von unterwegs, weil der Pi die Route `192.168.178.0/24` ins
-Tailnet anbietet und diese freigegeben ist (`PrimaryRoutes`, gemessen 25.08.2026).
+Inhalt**. Die `base-url` bestimmt zweierlei: wo die App den Text abholt, und
+**welches Upstream-Thema beide Seiten berechnen**. Sie ist deshalb keine Kosmetik —
+ändert sie sich, muss das Abo in der App neu angelegt werden, sonst warten App und
+Server auf verschiedenen Themen.
+
+Seit dem 06.09.2026 lautet sie `https://raspberrypi.tailf372ec.ts.net:8444`.
 
 ### Nachweis vom 25.08.2026
 
@@ -112,16 +125,87 @@ gleiches Thema, gleicher Token, gleiche URL.
 Die App musste **nicht** neu eingerichtet werden: Sie berechnet das Upstream-Thema
 selbst und war nach der Serveränderung sofort erreichbar.
 
-### Was die Änderung nicht leistet
+### Leere Meldungen — Befund vom 06.09.2026
 
-- **Ohne Tailscale auf dem iPhone kommt unterwegs nichts an.** Der Apple-Push trägt
-  nur die Kennung; den Text holt die App beim Pi, und dorthin führt von außerhalb
-  des WLAN nur das Tailnet. Die Meldung bleibt bis zu 24 Stunden im Cache
-  (`cache-duration: 24h`) und wird nachgeholt.
-- **Der Verkehr im WLAN ist unverschlüsselt** (`http`, Port 2586). Wer das ändern
-  will, legt ntfy wie Vaultwarden hinter `tailscale serve` auf einen eigenen Port;
-  am 25.08.2026 bewusst nicht getan, weil es dieselbe Abhängigkeit von Tailscale
-  hat und nur den Transport im Heimnetz betrifft.
+**Fehlerbild:** In der Mitteilungszentrale des iPhones erschien gelegentlich ein
+Eintrag mit App-Namen, aber **ohne Text**; in der App stand unter dem Thema
+„0 notifications“.
+
+**Das ist die Bauart, nicht ein Fehler im Server.** Der Apple-Push trägt nur die
+Kennung. Erreicht die App den eigenen Server in der kurzen Zeitspanne nicht, die iOS
+ihr zum Nachladen gibt, bleibt die Hülle stehen — leer, und ohne Eintrag im Verlauf,
+weil es nichts zu speichern gab. Ein `HTTP 200` beim Absenden sagt darüber nichts.
+
+**Was geändert wurde.** Die App holte den Text bis dahin von
+`http://192.168.178.80:2586` — einer Adresse, die nur im Heimnetz gilt und von
+unterwegs eine freigegebene Tailscale-Subnetzroute voraussetzt. Diese Kette hat mehr
+Glieder als nötig. Seit dem 06.09.2026 hängt ntfy zusätzlich unter seinem
+Tailnet-Namen:
+
+```bash
+sudo tailscale serve --bg --https=8444 http://127.0.0.1:2586
+```
+
+Damit spricht die App den Pi direkt an, mit gültigem Zertifikat, ohne Subnetzroute
+und ohne Unterschied zwischen zu Hause und unterwegs. Die Regel liegt in der
+tailscaled-Konfiguration und überlebt einen Neustart — wie die seit dem 23.08.2026
+bestehende Regel für Vaultwarden auf 8443.
+
+| Messung vom 06.09.2026 | Ergebnis |
+|---|---|
+| `/v1/health` über 8444, Zertifikat geprüft (ohne `-k`) | `{"healthy":true}` |
+| Negativkontrolle: derselbe Aufruf auf Port 8445 | Verbindung abgelehnt |
+| Negativkontrolle: derselbe Port unter falschem Hostnamen | Zertifikatsfehler |
+| Meldung auf dem iPhone nach Neuanlage des Abos | **mit Text angekommen** (Simon bestätigt) |
+
+**Welches Glied genau riss, ist nicht gemessen** — in Frage kommen die Subnetzroute,
+ein kalter WireGuard-Handschlag und das Zeitbudget der Mitteilungserweiterung.
+Nachgewiesen ist die Wirkung, nicht die Ursache: Die Abhängigkeit von der LAN-Adresse
+ist weg, und die Meldungen kommen an. Was bleibt, ist die Abhängigkeit von Tailscale
+auf dem Handy — und genau dafür gibt es seit demselben Tag den zweiten Weg.
+
+Nebenbei erledigt: Der Verkehr zur App ist nicht mehr unverschlüsselt. Der Port 2586
+bleibt im Heimnetz offen und unverschlüsselt, wird von der App aber nicht mehr
+benutzt.
+
+### Zweiter Alarmweg: Notruf über ntfy.sh
+
+*Ergänzt am 06.09.2026. Der erste Weg hat einen einzigen Punkt, an dem er reißt:
+Läuft Tailscale auf dem iPhone nicht, kommt kein Text an — und ein ausbleibender
+Alarm sieht aus wie „alles in Ordnung“.*
+
+Bei Priorität `high` oder `urgent` schickt `notify()` zusätzlich eine Meldung an ein
+zufällig benanntes Thema auf **ntfy.sh**. Dort ist die Zustellung sofort und
+vollständig — ohne Nachladen, ohne VPN.
+
+| | Weg 1 — eigener Server | Weg 2 — Notruf |
+|---|---|---|
+| Zustellung | Anstoß über ntfy.sh, Text vom Pi | ntfy.sh direkt, Text kommt mit |
+| Braucht Tailscale | ja | nein |
+| Inhalt | vollständig | ein Satz ohne Details, dazu `Alarm B` bzw. `Alarm A` |
+| Auslöser | jede Meldung, auch der Erfolg | nur `high` und `urgent` |
+
+**Der Preis ist bewusst gewählt.** Bei einem fremden Server wird sichtbar, *dass* auf
+irgendeinem Rechner etwas fehlschlug — nicht was, nicht wo, nicht bei wem. Kein
+Hostname, kein Dienstname, keine Fehlermeldung. `B` steht für Backup, `A` für
+Abgleich; den Schlüssel kennt nur Simon.
+
+**Der Themenname ist das Geheimnis.** Wer ihn kennt, liest die Alarme mit und kann
+welche einschleusen. Er steht in `/etc/pi-notruf.url` (Modus 600, root) und
+**nicht im Git**. Auslesen: `sudo cat /etc/pi-notruf.url`. Ersetzen: Datei neu
+schreiben und das Abo auf dem Handy neu anlegen — sonst nichts.
+
+| Messung vom 06.09.2026 | Ergebnis |
+|---|---|
+| Ausgangsstand des Themas auf ntfy.sh | 0 Meldungen |
+| `notify` mit Priorität `min` (Negativkontrolle) | weiterhin **0** — nicht durchgereicht |
+| `notify` mit Priorität `urgent` | **1** — angekommen |
+
+Gemessen wurde am ausgelieferten Skript `/usr/local/bin/pi-backup.sh`, nicht an einer
+Nachbildung: Die Funktion wurde aus der Datei herausgeschnitten und unverändert
+aufgerufen. Und gezählt wurde, was **auf ntfy.sh liegt** (`/json?poll=1`), nicht der
+Rückgabecode des Absendens — der hat in dieser Einrichtung schon zweimal
+Zuverlässigkeit vorgetäuscht.
 
 ### Vorgeschichte — warum es zwei Wochen lang still ausfiel
 
@@ -186,6 +270,11 @@ Im Skript `pi-backup.sh` steckt eine Funktion `notify()`. Drei Fälle:
 | **Mit Warnungen abgeschlossen** | `high` | Normale Benachrichtigung mit Ton |
 | **Erfolgreich** | `min` | Stiller Eintrag im Verlauf, keine Störung |
 
+Seit dem 06.09.2026 lösen die beiden oberen Fälle zusätzlich den Notruf über
+ntfy.sh aus. Der Erfolgsfall bewusst nicht: Ein täglicher Eintrag bei einem fremden
+Server wäre ein Anwesenheitsprotokoll des Haushalts, und dafür taugt das Ausbleiben
+der stillen Meldung auf dem eigenen Server genauso gut.
+
 Der Erfolgsfall wird **absichtlich** gemeldet, wenn auch lautlos. Sonst hätte man
 wieder das Ausgangsproblem: Bleibt eine Meldung aus, weil der Timer gar nicht mehr
 läuft, fällt das bei „nur bei Fehlern melden" niemandem auf. Ein täglicher stiller
@@ -232,6 +321,7 @@ Nachrichten einschleusen.
 |---|---|
 | Passwort für Handy und Browser | `stacks/ntfy/.env` (Modus 600, nicht im Git) |
 | Token für das Backup-Skript | `/root/.ntfy-token` (Modus 600) |
+| Adresse des Notruf-Themas | `/etc/pi-notruf.url` (Modus 600, root) |
 
 Das Token steht bewusst **nicht** in `/etc/pi-backup.env`, sondern in einer eigenen
 Datei — dieselbe Systematik wie beim restic-Repository-Passwort. So bleibt die
@@ -280,9 +370,9 @@ angelegt; wichtiger ist, dass `server.yml` und die Compose-Datei im Git liegen.
 
 ## 9. Was noch zu tun ist
 
-- [ ] ntfy-App auf dem Handy installieren
-- [ ] Standard-Server und Konto in der App eintragen (Abschnitt 3)
-- [ ] Thema `raspberrypi` abonnieren
-- [ ] Mit dem `curl`-Befehl aus Abschnitt 3 prüfen, ob eine Nachricht ankommt
+- [x] ntfy-App auf dem Handy installieren
+- [x] Konto und Abo auf `https://raspberrypi.tailf372ec.ts.net:8444` umgestellt (06.09.2026)
+- [x] Thema `raspberrypi` abonniert, Meldung mit Text nachgewiesen
+- [ ] Notruf-Thema auf **ntfy.sh** abonnieren — Adresse aus `/etc/pi-notruf.url`
 - [ ] Am nächsten Morgen nachsehen, ob die stille Erfolgsmeldung des nächtlichen
       Backups im Verlauf steht

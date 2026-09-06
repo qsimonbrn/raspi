@@ -4,7 +4,7 @@
 
 # Adresse, unter der der Server erreichbar ist. Die App braucht sie, um sich
 # zu verbinden -- sie muss exakt zur tatsaechlichen Adresse passen.
-base-url: "http://192.168.178.80:2586"
+base-url: "https://raspberrypi.tailf372ec.ts.net:8444"
 
 # Zustellung an die iOS-App: ohne diese Zeile empfaengt die App von einem
 # selbst gehosteten Server im Hintergrund nichts. Es geht nur die

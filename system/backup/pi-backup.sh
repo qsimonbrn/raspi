@@ -25,6 +25,7 @@ warn() { printf '[%s] WARNUNG: %s\n' "$(date +%H:%M:%S)" "$*"; FEHLER=$((FEHLER+
 
 # Push-Benachrichtigung ueber ntfy. Schlaegt der Versand fehl, laeuft das
 # Backup trotzdem weiter -- eine fehlende Meldung darf keine Sicherung verhindern.
+NOTRUF_CODE=B
 notify() {  # $1=Titel  $2=Text  $3=Prioritaet  $4=Tags
   [ -n "${NTFY_URL:-}" ] || return 0
   [ -r "${NTFY_TOKEN_FILE:-/nonexistent}" ] || return 0
@@ -35,6 +36,19 @@ notify() {  # $1=Titel  $2=Text  $3=Prioritaet  $4=Tags
     -H "Tags: ${4:-floppy_disk}" \
     -d "$2" \
     "$NTFY_URL/${NTFY_TOPIC:-raspberrypi}" || true
+  # Zweiter, unabhaengiger Weg: inhaltsleerer Notruf ueber ntfy.sh, nur bei
+  # hoher Prioritaet. Der erste Weg setzt voraus, dass Tailscale auf dem Handy
+  # laeuft; faellt das aus, ist dies der einzige Alarm, der noch ankommt.
+  # Bewusst ohne Details -- ntfy.sh ist ein fremder Server. Kennbuchstabe:
+  # B = Backup, A = Abgleich.
+  case "${3:-default}" in
+    high|urgent)
+      [ -r /etc/pi-notruf.url ] && curl -s -m 20 -o /dev/null \
+        -H "Title: Alarm ${NOTRUF_CODE:-?}" \
+        -H "Priority: urgent" -H "Tags: rotating_light" \
+        -d "Auf dem Server ist eine Aufgabe fehlgeschlagen." \
+        "$(cat /etc/pi-notruf.url)" || true ;;
+  esac
 }
 
 # --- Nur eine Instanz gleichzeitig -------------------------------------------

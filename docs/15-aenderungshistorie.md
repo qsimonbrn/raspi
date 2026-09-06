@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 03.09.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 06.09.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,68 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 06.09.2026 (spät) — ntfy: leere Meldungen behoben, zweiter Alarmweg ergänzt
+
+**Anlass:** Simon meldete ein Fehlerbild, das seit Längerem gelegentlich auftrat —
+in der Mitteilungszentrale des iPhones ein Eintrag mit App-Namen, **ohne Text**, und
+in der App darunter „0 notifications". Am Tag vor einer einwöchigen Abwesenheit war
+das der dringlichste offene Punkt: Eine Alarmkette, die stumm reißt, ist schlimmer
+als keine, weil ihr Schweigen wie „alles in Ordnung" aussieht.
+
+### 1. Ursachenkreis und Umbau
+
+Bei einem selbst gehosteten ntfy trägt der Apple-Push nur eine Kennung; den Text holt
+die App anschließend selbst von der Adresse in `base-url`. Die stand auf
+`http://192.168.178.80:2586` — nur im Heimnetz gültig, von unterwegs auf eine
+freigegebene Tailscale-Subnetzroute angewiesen. Gelingt das Nachladen nicht innerhalb
+des knappen Zeitbudgets, das iOS der Mitteilungserweiterung gibt, bleibt genau die
+leere Hülle stehen, die Simon sah.
+
+| | |
+|---|---|
+| Umbau | `sudo tailscale serve --bg --https=8444 http://127.0.0.1:2586` |
+| `base-url` neu | `https://raspberrypi.tailf372ec.ts.net:8444` |
+| Folge für die App | Abo musste **neu angelegt** werden — aus der Serveradresse leitet die App das Upstream-Thema ab |
+| Nachweis | `/v1/health` mit geprüftem Zertifikat `{"healthy":true}`; Negativkontrollen auf Port 8445 (abgelehnt) und falschem Hostnamen (Zertifikatsfehler) beide gescheitert wie erwartet |
+| Bestätigt | Simon erhielt nach Neuanlage des Abos Meldungen **mit Text** |
+
+**Was nicht gemessen wurde:** welches Glied genau riss — Subnetzroute, kalter
+WireGuard-Handschlag oder das Zeitbudget der Mitteilungserweiterung. Der Umbau
+entfernt die ganze Klasse dieser Abhängigkeit, statt ein Glied zu reparieren.
+Nebenbei ist der Weg zur App jetzt verschlüsselt.
+
+### 2. Zweiter Alarmweg über ntfy.sh
+
+Der erste Weg hat einen einzigen Bruchpunkt: Läuft Tailscale auf dem iPhone nicht,
+kommt kein Text an. Simon hat sich nach Abwägung für einen **inhaltsleeren Notruf**
+über ntfy.sh entschieden.
+
+| | |
+|---|---|
+| Auslöser | nur Priorität `high` und `urgent` — der Erfolgsfall bewusst nicht |
+| Inhalt | ein Satz ohne Details, Kennbuchstabe `B` (Backup) bzw. `A` (Abgleich) |
+| Was ein Fremder sieht | *dass* irgendwo etwas fehlschlug — kein Hostname, kein Dienst, kein Fehlertext |
+| Geheimnis | der zufällige Themenname in `/etc/pi-notruf.url` (Modus 600, root), **nicht im Git** |
+| Geändert | `notify()` in `system/backup/pi-backup.sh` und `system/abgleich/sync.sh` |
+
+**Messung mit Negativkontrolle:** Das Thema stand vorher auf 0 Meldungen. Ein Aufruf
+mit Priorität `min` ließ es bei 0 — der Notruf wird also nicht bei jeder Kleinigkeit
+ausgelöst. Ein Aufruf mit `urgent` brachte es auf 1. Gezählt wurde, was **auf ntfy.sh
+liegt** (`/json?poll=1`), nicht der Rückgabecode des Absendens; und gemessen wurde am
+ausgelieferten `/usr/local/bin/pi-backup.sh`, dessen `notify()` unverändert
+herausgeschnitten und aufgerufen wurde — nicht an einer Nachbildung.
+
+`sudo pi-abgleich.sh check` danach: **alle 24 Paare identisch.**
+
+### 3. Was bleibt
+
+- Der Notruf ist erst zugestellt, wenn Simon das Thema auf **ntfy.sh** abonniert hat.
+  Bis dahin schickt der Pi ins Leere.
+- Bleibt der Notruf über Monate ungenutzt, altert er unbemerkt. Ein bewusster
+  Probealarm alle paar Monate ist der einzige Weg, das zu bemerken.
 
 ---
 

@@ -9,6 +9,37 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.14.0] — 2026-09-06
+
+### Hinzugefügt
+
+- **Kapitel [14](docs/14-benachrichtigungen.md): zwei neue Abschnitte.** „Leere
+  Meldungen — Befund vom 06.09.2026" erklärt das Fehlerbild (Mitteilung ohne Text,
+  „0 notifications") aus der Bauart der iOS-Zustellung heraus und dokumentiert den
+  Umbau auf die Tailnet-Adresse samt zwei Negativkontrollen. „Zweiter Alarmweg:
+  Notruf über ntfy.sh" beschreibt den inhaltsleeren Zweitweg, seinen Preis und die
+  Messung mit Negativkontrolle.
+
+### Geändert
+
+- `stacks/ntfy/server.yml`: `base-url` von `http://192.168.178.80:2586` auf
+  `https://raspberrypi.tailf372ec.ts.net:8444`. Sie bestimmt nicht nur, wo die App
+  den Text abholt, sondern auch das gemeinsam berechnete Upstream-Thema — deshalb
+  musste das Abo auf dem Handy neu angelegt werden.
+- `system/backup/pi-backup.sh` und `system/abgleich/sync.sh`: `notify()` reicht
+  Meldungen der Priorität `high` und `urgent` zusätzlich an ein zufällig benanntes
+  Thema auf ntfy.sh durch. Adresse in `/etc/pi-notruf.url` (Modus 600, nicht im Git).
+- Kapitel 14, Abschnitte 2, 3, 5, 7 und 9 auf die neue Adresse und den zweiten Weg
+  nachgezogen; die veraltete Behauptung, die LAN-Adresse sei über die Subnetzroute
+  von unterwegs erreichbar, ist ersetzt.
+
+### Dokumentiert
+
+- Betriebstagebuch [15](docs/15-aenderungshistorie.md): Eintrag „06.09.2026 (spät)"
+  mit Umbau, Messungen, Negativkontrollen und dem, was offen bleibt.
+
+---
+
 ## [2.13.1] — 2026-09-06
 
 ### Behoben
