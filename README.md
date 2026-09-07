@@ -46,6 +46,7 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 | [16 — Konten und Rechte](docs/16-konten-und-rechte.md) | Wer darf was, Sitzungsaufzeichnung, Überwachungsbefehle, Notausschalter |
 | [17 — Wo was liegt](docs/17-wo-was-liegt.md) | Welche Datei ist Original, welche Kopie — Repositories, installierte Fassungen, Rechte |
 | [18 — Vaultwarden](docs/18-vaultwarden.md) | Passwort-Tresor: Aufbau, Absicherung, Sicherung der Tresor-Datenbank, Wiederherstellung |
+| [19 — n8n](docs/19-n8n.md) | Automatisierungsserver: Aufbau, Abschottung über pi-guard, Sicherung, Wiederherstellung |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 
@@ -65,13 +66,14 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 | Fehlgeschlagene Dienste | 0 |
 | Backup | täglich, 21 Snapshots (04.09.2026); zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
 | Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
-| Container | **12**, alle mit Logrotation und `no-new-privileges` (04.09.2026) |
+| Container | **13**, alle mit Logrotation und `no-new-privileges` (07.09.2026) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
 | Speicher-Limits | **seit 20.08.2026 gesetzt** für alle neun Container, Summe 3.360 von 3.796 MiB — nicht überbucht |
 | Passwort-Tresor | **Vaultwarden 1.37.2** seit 23.08.2026, nur über Tailscale auf Port 8443 ([18](docs/18-vaultwarden.md)) |
 | Benachrichtigungen | **ntfy stellt seit 25.08.2026 nachweislich aufs iPhone zu** — Alarmkette erstmals geschlossen ([14](docs/14-benachrichtigungen.md)) |
+| Automatisierung | **n8n 2.37.10** seit 07.09.2026, nur über Tailscale auf Port 5678 ([19](docs/19-n8n.md)) |
 | Update-Meldungen | **Diun 4.33.0** seit 25.08.2026, täglich 06:15, überwacht 11 Images ([05](docs/05-docker.md)) |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.

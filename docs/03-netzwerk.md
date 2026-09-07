@@ -65,7 +65,8 @@ unkritisch. Siehe dazu den Befund zu den zwei Netzwerk-Managern in
 | Adresse des Pi | `100.108.219.87/32` · `fd7a:115c:a1e0::aa01:dbd5/128` |
 | Tailnet-Bereich | `100.64.0.0/10` (CGNAT-Bereich, von Tailscale genutzt) |
 | Eingehender Port | **keiner** — Verbindungen werden von innen aufgebaut |
-| Von `tailscaled` belegt | **8443** (`tailscale serve` → Vaultwarden), nur auf `100.108.219.87` und der Tailnet-IPv6 |
+| Von `tailscaled` belegt | **8443** (`tailscale serve` → Vaultwarden) und **8444** (→ ntfy), nur auf `100.108.219.87` und der Tailnet-IPv6 |
+| Nur über das Tailnet nutzbar | **5678** (n8n) — der Port ist auf allen Schnittstellen veröffentlicht, `pi-guard` verwirft ihn aber auf `eth0`, siehe [19](19-n8n.md) |
 | Beworbene Route | `192.168.178.0/24` (Subnetz-Router) |
 
 Der Pi ist unter `100.108.219.87` aus jedem verbundenen Gerät erreichbar, unabhängig

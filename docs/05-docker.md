@@ -29,9 +29,10 @@
 | **vaultwarden** | `vaultwarden/server:1.37.2` | 8222 nur auf `127.0.0.1` 🔒 | Passwort-Tresor, siehe [18](18-vaultwarden.md) | `unless-stopped` |
 | **diun** | `crazymax/diun:4.33.0` | — (keiner) | Meldet neue Image-Versionen, aktualisiert nicht | `unless-stopped` |
 | diun-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Diun | `unless-stopped` |
+| **n8n** | `docker.n8n.io/n8nio/n8n:2.37.10` | 5678 🔒 | Automatisierungsserver (Workflows), siehe [19](19-n8n.md) | `unless-stopped` |
 | **insta-triage** | `insta-triage:1.0.0` (lokal gebaut, Basis `python:3.12.8-slim-bookworm`) | 8080 🔒 | Instagram-Abos sichten und sortieren, siehe [Stack-README](../stacks/insta-triage/README.md) | `unless-stopped` |
 
-**Zwölf Container** (seit 03.09.2026). 🔒 markiert Dienste, die nur über Tailscale
+**Dreizehn Container** (seit 07.09.2026). 🔒 markiert Dienste, die nur über Tailscale
 erreichbar sind — siehe [07 — Sicherheit](07-sicherheit.md).
 
 **insta-triage schottet sich anders ab als die übrigen 🔒-Dienste.** Bei ihnen bindet

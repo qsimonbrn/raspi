@@ -17,6 +17,7 @@ Alle Zugangswege zum System auf einen Blick.
 | **Portainer** | `http://100.108.219.87:9000`<br>`https://100.108.219.87:9443` 🔒 | Container-Verwaltung |
 | **Bichon** | `http://100.108.219.87:15630` 🔒 | E-Mail-Archiv |
 | **Vaultwarden** | `https://raspberrypi.tailf372ec.ts.net:8443` 🔒 | Passwort-Tresor, siehe [18](18-vaultwarden.md) |
+| **n8n** | `http://100.108.219.87:5678` 🔒 | Automatisierungsserver, siehe [19](19-n8n.md) |
 
 > Alle Weboberflächen laufen unverschlüsselt über HTTP (Ausnahmen: Portainer auf 9443
 > und Vaultwarden auf 8443, das seit dem 23.08.2026 über `tailscale serve` mit einem

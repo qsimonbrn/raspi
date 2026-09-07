@@ -19,10 +19,11 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | 7 | **ntfy** (Benutzer, Zugriffsregeln, Nachrichten-Cache) | ✅ **ja** | restic-Backup, seit 18.08.2026 |
 | 8 | **Portainer-Konfiguration** (Volume) | ✅ **ja** | restic-Backup, seit 18.08.2026 — absturzkonsistent, da im laufenden Betrieb gesichert |
 | 9 | **Vaultwarden** (Tresor-Datenbank und JWT-Schlüssel) | ✅ **ja** | restic-Backup, seit 23.08.2026 — konsistenter SQLite-Abzug, nicht die laufende Datei |
-| 10 | **Diun-Zustand und ntfy-Token** (`/mnt/usb-hdd/diun`, `/etc/diun/ntfy-token`) | ❌ **nein, bewusst** | In zwei Minuten neu erzeugt, siehe unten |
-| 11 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
+| 10 | **n8n** (Workflows, verschlüsselte Zugangsdaten, Verschlüsselungsschlüssel) | ✅ **ja** | restic-Backup, seit 07.09.2026 — konsistenter SQLite-Abzug wie bei Vaultwarden. **Der Schlüssel `config` liegt mit im Backup; ohne ihn ist die Datenbank wertlos** |
+| 11 | **Diun-Zustand und ntfy-Token** (`/mnt/usb-hdd/diun`, `/etc/diun/ntfy-token`) | ❌ **nein, bewusst** | In zwei Minuten neu erzeugt, siehe unten |
+| 12 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
 
-**Zu 10 — Diun nach einem Totalverlust wiederherstellen.** Das ntfy-Konto `diun`
+**Zu 11 — Diun nach einem Totalverlust wiederherstellen.** Das ntfy-Konto `diun`
 selbst ist gesichert (es liegt in `user.db` unter `/mnt/usb-hdd/ntfy`), nur sein
 Token nicht. Drei Befehle:
 
