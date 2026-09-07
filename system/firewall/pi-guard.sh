@@ -17,10 +17,11 @@ LAN_IF="eth0"
 TS_IF="tailscale0"
 
 # Ports, die aus dem LAN nicht erreichbar sein sollen
-GESPERRT="9000,9443,15630,8000"
+GESPERRT="9000,9443,15630,8000,5678"
 # 9000/9443 Portainer — Vollzugriff auf den Docker-Socket
 # 15630      Bichon    — E-Mail-Archiv, altes Image
 # 8000       Paperless — Dokumentenarchiv
+# 5678       n8n       — Automatisierungsserver, Zugangsdaten zu allen angebundenen Diensten
 #
 # Bewusst NICHT gesperrt (Entscheidung vom 18.08.2026):
 #   22        SSH       — Rettungsanker, falls Tailscale ausfaellt; nur Schluesselanmeldung

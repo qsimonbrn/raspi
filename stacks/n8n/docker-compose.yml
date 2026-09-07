@@ -1,0 +1,120 @@
+# =============================================================================
+#  n8n — Automatisierungsserver (Workflow-Engine)
+#
+#  Erreichbar AUSSCHLIESSLICH ueber das Tailnet:
+#      http://100.108.219.87:5678
+#  Der Container veroeffentlicht den Port auf allen Schnittstellen; abgeschottet
+#  wird er von "pi-guard", das 5678 auf eth0 verwirft. Anders als bei
+#  Vaultwarden haengt die Abschottung damit AN EINER EINZIGEN STELLE -- und
+#  genau die schreibt Docker beim Erzeugen eines Containers neu.
+#  Nach jedem "docker compose up -d" gehoert deshalb zwingend
+#      sudo /usr/local/sbin/pi-guard.sh status
+#  dazu; die Regel muss 5678 in der multiport-Liste nennen.
+#
+#  Kein HTTPS: der Verkehr laeuft ohnehin verschluesselt durch Tailscale.
+#  Weil die Oberflaeche damit KEIN "secure context" ist, muss das
+#  Anmelde-Cookie ohne das Secure-Flag gesetzt werden -- siehe
+#  N8N_SECURE_COOKIE unten. Ohne das ist keine Anmeldung moeglich.
+#
+#  Ollama laeuft bewusst NICHT auf dem Pi (4 GB RAM, ARM, keine GPU). n8n
+#  ruft das Modell ueber das Tailnet auf dem MacBook bzw. spaeter dem PC an.
+#
+#  Verschluesselungsschluessel steht in .env (ueber .gitignore ausgeschlossen).
+#  Dokumentation: docs/19-n8n.md
+# =============================================================================
+
+# --- Logrotation -------------------------------------------------------------
+#  Docker dreht Logdateien NUR, wenn es beim Erstellen des Containers gesetzt
+#  ist. Die Vorgabe in /etc/docker/daemon.json greift erst nach einem echten
+#  Daemon-Neustart (ein reload uebernimmt log-opts nicht) -- deshalb steht sie
+#  hier ausdruecklich und ueberlebt jede Aenderung am Daemon.
+# -----------------------------------------------------------------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  n8n:
+    # Fest gepinnt. Ein Update ist eine bewusste Entscheidung mit vorherigem
+    # Backup, kein Pull auf :latest. 2.37.10 ist der Stand vom 04.09.2026;
+    # das Manifest fuehrt linux/arm64.
+    image: docker.n8n.io/n8nio/n8n:2.37.10
+    container_name: n8n
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+    # Das Image laeuft als Benutzer "node" (UID 1000). Das Datenverzeichnis auf
+    # der USB-HDD gehoert 1000:1000; ausdruecklich gesetzt, damit ein
+    # geaendertes Image die Zuordnung nicht still verschiebt.
+    user: "1000:1000"
+
+    # Node laesst sich Speicher gerne, solange welcher da ist. Das Limit soll
+    # einen ausgerissenen Workflow abfangen, bevor er den Pi in den Swap
+    # treibt -- nicht den Betrieb begrenzen. Der tatsaechliche Verbrauch wird
+    # nach einer Woche nachgemessen und das Limit dann angepasst.
+    mem_limit: 1024m
+
+    ports:
+      - "5678:5678"
+
+    # Die gesamte n8n-Ablage: SQLite-Datenbank, Workflows, verschluesselte
+    # Zugangsdaten. Liegt auf der USB-HDD, nicht auf der SD-Karte, und steht
+    # seit dem 07.09.2026 in der Pfadliste von pi-backup.sh.
+    volumes:
+      - /mnt/usb-hdd/n8n:/home/node/.n8n
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: Europe/Berlin
+      # Zeitzone der Zeitplan-Ausloeser. TZ allein genuegt n8n nicht.
+      GENERIC_TIMEZONE: Europe/Berlin
+
+      # SQLite ist die Vorgabe; ausdruecklich gesetzt, damit die Wahl
+      # dokumentiert ist und ein Versionswechsel sie nicht still aendert.
+      DB_TYPE: sqlite
+
+      N8N_HOST: 100.108.219.87
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+
+      # Adresse, die n8n in erzeugte Webhook-URLs schreibt. Ohne dies traegt
+      # es "localhost" ein, und die URLs sind von anderen Geraeten unbrauchbar.
+      # Frueher WEBHOOK_URL; in der 2.x-Linie abgekuendigt.
+      N8N_WEBHOOK_URL: http://100.108.219.87:5678/
+
+      # Ohne HTTPS setzt n8n sein Anmelde-Cookie sonst mit dem Secure-Flag,
+      # das der Browser bei einer http-Adresse verwirft -- die Anmeldung
+      # schlaegt dann ohne verstaendliche Meldung fehl. Vertretbar, weil der
+      # Weg ausschliesslich durch den Tailscale-Tunnel fuehrt.
+      N8N_SECURE_COOKIE: "false"
+
+      # N8N_RUNNERS_ENABLED wurde bewusst wieder entfernt: in der 2.x-Linie
+      # sind die Task-Runner der Normalfall, und die Variable erzeugt beim
+      # Start nur noch eine Abkuendigungsmeldung.
+      #
+      # Im Log steht dauerhaft "Failed to start Python task runner ... Python 3
+      # is missing". Das ist erwartet -- das Image bringt kein Python mit, der
+      # JS-Runner registriert sich sauber. Keine Massnahme noetig.
+
+      # n8n weigert sich zu starten, wenn die Einstellungsdatei fuer andere
+      # lesbar ist. Erwuenscht -- dort steht der Verschluesselungsschluessel.
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+
+      # Keine Nutzungsdaten nach aussen.
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+
+    # Das Image bringt kein curl mit; busybox-wget genuegt. /healthz antwortet,
+    # sobald der Webserver steht.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:5678/healthz || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s

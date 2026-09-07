@@ -62,7 +62,7 @@ log "=== Backup gestartet ==="
 
 # --- Zwischenablage vorbereiten ----------------------------------------------
 rm -rf "$STAGE"
-mkdir -p "$STAGE"/{paperless,vaultwarden,pihole,etc,system}
+mkdir -p "$STAGE"/{paperless,vaultwarden,n8n,pihole,etc,system}
 chmod 700 "$STAGE"
 
 # --- 1. Paperless: Export inklusive Metadaten --------------------------------
@@ -139,6 +139,53 @@ else
   warn "Vaultwarden-Container laeuft nicht -- uebersprungen"
 fi
 
+# --- 2b. n8n: Datenbankabzug (seit 07.09.2026) -------------------------------
+# Gleiche Begruendung wie bei Vaultwarden: n8n legt seine Workflows und die
+# verschluesselten Zugangsdaten in einer SQLite-Datei ab und betreibt sie im
+# WAL-Modus -- neben database.sqlite liegen staendig ein -wal und ein -shm.
+# Ein bytweises Kopieren erwischt die drei Dateien zu verschiedenen
+# Zeitpunkten. Gesichert wird deshalb nur der ".backup"-Abzug; die Live-Datei
+# ist aus der restic-Sicherung ausgeschlossen.
+#
+# Der Schluessel, mit dem die Zugangsdaten verschluesselt sind, steht NICHT in
+# der Datenbank, sondern in stacks/n8n/.env und in /mnt/usb-hdd/n8n/config.
+# Die Datei "config" wird als Teil des Verzeichnisses mitgesichert -- ohne sie
+# ist die wiederhergestellte Datenbank wertlos.
+N8N_DB=/mnt/usb-hdd/n8n/database.sqlite
+if docker ps --format '{{.Names}}' | grep -qx n8n; then
+  if [ -r "$N8N_DB" ]; then
+    log "n8n: Datenbankabzug"
+    if sqlite3 "$N8N_DB" ".backup '$STAGE/n8n/database.sqlite'" 2>/dev/null \
+         && [ -s "$STAGE/n8n/database.sqlite" ]; then
+      PRUEF_N8N=$(sqlite3 "$STAGE/n8n/database.sqlite" 'PRAGMA integrity_check;' 2>&1 | head -1)
+      if [ "$PRUEF_N8N" = "ok" ]; then
+        # integrity_check allein genuegt nicht -- eine voellig leere Datei
+        # besteht sie mit "ok" (nachgemessen am 23.08.2026). Geprueft wird
+        # deshalb eine Tabelle, die IMMER gefuellt ist: die Migrationsliste.
+        # Die Zahl der Workflows taugt dafuer nicht, weil 0 Workflows bei
+        # einer frischen Installation ein gueltiger Zustand ist.
+        MIGR=$(sqlite3 "$STAGE/n8n/database.sqlite" 'SELECT count(*) FROM migrations;' 2>/dev/null)
+        case "${MIGR:-leer}" in
+          *[!0-9]*|leer|0)
+            warn "n8n: Abzug ohne lesbare Migrationsliste -- kein brauchbares Backup" ;;
+          *)
+            WF=$(sqlite3 "$STAGE/n8n/database.sqlite" 'SELECT count(*) FROM workflow_entity;' 2>/dev/null)
+            CRED=$(sqlite3 "$STAGE/n8n/database.sqlite" 'SELECT count(*) FROM credentials_entity;' 2>/dev/null)
+            log "n8n: Datenbank gesichert ($(du -h "$STAGE/n8n/database.sqlite" | cut -f1), ${WF:-?} Workflows, ${CRED:-?} Zugangsdaten)" ;;
+        esac
+      else
+        warn "n8n: Abzug beschaedigt -- integrity_check meldet: ${PRUEF_N8N:-keine Ausgabe}"
+      fi
+    else
+      warn "n8n: sqlite3 .backup fehlgeschlagen"
+    fi
+  else
+    warn "n8n: $N8N_DB nicht lesbar"
+  fi
+else
+  warn "n8n-Container laeuft nicht -- uebersprungen"
+fi
+
 # --- 3. Pi-hole: Teleporter-Export -------------------------------------------
 # Enthaelt Einstellungen, lokale DNS-Eintraege und Blocklisten-Quellen --
 # wenige hundert Kilobyte statt 424 MB Query-Datenbank.
@@ -199,12 +246,15 @@ restic backup \
   --exclude '*.lock' \
   --exclude '/mnt/usb-hdd/vaultwarden/db.sqlite3*' \
   --exclude '/mnt/usb-hdd/vaultwarden/icon_cache' \
+  --exclude '/mnt/usb-hdd/n8n/database.sqlite*' \
+  --exclude '/mnt/usb-hdd/n8n/*.log' \
   "$STAGE" \
   /mnt/usb-hdd/bichon \
   /mnt/usb-hdd/ntfy \
   /mnt/usb-hdd/paperless/export \
   /mnt/usb-hdd/paperless/media \
   /mnt/usb-hdd/vaultwarden \
+  /mnt/usb-hdd/n8n \
   /var/lib/docker/volumes/portainer_portainer_data/_data \
   /mnt/usb-hdd/claude-skills \
   /home/simon/raspi \

@@ -746,15 +746,27 @@ fi
 # --- 8. Hat pi-guard Treffer? ----------------------------------------------
 # Zaehler 0 ist zweideutig: entweder wirkt die Regel abschreckend, oder sie
 # wird nie erreicht. Beides wird hier benannt statt bewertet.
-if ! sudo iptables -L PI-GUARD-IN -n >/dev/null 2>&1; then
-  pruef "pi-guard sperrt aus dem LAN" "ACHTUNG" "Kette PI-GUARD-IN fehlt -- die Verwaltungsoberflaechen sind aus dem LAN erreichbar"
+# BEIDE Ketten zaehlen (korrigiert am 07.09.2026). Vorher wurde nur
+# PI-GUARD-IN gelesen -- das ist der Weg fuer Verkehr, den der Host selbst
+# annimmt. Alles, was Docker per DNAT an einen Container weiterreicht, wird
+# dagegen in PI-GUARD verworfen, und das ist bei Portainer, Paperless, Bichon
+# und n8n der Normalfall. Nachgemessen am 07.09.2026: ein Zugriffsversuch aus
+# dem LAN auf Port 5678 erzeugte 26 Verwerfungen in PI-GUARD und 0 in
+# PI-GUARD-IN -- die Pruefung meldete trotzdem "bisher 0 Verwerfungen".
+if ! sudo iptables -L PI-GUARD-IN -n >/dev/null 2>&1 || ! sudo iptables -L PI-GUARD -n >/dev/null 2>&1; then
+  FEHLT=""
+  sudo iptables -L PI-GUARD    -n >/dev/null 2>&1 || FEHLT="PI-GUARD"
+  sudo iptables -L PI-GUARD-IN -n >/dev/null 2>&1 || FEHLT="${FEHLT:+$FEHLT und }PI-GUARD-IN"
+  pruef "pi-guard sperrt aus dem LAN" "ACHTUNG" "Kette $FEHLT fehlt -- die Verwaltungsoberflaechen sind aus dem LAN erreichbar"
 else
-  TR="$(sudo iptables -L PI-GUARD-IN -n -v 2>/dev/null | awk '/DROP/{print $1; exit}')"
+  TR_F="$(sudo iptables -L PI-GUARD    -n -v 2>/dev/null | awk '/DROP/{print $1; exit}')"
+  TR_I="$(sudo iptables -L PI-GUARD-IN -n -v 2>/dev/null | awk '/DROP/{print $1; exit}')"
   DU="$(sudo iptables -L PI-GUARD-IN -n -v 2>/dev/null | awk '/tailscale0/{print $1; exit}')"
-  if [ "${TR:-0}" -gt 0 ] 2>/dev/null; then
-    pruef "pi-guard sperrt aus dem LAN" "ok" "Kette aktiv, ${TR} Pakete verworfen, ${DU:-0} ueber Tailscale durchgelassen"
+  TR=$(( ${TR_F:-0} + ${TR_I:-0} ))
+  if [ "$TR" -gt 0 ] 2>/dev/null; then
+    pruef "pi-guard sperrt aus dem LAN" "ok" "Kette aktiv, ${TR} Pakete verworfen (${TR_F:-0} weitergeleitet an Container, ${TR_I:-0} an den Host), ${DU:-0} ueber Tailscale durchgelassen"
   else
-    pruef "pi-guard sperrt aus dem LAN" "ok" "Kette aktiv, bisher 0 Verwerfungen, ${DU:-0} Pakete ueber Tailscale -- die 0 belegt nur, dass niemand aus dem LAN angeklopft hat"
+    pruef "pi-guard sperrt aus dem LAN" "ok" "Kette aktiv, bisher 0 Verwerfungen in beiden Ketten, ${DU:-0} Pakete ueber Tailscale -- die 0 belegt nur, dass niemand aus dem LAN angeklopft hat"
   fi
 fi
 
