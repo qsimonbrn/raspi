@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 07.09.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 12.09.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,83 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 12.09.2026 — Speichermessung beendet, fünf Limits richtiggestellt
+
+**Die befristete Speichermessung ist abgeschaltet.**
+`sudo systemctl disable --now docker-stats-messung.timer`. Sie lief seit dem 18.08.2026
+alle fünf Minuten und hat **74.050 Messpunkte** über 25 Tage gesammelt. Nachweis der
+Abschaltung: `is-enabled` meldet `disabled`, `is-active` meldet `inactive`, der Timer
+steht nicht mehr in `list-timers` — und die Zeilenzahl der CSV war 22 Minuten später
+unverändert, bei einem Takt von fünf Minuten also vier ausgefallene Läufe.
+
+Skript, Unit-Dateien und die drei Manifestzeilen bleiben bestehen; der Abgleich meldet
+weiterhin 25 von 25 Paaren. Die CSV (4,2 MB) bleibt auf der SSD.
+
+**Vor dem Abschalten ausgewertet — und fünf Werte in Kapitel 05 waren zu niedrig.** Die
+Tabelle dort beruhte auf 603 Messpunkten aus zweieinhalb Tagen:
+
+| Container | stand in der Doku | tatsächliches Maximum über 25 Tage |
+|---|---|---|
+| bichon | 462 MiB | **699 MiB** |
+| diun | 14 MiB | **57 MiB** |
+| vaultwarden | 46 MiB | **62 MiB** |
+| insta-triage | nicht gemessen | **96 MiB** |
+| n8n | nicht gemessen | **355 MiB** |
+
+Kein Limit wurde überschritten, keines wurde geändert. **Bichon ist der knappste Fall**
+mit 699 MiB gegen ein Limit von 768 MiB; die Verteilung entschärft ihn aber — Median
+338 MiB, 95-Prozent-Quantil 439 MiB, nur 1,4 Prozent der Messungen über 600 MiB, nie
+über 700.
+
+**Die Maschine ist seit n8n überbucht, und das bleibt so.** Die Summe der Limits beträgt
+**4.816 MiB bei 3.796 MiB RAM**, direkt an den laufenden Containern abgelesen. Bis zum
+07.09. galt die Zusage, dass selbst im gleichzeitigen Maximalfall Luft bleibt; sie ist
+mit n8n hinfällig. Entschieden: Überbuchung in Kauf nehmen, statt rund 1.000 MiB aus den
+Limits zu schneiden und damit genau die Puffer zu opfern, für die sie großzügig gewählt
+wurden. **n8n bleibt bei 1024 MiB**, obwohl im Leerlauf nur 355 MiB gemessen wurden — der
+Container ist noch leer, die Workflows kommen erst. Nach den ersten produktiven Workflows
+erneut messen.
+
+---
+
+## 12.09.2026 — n8n nachgetragen (Änderung vom 07.09.2026)
+
+**Nachtrag, kein neuer Eingriff.** Die Inbetriebnahme von n8n am 07.09.2026 ist in den
+Fachkapiteln 03, 05, 10, 11 und 19 dokumentiert, hat aber **nie einen Eintrag in diesem
+Betriebstagebuch bekommen** — die Sitzung brach vor diesem Schritt ab. Der Eintrag wird
+hier unter dem Datum seiner Feststellung nachgeholt, die Änderung selbst datiert auf den
+07.09.2026.
+
+| | |
+|---|---|
+| Stack | `stacks/n8n`, Image `docker.n8n.io/n8nio/n8n:2.37.10` (gepinnt, arm64) |
+| Daten | `/mnt/usb-hdd/n8n`, SQLite, Container läuft als `user: "1000:1000"` |
+| Schlüssel | `N8N_ENCRYPTION_KEY` in `stacks/n8n/.env` (Modus 600), über `.gitignore` ausgeschlossen — Nachweis `git check-ignore` |
+| Zugang | Port 5678 über das Tailnet, **kein HTTPS, kein `tailscale serve`** (bewusste Entscheidung) |
+| Abschottung | allein `pi-guard`; `GESPERRT` jetzt `9000,9443,15630,8000,5678` |
+| Speicher | `mem_limit: 1024m` |
+| Backup | `/mnt/usb-hdd/n8n` in `pi-backup.sh`; Live-DB, `-wal`, `-shm` und `*.log` ausgeschlossen |
+
+**Nachgewiesen:** Der DROP-Zähler in der Kette `PI-GUARD` stieg beim Zugriffsversuch vom
+Mac aus dem LAN von 0 auf 26, während derselbe Dienst über das Tailnet weiter mit 200
+antwortete. Der Backup-Snapshot vom 07.09. führt 12 Pfade statt 11 und enthält den
+stimmigen Datenbankabzug, nicht die laufende Datei.
+
+**Das Eigentümerkonto war bis zum 12.09.2026 nicht angelegt.** Fünf Tage lang konnte
+jedes Gerät im Tailnet es ohne Passwort beanspruchen. Aufgefallen ist das erst bei der
+Inventur — und beinahe nicht: Die Abfrage `select count(*) from user` lieferte `1` und
+sah nach einem vorhandenen Konto aus. **Erst die Kontrolle auf die Inhalte zeigte, dass
+`email` und `password` leer waren** — n8n legt diese Zeile beim ersten Start selbst an.
+Simon hat das Konto am 12.09.2026 angelegt; `showSetupOnFirstLoad` meldet seither
+`false`. Zwei-Faktor-Anmeldung ist bewusst noch nicht aktiviert.
+
+**Nebenbefund vom 07.09., hier der Vollständigkeit halber:** Die Prüfung „pi-guard sperrt
+aus dem LAN" in `inventar/collect.sh` las nur die Kette `PI-GUARD-IN` und sah damit
+nichts von dem, was Docker per DNAT an Container weiterreicht. Sie zählt jetzt beide
+Ketten getrennt.
 
 ---
 

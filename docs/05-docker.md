@@ -180,37 +180,78 @@ zwei Tage später abgewürgt.
 
 ### Speicher-Limits — gesetzt am 20.08.2026
 
-Grundlage ist die Messung, die seit dem 18.08.2026 alle fünf Minuten nach
-`/mnt/usb-hdd/messungen/docker-speicher.csv` schreibt: **603 Punkte je Container**
-zwischen dem 18.08. 06:03 und dem 20.08. 11:39.
+Grundlage ist die Messung, die vom 18.08.2026 bis zum 12.09.2026 alle fünf Minuten nach
+`/mnt/usb-hdd/messungen/docker-speicher.csv` geschrieben hat: **74.050 Messpunkte** über
+25 Tage. Die Messung wurde am 12.09.2026 beendet (siehe unten); die Datei bleibt liegen.
 
 | Container | gemessenes Maximum | Limit | Reserve |
 |---|---|---|---|
-| paperless | 907 MiB | **1280 MiB** | 41 % |
-| bichon | 462 MiB | **768 MiB** | 66 % |
+| paperless | 909 MiB | **1280 MiB** | 41 % |
+| bichon | 699 MiB | **768 MiB** | **10 %** |
+| n8n | 355 MiB | **1024 MiB** | 188 % |
 | homepage | 176 MiB | **320 MiB** | 82 % |
-| paperless-db | 61 MiB | **256 MiB** | 319 % |
+| insta-triage | 96 MiB | **256 MiB** | 167 % |
 | portainer | 89 MiB | **192 MiB** | 116 % |
-| paperless-redis | 15 MiB | **128 MiB** | 742 % |
-| ntfy | 51 MiB | **96 MiB** | 90 % |
+| paperless-db | 63 MiB | **256 MiB** | 306 % |
+| vaultwarden | 62 MiB | **256 MiB** | 313 % |
+| diun | 57 MiB | **128 MiB** | 125 % |
+| ntfy | 52 MiB | **96 MiB** | 85 % |
 | homepage-dockerproxy | 30 MiB | **64 MiB** | 113 % |
-| **Summe** | **1.790 MiB** | **3.104 MiB** | von 3.796 MiB RAM |
+| diun-dockerproxy | 19 MiB | **48 MiB** | 153 % |
+| paperless-redis | 16 MiB | **128 MiB** | 700 % |
+| **Summe** | **2.623 MiB** | **4.816 MiB** | von 3.796 MiB RAM |
 
 **Die Limits sind bewusst großzügig.** Sie sind eine Reißleine gegen einen ausgerissenen
 Dienst, kein Sparprogramm. Der Grund steht in der Messung selbst: Sie tastet alle fünf
 Minuten ab und **sieht kurze Spitzen überhaupt nicht** — ein OCR-Lauf in Paperless dauert
-oft unter zwei Minuten. Das gemessene Maximum von 907 MiB ist deshalb eine Untergrenze,
-keine Obergrenze. Ein Limit knapp darüber würde irgendwann mitten in einer Texterkennung
+oft unter zwei Minuten. Jedes Maximum in der Tabelle ist deshalb eine Untergrenze, keine
+Obergrenze. Ein Limit knapp darüber würde irgendwann mitten in einer Texterkennung
 zuschlagen, und das Dokument bliebe unbearbeitet im Einwurf liegen.
 
-Dazu kommt, dass **bichon noch wächst**: niedrigster Wert 14,7 MiB (Kaltstart), Median
-370 MiB, Maximum 462 MiB. Der Arbeitssatz eines E-Mail-Indexers baut sich über Tage auf
-und war am Ende des Messfensters erkennbar noch nicht am Ende.
+> **Richtigstellung zur Fassung vom 20.08.2026.** Die damalige Tabelle beruhte auf 603
+> Messpunkten aus zweieinhalb Tagen. Fünf Werte darin waren zu niedrig, teilweise
+> deutlich: bichon stand mit 462 MiB drin und erreichte über 25 Tage **699 MiB**, diun mit
+> 14 MiB und erreichte **57 MiB**, vaultwarden mit 46 MiB und erreichte **62 MiB**. Für
+> insta-triage und n8n gab es überhaupt keinen Wert. **Der Fehler lag nicht in der
+> Messung, sondern im Messfenster** — dieselbe Lehre wie bei bichon 2025, nur eine Ebene
+> höher: Ein Maximum aus zweieinhalb Tagen ist eine Momentaufnahme, kein Maximum.
 
-**Die Summe aller Limits liegt mit 3.104 MiB unter den 3.796 MiB RAM.** Damit ist nichts
-überbucht: Selbst wenn alle acht Container gleichzeitig ihre Decke erreichen, bleibt dem
-Betriebssystem Luft. Das ist die eigentliche Absicherung — der OOM-Killer sucht sich
-sonst ein beliebiges Opfer, und das ist selten der Schuldige.
+**Bichon ist der einzige knappe Fall: 699 MiB bei einem Limit von 768 MiB.** Die
+Verteilung entschärft das aber. Median 338 MiB, das 95-Prozent-Quantil 439 MiB, und nur
+1,4 Prozent aller 6.851 Messungen liegen über 600 MiB. Über 700 MiB war der Container in
+25 Tagen nie. Es ist eine seltene Spitze, kein Dauerzustand, und das Limit hält —
+beobachten statt anheben.
+
+### Seit n8n ist die Maschine überbucht, und das ist so gewollt
+
+**Die Summe aller Limits liegt mit 4.816 MiB über den 3.796 MiB RAM.** Bis zum
+07.09.2026 war das anders; mit n8n und seinem Limit von 1024 MiB ist die alte Zusage
+„selbst wenn alle gleichzeitig ihre Decke erreichen, bleibt Luft" nicht mehr zu halten.
+
+**Das ist eine bewusste Entscheidung, keine Nachlässigkeit** (12.09.2026). Um wieder
+unter die 3.796 MiB zu kommen, müssten rund 1.000 MiB aus den Limits herausgeschnitten
+werden — und weil die gemessenen Maxima Untergrenzen sind, würden dabei genau die Puffer
+verschwinden, für die die Limits großzügig gewählt wurden. Der Preis der Überbuchung ist
+klar benannt: **Geht wirklich alles gleichzeitig an seine Decke, sucht sich der
+OOM-Killer ein Opfer, und das ist selten der Schuldige.**
+
+Was dagegen spricht, dass dieser Fall eintritt: Die Summe der *gemessenen* Maxima liegt
+bei 2.623 MiB und damit deutlich unter dem RAM — und diese Maxima traten nicht
+gleichzeitig auf. Im laufenden Betrieb am 12.09.2026 waren 1.928 von 3.796 MiB belegt.
+
+**n8n bleibt vorerst bei 1024 MiB**, obwohl im Leerlauf nur 355 MiB gemessen wurden. Der
+Container ist noch leer; die Workflows kommen erst. Ein Limit auf der Grundlage eines
+leeren n8n zu senken, wäre dieselbe Einzelmessung, die oben gerade richtiggestellt wurde.
+**Nach den ersten produktiven Workflows erneut messen.**
+
+### Die Messung ist beendet (12.09.2026)
+
+`docker-stats-messung.timer` ist seit dem 12.09.2026 abgeschaltet
+(`systemctl disable --now`), nachgewiesen über eine unveränderte Zeilenzahl 22 Minuten
+später. Sie war von Anfang an befristet gedacht und hat ihren Zweck erfüllt. Skript,
+Unit-Dateien und die Manifestzeilen bleiben bestehen, damit sich die Messung für eine
+neue Frage ohne Aufbau wieder einschalten lässt. Die CSV (4,2 MB) bleibt auf der SSD
+liegen.
 
 **Nachgemessen nach dem Setzen** (20.08.2026): Alle acht Container melden ihr Limit über
 `docker inspect`, `OOMKilled=false`, `RestartCount=0`, Paperless nach 125 s wieder

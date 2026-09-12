@@ -18,7 +18,7 @@ Ein Raspberry Pi 4B als Heimserver mit drei Rollen:
 | **Dateiablage** | Samba auf einer 1-TB-SSD |
 
 Dazu Tailscale für den Fernzugriff, Portainer zur Container-Verwaltung und Homepage als
-Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liegen seit dem
+Einstiegsseite. Dreizehn Docker-Container in neun Stacks; die Compose-Dateien liegen seit dem
 18.08.2026 in **diesem** Repository unter `stacks/` und laufen direkt von dort — seit dem
 16.08.2026 durchgängig auf feste Image-Versionen gepinnt.
 
@@ -64,13 +64,13 @@ Einstiegsseite. Acht Docker-Container in fünf Stacks; die Compose-Dateien liege
 | Datenspeicher SSD | 36 % belegt (311 G von 916 G) |
 | Ausstehende OS-Updates | **2** (04.09.2026) — `tailscale` wird von `unattended-upgrades` nie erfasst (Fremd-Repository), zuletzt am 20.08.2026 von Hand auf 1.102.3 gezogen |
 | Fehlgeschlagene Dienste | 0 |
-| Backup | täglich, 21 Snapshots (04.09.2026); zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
+| Backup | täglich, 31 Snapshots (12.09.2026); zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
 | Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
 | Container | **13**, alle mit Logrotation und `no-new-privileges` (07.09.2026) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
-| Speicher-Limits | **seit 20.08.2026 gesetzt** für alle neun Container, Summe 3.360 von 3.796 MiB — nicht überbucht |
+| Speicher-Limits | **für alle 13 Container gesetzt**, Summe 4.816 von 3.796 MiB — seit n8n **bewusst überbucht** ([05](docs/05-docker.md)) |
 | Passwort-Tresor | **Vaultwarden 1.37.2** seit 23.08.2026, nur über Tailscale auf Port 8443 ([18](docs/18-vaultwarden.md)) |
 | Benachrichtigungen | **ntfy stellt seit 25.08.2026 nachweislich aufs iPhone zu** — Alarmkette erstmals geschlossen ([14](docs/14-benachrichtigungen.md)) |
 | Automatisierung | **n8n 2.37.10** seit 07.09.2026, nur über Tailscale auf Port 5678 ([19](docs/19-n8n.md)) |

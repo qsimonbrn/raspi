@@ -9,6 +9,50 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.17.0] — 2026-09-12
+
+Nachtrag und Inventur. Der Dienst n8n war seit dem 07.09.2026 in den Fachkapiteln
+beschrieben, aber weder im CHANGELOG noch im Betriebstagebuch vermerkt — die Sitzung
+brach vor diesen beiden Schritten ab.
+
+### Hinzugefügt
+
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Der fehlende Tagebucheintrag zu n8n,
+  nachgetragen unter dem Datum der Feststellung, die Änderung selbst auf den 07.09.2026
+  datiert. Dazu ein zweiter Eintrag zum Ende der Speichermessung.
+- **Kapitel [05](docs/05-docker.md):** Abschnitt „Seit n8n ist die Maschine überbucht,
+  und das ist so gewollt" samt Preis der Entscheidung, und ein Abschnitt zum Ende der
+  Messung.
+
+### Geändert
+
+- **Kapitel [05](docs/05-docker.md):** Die Speichertabelle umfasst jetzt alle **13
+  Container** statt acht und beruht auf **74.050 Messpunkten aus 25 Tagen** statt auf 603
+  aus zweieinhalb Tagen.
+- **[README](README.md):** drei Zahlen auf den gemessenen Stand gebracht — Container und
+  Stacks (acht/fünf → dreizehn/neun), Snapshots (21 → 31), Speicher-Limits.
+
+### Richtiggestellt
+
+- **Fünf Speicherwerte in Kapitel [05](docs/05-docker.md) waren zu niedrig**, weil das
+  Messfenster zweieinhalb Tage umfasste: bichon 462 → **699 MiB**, diun 14 → **57 MiB**,
+  vaultwarden 46 → **62 MiB**; für insta-triage (**96 MiB**) und n8n (**355 MiB**) fehlte
+  jeder Wert. Kein Limit wurde überschritten. **Der Fehler lag im Messfenster, nicht in
+  der Messung.**
+- **Die Aussage „nicht überbucht" im README und in Kapitel 05 war seit dem 07.09.2026
+  falsch.** Die Summe der Limits beträgt **4.816 MiB bei 3.796 MiB RAM**; mit n8n ist die
+  alte Rechnung hinfällig. Die Überbuchung ist jetzt als bewusste Entscheidung
+  dokumentiert, mit ihrem Preis.
+
+### Entfernt
+
+- **Offener Punkt „AWS-Schulungspasswort im Klartext" ist gegenstandslos.** Weder im Vault
+  noch in den auf den Pi gesicherten Unterlagen existiert die genannte Datei noch; der
+  Bereich wurde Anfang September umgebaut. Der Punkt stand seit Wochen ungeprüft in der
+  Liste.
+
+---
+
 ## [2.16.0] — 2026-09-07
 
 ### Hinzugefügt
