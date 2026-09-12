@@ -9,6 +9,34 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.18.0] — 2026-09-12
+
+Die Workbench geht in Betrieb: ein neuer Dienst, zwei Workflows, ein Ablagefach.
+
+### Hinzugefügt
+
+- **Kapitel [20](docs/20-yt-werk.md)** (neu): der Sidecar `yt-werk` — warum es ihn gibt,
+  seine Schnittstelle, die beiden Fallen beim Bauen (HTTP 429 und übersetzte statt
+  originaler Untertitel) und was zu tun ist, wenn das Holen ausfällt.
+- **Kapitel [19](docs/19-n8n.md):** Abschnitt zu den beiden Workbench-Workflows samt
+  Modellvergleich und dem Grundsatz, Workflows aus dem Repo statt aus der Oberfläche
+  zu erzeugen.
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Tagebucheintrag zum Eingriff, mit
+  allen Nachweisen und drei Befunden.
+
+### Geändert
+
+- **Kapitel [19](docs/19-n8n.md):** zwei offene Punkte ergänzt — der fehlende
+  Hol-Schritt auf dem Mac und drei noch nicht eingetragene Vault-Tags.
+
+### Richtiggestellt
+
+- **Der geplante Google-API-Schlüssel entfällt.** Die YouTube Data API v3 liefert keine
+  Untertitel fremder Videos; ein Trigger ohne Inhalt hätte nichts genützt. Begründung
+  in Kapitel 20.
+
+---
+
 ## [2.17.0] — 2026-09-12
 
 Nachtrag und Inventur. Der Dienst n8n war seit dem 07.09.2026 in den Fachkapiteln

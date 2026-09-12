@@ -19,6 +19,61 @@ Backup.
 
 ---
 
+## 12.09.2026 (abends) — Workbench in Betrieb: yt-werk, zwei Workflows, Ablagefach
+
+**Erster Eingriff für die Workbench.** Ziel: Videos einer YouTube-Playlist werden zu
+Projektvorschlägen im Obsidian-Vault. Freigabe lag für den gesamten Block vor.
+
+| Was | Wie |
+|---|---|
+| Ablagefach | `/mnt/usb-hdd/second-brain/eingang/`, `simon:pi-admin`, Modus 2750 |
+| Neuer Stack | `stacks/yt-werk`, selbst gebautes Image `yt-werk:1.0.0`, `mem_limit: 256m`, **kein Port veröffentlicht** |
+| Neues Netz | `werkbank` (extern angelegt, damit kein `compose down` es dem anderen Stack entzieht) |
+| n8n | zweites Volume auf `eingang/`, Anschluss an `werkbank`, Container neu erzeugt |
+| Workflows | zwei, erzeugt aus `stacks/n8n/workflows-einspielen.py` über die n8n-API |
+| Sicherung | `eingang/` in `pi-backup.sh`, `.tmp-*` ausgenommen |
+
+**Nachgewiesen, nicht angenommen:**
+
+- `pi-guard.sh status` nach dem Neuerzeugen von n8n: die DROP-Regel nennt
+  `9000,9443,15630,8000,5678` unverändert — die Regel überlebte den Eingriff.
+- Schreibzugriff auf `eingang/` aus dem n8n-Container heraus: `touch` erfolgreich,
+  Datei danach als `claude` vom Host lesbar (setgid vererbt `pi-admin`).
+- n8n erreicht `http://yt-werk:8722/health` und weiterhin Ollama auf dem MacBook.
+- restic-Snapshot `00269c39`: 13 Pfade statt 12, `eingang/` mit allen Dateien enthalten.
+- Workflow A: vollständiger Lauf, Playlist gelesen, Video als bereits vorhanden erkannt,
+  Filter ließ korrekt 0 Einträge durch.
+- Workflow B: vollständiger Lauf bis zur fertigen Quellennotiz, zum Fahrplan, zur
+  `ablage.json` und zum Eintrag in `.verarbeitet`.
+
+**Drei Befunde:**
+
+1. **Die YouTube Data API v3 liefert keine Transkripte fremder Videos.** Der bisherige
+   Plan (Entscheidung vom 07.09.) hätte einen Trigger ohne Inhalt ergeben.
+   `captions.download` funktioniert nur als Kanaleigentümer. Der geplante
+   Google-API-Schlüssel entfällt ersatzlos.
+2. **yt-dlp läuft mit einem Sprachmuster wie `de.*` in ein HTTP 429**, weil es dutzende
+   automatisch übersetzte Untertitelfächer nacheinander anfragt. Behoben durch einen
+   einzigen gezielten Abruf über die bereits bekannte Untertitel-URL.
+3. **Die deutsche Untertitelspur eines englischen Videos ist eine Maschinenübersetzung
+   einer Maschinentranskription.** Seitdem wird die unübersetzte Originalspur bevorzugt
+   und das Übersetzen dem Modell überlassen, das den Fahrplan ohnehin auf Deutsch
+   schreibt.
+
+**Modellwahl gemessen statt geraten:** `qwen3.5:4b` gegen `qwen3.5:9b` am selben
+Transkript (17.125 Zeichen, 5.283 Eingabetoken): 37 s gegen 63 s — und nur das kleinere
+hielt sich an die vorgegebene Gliederung. Einschränkung: eine Stichprobe, ein Video.
+
+**Rechteänderung am Rande:** `stacks/n8n/` ist jetzt für die Gruppe `pi-admin`
+beschreibbar (`g+w`), damit dort ohne `sudo` gearbeitet werden kann. Das Verzeichnis
+`/mnt/usb-hdd/second-brain/` selbst blieb unangetastet — `simon` kann es vom Host aus
+weiterhin nicht durchqueren; der Container erreicht `eingang/` über den Bind-Mount.
+
+**Noch offen:** Der Hol-Schritt auf dem Mac fehlt. Bis dahin bleiben die fertigen
+Notizen in `eingang/` liegen und erreichen den Vault nicht.
+
+---
+
 ## 12.09.2026 — Speichermessung beendet, fünf Limits richtiggestellt
 
 **Die befristete Speichermessung ist abgeschaltet.**
