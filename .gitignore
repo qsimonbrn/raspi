@@ -11,6 +11,9 @@
 *_ed25519
 secrets*
 secrets/
+# Der n8n-API-Schluessel. Endet auf "-key", nicht ".key" --
+# von der Regel *.key oben also NICHT erfasst.
+.n8n-api-key
 
 # --- Daten und Laufzeit ------------------------------------------------------
 *.db
@@ -37,3 +40,7 @@ Thumbs.db
 *~
 .vscode/
 .idea/
+
+# Python-Zwischenstand
+__pycache__/
+*.pyc
