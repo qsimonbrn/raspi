@@ -66,6 +66,11 @@ services:
     # seit dem 07.09.2026 in der Pfadliste von pi-backup.sh.
     volumes:
       - /mnt/usb-hdd/n8n:/home/node/.n8n
+      # Ablagefach fuer die Workbench: hier legt yt-werk die geholten Videos
+      # ab und n8n schreibt die fertigen Fahrplaene hin. Der Mac holt es
+      # abends beim 21:30-Sync. Bewusst NICHT unter second-brain/unterlagen --
+      # dorthin spiegelt der Mac mit "rsync --delete".
+      - /mnt/usb-hdd/second-brain/eingang:/eingang
 
     env_file:
       - .env
@@ -110,6 +115,14 @@ services:
       N8N_DIAGNOSTICS_ENABLED: "false"
       N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
 
+    # Gemeinsames Netz mit yt-werk. Das Sidecar veroeffentlicht keinen Port;
+    # n8n erreicht es ausschliesslich hierueber unter http://yt-werk:8722.
+    # Das Netz wird nicht von diesem Stack erzeugt, damit kein "compose down"
+    # es dem anderen Stack unter den Fuessen wegzieht:
+    #     docker network create werkbank
+    networks:
+      - werkbank
+
     # Das Image bringt kein curl mit; busybox-wget genuegt. /healthz antwortet,
     # sobald der Webserver steht.
     healthcheck:
@@ -118,3 +131,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 90s
+
+networks:
+  werkbank:
+    external: true
