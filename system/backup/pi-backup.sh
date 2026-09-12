@@ -248,6 +248,7 @@ restic backup \
   --exclude '/mnt/usb-hdd/vaultwarden/icon_cache' \
   --exclude '/mnt/usb-hdd/n8n/database.sqlite*' \
   --exclude '/mnt/usb-hdd/n8n/*.log' \
+  --exclude '/mnt/usb-hdd/second-brain/eingang/.tmp-*' \
   "$STAGE" \
   /mnt/usb-hdd/bichon \
   /mnt/usb-hdd/ntfy \
@@ -259,7 +260,8 @@ restic backup \
   /mnt/usb-hdd/claude-skills \
   /home/simon/raspi \
   /mnt/usb-hdd/second-brain/unterlagen \
-  /mnt/usb-hdd/second-brain/vault.git
+  /mnt/usb-hdd/second-brain/vault.git \
+  /mnt/usb-hdd/second-brain/eingang
 RC=$?
 
 if [ $RC -ne 0 ]; then
