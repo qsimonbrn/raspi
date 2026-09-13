@@ -1,6 +1,6 @@
 # 10 — Zugriff
 
-*Erfasst: 18.08.2026 · ergänzt 23.08.2026*
+*Erfasst: 18.08.2026 · ergänzt 23.08.2026 · nachgemessen: 13.09.2026*
 
 Alle Zugangswege zum System auf einen Blick.
 
@@ -18,6 +18,8 @@ Alle Zugangswege zum System auf einen Blick.
 | **Bichon** | `http://100.108.219.87:15630` 🔒 | E-Mail-Archiv |
 | **Vaultwarden** | `https://raspberrypi.tailf372ec.ts.net:8443` 🔒 | Passwort-Tresor, siehe [18](18-vaultwarden.md) |
 | **n8n** | `http://100.108.219.87:5678` 🔒 | Automatisierungsserver, siehe [19](19-n8n.md) |
+| **insta-triage** | `http://100.108.219.87:8080` 🔒 | Instagram-Abos sichten — an die Tailscale-Adresse gebunden, nicht per Firewall gesperrt |
+| ~~yt-werk~~ | **keine Adresse** | Kein Port auf dem Host. Nur für n8n unter `http://yt-werk:8722` im Docker-Netz `werkbank`, siehe [20](20-yt-werk.md) |
 
 > Alle Weboberflächen laufen unverschlüsselt über HTTP (Ausnahmen: Portainer auf 9443
 > und Vaultwarden auf 8443, das seit dem 23.08.2026 über `tailscale serve` mit einem
@@ -114,16 +116,22 @@ jedem Core-Update überschrieben, wie schon bei `/etc/cron.d/pihole`.
 
 ## 🔒 Nur über Tailscale erreichbar
 
-Seit dem 18.08.2026 sind drei Dienste aus dem Heimnetz **nicht mehr** erreichbar. Sie
-antworten ausschließlich auf der Tailscale-Adresse `100.108.219.87`. Die alten
-Lesezeichen auf `192.168.178.80` funktionieren für diese drei nicht mehr — auch nicht
-vom Mac, weil der im Heimnetz den direkten Weg nimmt statt den Tunnel.
+Seit dem 18.08.2026 sind Dienste aus dem Heimnetz **nicht mehr** erreichbar; am
+13.09.2026 sind es fünf. Sie antworten ausschließlich auf der Tailscale-Adresse
+`100.108.219.87`. Die alten Lesezeichen auf `192.168.178.80` funktionieren für sie nicht
+mehr — auch nicht vom Mac, weil der im Heimnetz den direkten Weg nimmt statt den Tunnel.
 
-| Dienst | Warum gesperrt |
-|---|---|
-| Portainer | Der Docker-Socket ist schreibend eingebunden — wer die Oberfläche übernimmt, hat Systemrechte |
-| Bichon | E-Mail-Archiv, Image acht Monate alt |
-| Paperless | Dokumentenarchiv |
+| Dienst | Warum gesperrt | Wie |
+|---|---|---|
+| Portainer | Der Docker-Socket ist schreibend eingebunden — wer die Oberfläche übernimmt, hat Systemrechte | `pi-guard` |
+| Bichon | E-Mail-Archiv, Image neun Monate alt | `pi-guard` |
+| Paperless | Dokumentenarchiv | `pi-guard` |
+| n8n | Workflows mit verschlüsselten Zugangsdaten; keine Anmeldung im Heimnetz erwünscht (seit 07.09.2026) | `pi-guard` |
+| insta-triage | Persönliche Kontaktlisten (seit 03.09.2026) | **Bindung an `100.108.219.87`**, nicht `pi-guard` |
+
+Vaultwarden geht einen sechsten Weg: an `127.0.0.1` gebunden und über `tailscale serve`
+mit Zertifikat auf 8443 veröffentlicht — siehe [18](18-vaultwarden.md). Und `yt-werk`
+einen siebten: gar nicht veröffentlicht.
 
 Umgesetzt über `pi-guard`, siehe [07 — Sicherheit](07-sicherheit.md). Die Homepage-Kacheln
 zeigen bereits auf die richtigen Adressen.
@@ -143,6 +151,10 @@ in [05 — Docker](05-docker.md), Compose-Dateien unter `stacks/_archiviert/`.
 | Paperless | ❌ 🔒 | ✅ | ❌ |
 | Portainer | ❌ 🔒 | ✅ | ❌ |
 | Bichon | ❌ 🔒 | ✅ | ❌ |
+| Vaultwarden | ❌ | ✅ (8443, HTTPS) | ❌ |
+| n8n | ❌ 🔒 | ✅ | ❌ |
+| insta-triage | ❌ (gar nicht gebunden) | ✅ | ❌ |
+| yt-werk | ❌ (kein Port) | ❌ (kein Port) | ❌ |
 | Samba | ✅ | ✅ | ❌ |
 | SSH | ✅ | ✅ | ❌ |
 | Tailscale | ✅ | — | ❌ (kein eingehender Port) |

@@ -9,6 +9,68 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.19.0] — 2026-09-13
+
+Die Querverweis-Kapitel holen die Workbench nach. Kapitel 19, 20, 15 beschrieben den neuen
+Dienst seit dem 12.09.2026; die Kapitel, die den **Bestand** führen, kannten ihn nicht.
+Alle Werte in diesem Eintrag sind am 13.09.2026 gemessen, keiner übernommen.
+
+### Hinzugefügt
+
+- **[README](README.md):** Kapitel 20 in der Navigation, Zustandszeile für die Workbench.
+- **Kapitel [03](docs/03-netzwerk.md):** das stackübergreifende Netz `werkbank` samt
+  Begründung, warum es außerhalb beider Stacks liegt, und was die Ausnahme kostet.
+- **Kapitel [05](docs/05-docker.md):** `yt-werk` in Container- und Limit-Tabelle; der
+  Abschnitt zu den drei Abstufungen der Abschottung (Firewall / Adressbindung / gar kein
+  Port).
+- **Kapitel [06](docs/06-daten-und-speicher.md):** Abschnitt zum Ablagefach
+  `second-brain/eingang/`; acht bisher fehlende SSD-Verzeichnisse in der Tabelle.
+- **Kapitel [09](docs/09-empfehlungen.md):** Punkt 3.11 (`umask`), drei Aufräumzeilen.
+- **Kapitel [10](docs/10-zugriff.md):** insta-triage und `yt-werk` in Weboberflächen und
+  Zugriffsmatrix; die Sperrtabelle nennt jetzt auch, *wie* jeder Dienst gesperrt ist.
+- **Kapitel [11](docs/11-disaster-recovery.md):** Positionen 12–14 (Second Brain,
+  Ablagefach, `yt-werk`).
+
+### Richtiggestellt
+
+- **[README](README.md):** 13 Container → **14**, Limitsumme 4.816 → **5.072 MiB**, Diun
+  überwacht 11 → **12** Images, dazu Uptime, Load, Temperatur, RAM, Systemdatenträger,
+  ausstehende Updates (2 → **3**) und Snapshots (31 → **33**).
+- **Kapitel [03](docs/03-netzwerk.md):** Die Netztabelle nannte fünf von elf Netzen und
+  ordnete `172.21`/`172.22` noch Dashy und Filebrowser zu — die Nummern gehören seit dem
+  18.08.2026 Vaultwarden und Diun. Portliste um 5678, 8080 und 8222 ergänzt.
+- **Kapitel [05](docs/05-docker.md):** Docker-Version 29.7.2 → **29.8.0**, „12 von 12
+  Containern" → **14 von 14**, 7 → **10** Stacks, 11 → **16** Images. Der Verzeichnisbaum
+  zeigte noch die flache Ablage vor der Repository-Zusammenlegung vom 18.08.2026.
+- **Kapitel [05](docs/05-docker.md):** Der Abschnitt „Die Messung ist beendet" endete mit
+  dem Satz „Die Messung läuft vorerst weiter" — ein Rest der Fassung vom 20.08.2026, der
+  dem Absatz darüber widersprach. Entfernt, Abschnitt neu geordnet.
+- **Kapitel [12](docs/12-backup.md):** Die Pfadliste nannte `/mnt/usb-hdd/n8n` nicht,
+  obwohl es seit dem 07.09.2026 gesichert wird, und `eingang/` nicht. Beides ergänzt, die
+  Ausschlussliste am Skript nachgemessen. Der Lauf sichert **13 Pfade**.
+- **Kapitel [17](docs/17-wo-was-liegt.md):** „Verzeichnisse 2775" galt nur noch für 24 von
+  34; acht stehen auf `2755 claude:pi-admin`. Compose-Pfad `raspi/<dienst>/` →
+  `stacks/<dienst>/`. `.env`- und Nutzdatenliste vervollständigt.
+
+### Befunde
+
+- **Das Konto `claude` kann in `second-brain/eingang/` nicht schreiben** (Modus 2750).
+  Für `yt-werk` und `n8n` (UID 1000) unerheblich, für den Abholvorgang vom Mac nicht.
+  → [06](docs/06-daten-und-speicher.md), [09](docs/09-empfehlungen.md) 3.11
+- **Die `umask 022` beider Konten erzeugt wiederkehrend Verzeichnisse, in denen das jeweils
+  andere Konto nichts anlegen kann.** Vier `root`-Dateien im Repository sind die Spur
+  davon. → [17](docs/17-wo-was-liegt.md), [09](docs/09-empfehlungen.md) 3.11
+- **`n8n_default` ist leer**, **`alpine:3.20` ist unreferenziert**, der Build-Cache belegt
+  102 MB. Alles kosmetisch. → [09](docs/09-empfehlungen.md) 3.4
+
+### Geprüft, ohne Änderung
+
+Behauptungsprüfung 13 ok, 0 abweichend, 0 nicht prüfbar. `pi-guard` sperrt 5678 weiterhin
+gegen `eth0` (26 Verwerfungen, 124K über Tailscale durchgelassen) — die Regel hat das
+Neuerzeugen der Container am 12.09.2026 überstanden. Abgleich Repository ↔ System 25/25.
+
+---
+
 ## [2.18.0] — 2026-09-12
 
 Die Workbench geht in Betrieb: ein neuer Dienst, zwei Workflows, ein Ablagefach.

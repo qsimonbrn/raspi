@@ -1,6 +1,6 @@
 # 17 — Wo was liegt
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · Rechte nachgemessen: 13.09.2026*
 
 Dieses Kapitel beantwortet eine Frage, die sich sonst über ein halbes Dutzend Kapitel
 verteilt: **Welche Datei ist das Original, welche nur eine Kopie?** Wer das verwechselt,
@@ -33,14 +33,50 @@ Beide pushen direkt vom Pi über einen SSH-Schlüssel, der am GitHub-Konto hinte
 ist. Der GitHub-Connector aus Claude darf in diese Repositories **nicht** schreiben
 (403, nachgemessen) — er taugt zum Lesen und kann keine Repositories anlegen.
 
-**Rechte.** Beide gehören `simon:pi-admin`, Verzeichnisse `2775` (setgid,
-gruppenschreibbar). Beide Konten — `simon` und `claude` — sind in `pi-admin` und können
-darin arbeiten und committen. Nachgemessen am 18.08.2026.
+**Rechte.** Beide gehören `simon:pi-admin`, das setgid-Bit ist durchgängig gesetzt. Beide
+Konten — `simon` und `claude` — sind in `pi-admin`. `.git` und `.git/objects` stehen auf
+`2775 simon:pi-admin`; beide Konten können committen.
 
 > **Nicht mit `chown` „aufräumen".** Wer die Dateien einem einzelnen Benutzer zuschlägt,
 > nimmt dem anderen Konto das Schreibrecht auf Teile von `.git` — der Fehler lautet dann
 > `insufficient permission for adding an object to repository database`. Entscheidend
 > ist die **Gruppe** `pi-admin` samt Gruppenschreibrecht, nicht der Besitzer.
+
+### ⚠️ Das Gruppenschreibrecht gilt nicht überall (nachgemessen 13.09.2026)
+
+Die Aussage „Verzeichnisse `2775`" stimmte am 18.08.2026 und stimmt seither nicht mehr
+durchgängig. Gezählt über `find -type d`, ohne `.git`:
+
+| Modus, Besitzer | Anzahl | Wer kann darin anlegen |
+|---|---|---|
+| `2775 simon:pi-admin` | 24 | beide Konten |
+| `2755 claude:pi-admin` | 8 | **nur `claude`** |
+| `2775 simon:simon` | 1 | nur `simon` |
+| `2755 simon:simon` | 1 | nur `simon` (`stacks/homepage/config/logs`) |
+
+Die acht Verzeichnisse ohne Gruppenschreibrecht sind `stacks/diun`, `stacks/insta-triage`
+(samt `app/`, `app/static/`), `stacks/yt-werk` (samt `app/`), `system/journald` und
+`system/pihole` — durchweg Verzeichnisse, die das Konto `claude` angelegt hat.
+
+**Negativkontrolle statt Vermutung:** `sudo -u simon touch stacks/yt-werk/.schreibtest`
+scheitert mit `Permission denied`, während `touch stacks/paperless/.schreibtest` als
+`claude` durchläuft. Die Sperre wirkt also **gegen `simon`**, nicht gegen `claude` — genau
+umgekehrt zu der Annahme, die am 12.09.2026 zum `chmod g+w` auf `stacks/n8n/` geführt hat.
+Dort lag der Fall andersherum: Das Verzeichnis hatte `simon` angelegt.
+
+**Die Ursache ist in beiden Fällen dieselbe und liegt nicht im Repository, sondern in der
+`umask`.** Beide Konten laufen mit `022` (`/etc/login.defs`, Zeile 151; für `claude` in der
+Anmelde- *und* der interaktiven Shell nachgemessen). Jedes neu angelegte Verzeichnis
+bekommt damit `755` plus das geerbte setgid-Bit — also `2755`, ohne Gruppenschreibrecht.
+Wer das mit `chmod g+w` repariert, repariert den heutigen Bestand; das nächste `mkdir`
+erzeugt denselben Fall erneut. Vorschlag und Preis in
+[09 — Empfehlungen](09-empfehlungen.md), 3.11.
+
+**Vier Dateien gehören `root`** (`inventar/snapshots/2026-09-07-00{22,40}-*`, Modus 644
+`root:pi-admin`). Sie sind der sichtbare Rest genau dieses Musters: Wo das
+Gruppenschreibrecht fehlt, weicht die Automatisierung auf `sudo` aus, und was danach
+liegen bleibt, gehört `root`. Überschreiben kann sie keines der beiden Konten; ersetzen
+schon, weil das umgebende Verzeichnis gruppenschreibbar ist.
 
 ---
 
@@ -53,7 +89,7 @@ Diese Dateien werden **direkt aus dem Repository** gelesen. Eine Änderung wirkt
 
 | Was | Wo |
 |---|---|
-| Alle `docker-compose.yml` | `raspi/<dienst>/` |
+| Alle `docker-compose.yml` | `stacks/<dienst>/` |
 | Dashboard-Konfiguration | `stacks/homepage/config/` |
 | ntfy-Serverkonfiguration | `stacks/ntfy/server.yml` |
 | Skills und MCP-Server | `/mnt/usb-hdd/claude-skills/` |
@@ -126,8 +162,8 @@ vereinheitlicht und installiert. Die alten Fassungen liegen unter
 
 | Was | Wo | Warum |
 |---|---|---|
-| `bichon/.env`, `ntfy/.env`, `paperless/.env` | bei den Stacks, Modus 660 | Geheimnisse, über `.gitignore` ausgeschlossen |
-| Nutzdaten | `/mnt/usb-hdd/{paperless,bichon,ntfy}` | zu groß, im restic-Backup |
+| `.env` von bichon, ntfy, paperless, n8n, vaultwarden | bei den Stacks, Modus 660 bzw. **600** (n8n, ntfy, vaultwarden) | Geheimnisse, über `.gitignore` ausgeschlossen. Stand 13.09.2026 |
+| Nutzdaten | `/mnt/usb-hdd/{paperless,bichon,ntfy,n8n,vaultwarden,insta-triage,diun,second-brain}` | zu groß bzw. Geheimnisse, im restic-Backup — siehe [06](06-daten-und-speicher.md) |
 | `/mnt/usb-hdd/messungen/` | dort | laufende Messwerte, keine Konfiguration |
 | `/mnt/usb-hdd/backups-manuell/` | dort, Modus 600 | Rückfallebene vom 18.08.2026, **enthält `.env` im Klartext** |
 | `/mnt/usb-hdd/_to_delete/` | dort | zum Löschen vorgemerkt |

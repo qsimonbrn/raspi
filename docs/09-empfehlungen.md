@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 25.08.2026*
+*Stand: 25.08.2026 · ergänzt 13.09.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -312,6 +312,40 @@ Pfade), ist ungeklärt. **Zu tun:** entscheiden und entweder angleichen
 (`sudo chgrp pi-admin && chmod 664`) oder die Ausnahme in
 [07 — Sicherheit](07-sicherheit.md) begründen. Fünf Minuten plus die Entscheidung.
 
+### 3.11 `umask` der beiden Konten auf `002` setzen — 🟡 offen, klein
+
+**Befund (13.09.2026, mit Negativkontrolle gemessen).** Im Repository gibt es acht
+Verzeichnisse ohne Gruppenschreibrecht; `simon` kann darin nichts anlegen, weil `claude`
+sie angelegt hat. Umgekehrt war es am 12.09.2026 bei `stacks/n8n/`. Ursache ist beidesmal
+die `umask 022` beider Konten: Ein neues Verzeichnis wird `2755`, das setgid-Bit vererbt
+zwar die Gruppe `pi-admin`, aber nicht das Schreibrecht. Einzelheiten und Zahlen in
+[17](17-wo-was-liegt.md).
+
+**Was ein `chmod -R g+w` allein leistet — und was nicht.** Es räumt den Bestand auf,
+sofort und ohne Risiko. Es verhindert den nächsten Fall nicht: Das übernächste `mkdir`
+erzeugt wieder `2755`. Wer nur das tut, wiederholt die Reparatur alle paar Wochen und
+merkt es erst, wenn eine Automatisierung auf `sudo` ausweicht und `root`-Dateien
+hinterlässt — vier davon liegen bereits herum.
+
+**Preis von `umask 002`.** Neu angelegte Dateien werden `664` statt `644`, Verzeichnisse
+`2775` statt `2755`. Weil beide Konten eine eigene Primärgruppe haben (`simon:simon`,
+`claude:claude`, `USERGROUPS_ENAB yes`), betrifft das außerhalb des Repositories nur die
+jeweils eigene Gruppe — niemanden sonst. **Innerhalb** des Repositories ist die Gruppe
+`pi-admin`, und genau das ist beabsichtigt. Die Ausnahme, auf die zu achten ist:
+`.env`-Dateien. Sie stehen heute auf 600 bzw. 660 und müssen das bleiben — eine unter
+`umask 002` neu angelegte `.env` bekäme 664 und wäre für `pi-admin` **schreib**bar.
+Geheimnisse also weiterhin ausdrücklich auf 600 setzen, nicht der `umask` überlassen.
+
+**Zu tun:** `umask 002` in `/home/claude/.profile` und `/home/simon/.profile`, dazu einmal
+`chmod -R g+w` über `/home/simon/raspi` (das setgid-Bit steht bereits). Zehn Minuten.
+Anschließend gegenprüfen, indem jedes Konto im Verzeichnis des jeweils anderen eine Datei
+anlegt — nicht, indem man die `umask` ausliest.
+
+**Schmalere Alternative, falls die globale `umask` zu weit greift:** eine Standard-ACL nur
+auf dem Repository (`setfacl -R -d -m g::rwx /home/simon/raspi`). Sie wirkt genau dort und
+sonst nirgends, ist dafür ein Mechanismus mehr, den ein Betrachter kennen muss — `ls -l`
+zeigt ihn nur als `+` an. Vorher prüfen, ob das Dateisystem mit `acl` eingehängt ist.
+
 ### 3.4 Aufräumen
 
 | Maßnahme | Aufwand | Nutzen |
@@ -326,6 +360,9 @@ Pfade), ist ungeklärt. **Zu tun:** entscheiden und entweder angleichen
 | ~~Speicher-Limits je Container setzen~~ | — | ✅ **erledigt am 20.08.2026** — alle acht Container, Summe 3.104 von 3.796 MiB, nicht überbucht. Nachgemessen: Limits stehen, kein OOM, kein Neustart. Begründung der Großzügigkeit in [05](05-docker.md) |
 | ~~`tailscale` von Hand aktualisieren~~ | — | ✅ **erledigt am 20.08.2026** (1.102.2 → 1.102.3, Tailnet danach vollständig). **Bleibt als Dauerauftrag:** Tailscale kommt aus einem eigenen Repository und wird von `unattended-upgrades` bauartbedingt **nie** erfasst |
 | Fünf verwaiste anonyme Volumes entfernen | 5 min | `docker volume prune`, faktisch leer (479 B) |
+| Leeres Docker-Netz `n8n_default` entfernen | 2 min | Seit 12.09.2026 ohne Container, weil n8n nur noch in `werkbank` hängt. Compose legt es beim nächsten `up` wieder an — kosmetisch, siehe [03](03-netzwerk.md) |
+| Ungenutztes Image `alpine:3.20` entfernen | 2 min | 8,82 MB, von keinem Container und keiner Compose-Datei referenziert (13.09.2026 geprüft) |
+| Vier `root`-Dateien unter `inventar/snapshots/` bereinigen | 5 min | Rest aus `sudo`-Ausweichmanövern, siehe 3.11 und [17](17-wo-was-liegt.md) |
 
 **Vorsicht bei `dhcpcd`/`NetworkManager`:** Ein Fehler kappt die Netzwerkverbindung. Nur
 mit physischem Zugang oder zweitem Zugangsweg durchführen.

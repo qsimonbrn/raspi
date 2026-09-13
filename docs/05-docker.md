@@ -1,18 +1,18 @@
 # 05 — Docker
 
-*Erfasst: 18.08.2026 · Verbrauchswerte nachgemessen: 20.08.2026*
+*Erfasst: 18.08.2026 · Verbrauchswerte nachgemessen: 20.08.2026 · Bestand nachgemessen: 13.09.2026*
 
 ## Überblick
 
 | | |
 |---|---|
-| Docker-Version | 29.7.2 (build a7dcaa6) |
-| Laufende Container | 12 von 12 (03.09.2026) |
-| Compose-Stacks | 7 aktiv, 2 archiviert |
-| Images gesamt | **11 (3,94 GB)** — zuletzt aufgeräumt am 18.08.2026 |
-| Alle Images | auf feste Versionen bzw. Digests gepinnt (vollständig seit 18.08.2026) |
+| Docker-Version | 29.8.0 (build 88096ef) — 13.09.2026 |
+| Laufende Container | **14 von 14** (13.09.2026) |
+| Compose-Stacks | **10 aktiv**, 2 archiviert |
+| Images gesamt | **16 benannte (5,80 GB)**, 25 einschließlich Zwischenschichten — 13.09.2026 |
+| Alle Images | auf feste Versionen bzw. Digests gepinnt (vollständig seit 18.08.2026); `yt-werk:1.0.0` und `insta-triage:1.0.0` werden lokal gebaut und tragen eine eigene Versionsnummer |
 | Logrotation | 10 MB je Datei, 3 Dateien — in jeder Compose-Datei gesetzt |
-| Speicher-Limits | **gesetzt für alle elf Container** — die acht vom 20.08.2026 auf Grundlage einer Zweitagesmessung, Vaultwarden (23.08.) und die beiden Diun-Container (25.08.) als Erstanhaltspunkt |
+| Speicher-Limits | **gesetzt für alle 14 Container** — Summe 5.072 MiB, siehe unten |
 
 ## Container
 
@@ -31,9 +31,19 @@
 | diun-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Diun | `unless-stopped` |
 | **n8n** | `docker.n8n.io/n8nio/n8n:2.37.10` | 5678 🔒 | Automatisierungsserver (Workflows), siehe [19](19-n8n.md) | `unless-stopped` |
 | **insta-triage** | `insta-triage:1.0.0` (lokal gebaut, Basis `python:3.12.8-slim-bookworm`) | 8080 🔒 | Instagram-Abos sichten und sortieren, siehe [Stack-README](../stacks/insta-triage/README.md) | `unless-stopped` |
+| **yt-werk** | `yt-werk:1.0.0` (lokal gebaut, Basis `python:3.12.8-slim-bookworm`, `yt-dlp` gepinnt) | **— keiner** | Holt Playlists, Metadaten und Transkripte von YouTube für die Workbench, siehe [20](20-yt-werk.md) | `unless-stopped` |
 
-**Dreizehn Container** (seit 07.09.2026). 🔒 markiert Dienste, die nur über Tailscale
+**Vierzehn Container** (seit 12.09.2026). 🔒 markiert Dienste, die nur über Tailscale
 erreichbar sind — siehe [07 — Sicherheit](07-sicherheit.md).
+
+**yt-werk ist der erste Dienst, der überhaupt keinen Port auf dem Host veröffentlicht.**
+Er lauscht auf 8722, aber nur im Container, und ist ausschließlich für n8n erreichbar —
+über das stackübergreifende Netz `werkbank`, siehe [03 — Netzwerk](03-netzwerk.md).
+`pi-guard` ist hier folglich **nicht** beteiligt; es gibt nichts abzuschotten. Damit
+kommen im Setup jetzt drei Abstufungen vor, von der lockersten zur dichtesten: per
+Firewall gesperrt (Paperless, Portainer, Bichon, n8n), an die Tailscale-Adresse gebunden
+(insta-triage), gar nicht veröffentlicht (yt-werk). Die dichteste ist zugleich die, die
+man nicht vergessen kann — sie braucht keinen Eintrag in einer Portliste.
 
 **insta-triage schottet sich anders ab als die übrigen 🔒-Dienste.** Bei ihnen bindet
 Docker an `0.0.0.0` und `pi-guard` sperrt den Port gegen `eth0`; bei insta-triage ist
@@ -46,7 +56,7 @@ Dienst startet. Preis dafür ist eine harte Abhängigkeit von dieser Adresse —
 sich die Tailscale-Adresse des Pi, startet der Container nicht mehr.
 
 Kein Container läuft mit `privileged`, kein Container nutzt `network_mode: host`,
-alle elf laufen mit `no-new-privileges`.
+alle vierzehn laufen mit `no-new-privileges` (nachgemessen 13.09.2026).
 
 **Vaultwarden ist der einzige Container, der ausdrücklich an `127.0.0.1` gebunden ist.**
 Bei allen übrigen sorgt `pi-guard` für die Abschottung; bei einem Passwort-Tresor soll
@@ -199,7 +209,14 @@ Grundlage ist die Messung, die vom 18.08.2026 bis zum 12.09.2026 alle fünf Minu
 | homepage-dockerproxy | 30 MiB | **64 MiB** | 113 % |
 | diun-dockerproxy | 19 MiB | **48 MiB** | 153 % |
 | paperless-redis | 16 MiB | **128 MiB** | 700 % |
-| **Summe** | **2.623 MiB** | **4.816 MiB** | von 3.796 MiB RAM |
+| yt-werk | — (keine Messreihe) | **256 MiB** | — |
+| **Summe** | **2.623 MiB** (13 Container) | **5.072 MiB** (14 Container) | von 3.796 MiB RAM |
+
+**Für yt-werk gibt es keinen Messreihenwert.** Der Dienst kam am 12.09.2026 dazu, da war
+die Fünf-Minuten-Messung bereits abgeschaltet. Was vorliegt, ist eine Einzelmessung:
+**77 MiB am 13.09.2026 im Leerlauf** bei einem Limit von 256 MiB. Nach der Lehre aus der
+Richtigstellung weiter unten ist das ausdrücklich **kein** Maximum. Der Fall, der den
+Wert treibt, ist ein sehr langes Transkript, und der trat während der Messung nicht auf.
 
 **Die Limits sind bewusst großzügig.** Sie sind eine Reißleine gegen einen ausgerissenen
 Dienst, kein Sparprogramm. Der Grund steht in der Messung selbst: Sie tastet alle fünf
@@ -224,12 +241,13 @@ beobachten statt anheben.
 
 ### Seit n8n ist die Maschine überbucht, und das ist so gewollt
 
-**Die Summe aller Limits liegt mit 4.816 MiB über den 3.796 MiB RAM.** Bis zum
-07.09.2026 war das anders; mit n8n und seinem Limit von 1024 MiB ist die alte Zusage
+**Die Summe aller Limits liegt mit 5.072 MiB über den 3.796 MiB RAM** (nachgemessen am
+13.09.2026 direkt an den laufenden Containern; mit `yt-werk` sind am 12.09.2026 256 MiB
+dazugekommen). Bis zum 07.09.2026 war das anders; mit n8n und seinem Limit von 1024 MiB ist die alte Zusage
 „selbst wenn alle gleichzeitig ihre Decke erreichen, bleibt Luft" nicht mehr zu halten.
 
-**Das ist eine bewusste Entscheidung, keine Nachlässigkeit** (12.09.2026). Um wieder
-unter die 3.796 MiB zu kommen, müssten rund 1.000 MiB aus den Limits herausgeschnitten
+**Das ist eine bewusste Entscheidung, keine Nachlässigkeit** (12.09.2026, am 13.09.2026
+unverändert). Um wieder unter die 3.796 MiB zu kommen, müssten rund 1.300 MiB aus den Limits herausgeschnitten
 werden — und weil die gemessenen Maxima Untergrenzen sind, würden dabei genau die Puffer
 verschwinden, für die die Limits großzügig gewählt wurden. Der Preis der Überbuchung ist
 klar benannt: **Geht wirklich alles gleichzeitig an seine Decke, sucht sich der
@@ -244,6 +262,15 @@ Container ist noch leer; die Workflows kommen erst. Ein Limit auf der Grundlage 
 leeren n8n zu senken, wäre dieselbe Einzelmessung, die oben gerade richtiggestellt wurde.
 **Nach den ersten produktiven Workflows erneut messen.**
 
+**Nachgemessen nach dem Setzen** (20.08.2026): Alle acht damaligen Container melden ihr
+Limit über `docker inspect`, `OOMKilled=false`, `RestartCount=0`, Paperless nach 125 s
+wieder `healthy`. `pi-guard` hat das Neuerzeugen überstanden — die Ketten stehen samt
+Referenz.
+
+> **Ein Limit greift erst, wenn der Container neu erzeugt wird.** Ein `restart` genügt
+> nicht, `compose up -d` schon. Wer nur die Compose-Datei ändert und committet, hat die
+> Änderung an einer von zwei Stellen gemacht.
+
 ### Die Messung ist beendet (12.09.2026)
 
 `docker-stats-messung.timer` ist seit dem 12.09.2026 abgeschaltet
@@ -253,18 +280,15 @@ Unit-Dateien und die Manifestzeilen bleiben bestehen, damit sich die Messung fü
 neue Frage ohne Aufbau wieder einschalten lässt. Die CSV (4,2 MB) bleibt auf der SSD
 liegen.
 
-**Nachgemessen nach dem Setzen** (20.08.2026): Alle acht Container melden ihr Limit über
-`docker inspect`, `OOMKilled=false`, `RestartCount=0`, Paperless nach 125 s wieder
-`healthy`. `pi-guard` hat das Neuerzeugen überstanden — die Ketten stehen samt Referenz.
+> **Richtiggestellt am 13.09.2026.** An dieser Stelle stand bis dahin zusätzlich der Satz
+> „Die Messung läuft vorerst weiter" — ein Rest der Fassung vom 20.08.2026, der dem Absatz
+> direkt darüber widersprach. Wer nur eine Hälfte des Abschnitts las, bekam die falsche
+> Antwort auf die Frage, ob gerade gemessen wird. Der Satz ist entfernt; es wird **nicht**
+> gemessen. Wiedereinschalten: Anleitung in `system/messung/README.md`.
 
-> **Ein Limit greift erst, wenn der Container neu erzeugt wird.** Ein `restart` genügt
-> nicht, `compose up -d` schon. Wer nur die Compose-Datei ändert und committet, hat die
-> Änderung an einer von zwei Stellen gemacht.
-
-**Die Messung läuft vorerst weiter.** Ihr ursprünglicher Zweck ist erfüllt, aber sie hat
-jetzt einen zweiten: zu zeigen, ob ein Container gegen seine neue Decke läuft — vor allem
-bichon. Erst wenn das über ein bis zwei Wochen nicht passiert, wird sie entfernt;
-Anleitung in `system/messung/README.md`.
+**Folge für neue Dienste:** Wer ab jetzt dazukommt, hat keinen Messreihenwert, sondern nur
+eine Einzelmessung — so wie `yt-werk`. Ein Limit auf dieser Grundlage ist ein
+Erstanhaltspunkt, kein gemessenes Maximum.
 
 **Bewertung:** Der Pi ist von seiner Kapazitätsgrenze entfernt, aber nicht mehr
 komfortabel weit: 34 % Speicher im Leerlauf lassen für einen schweren zusätzlichen
@@ -500,12 +524,18 @@ unterscheidet nicht zwischen „leer" und „wichtig".
 
 | Typ | Anzahl | Größe | Davon freigebbar |
 |---|---|---|---|
-| Images | 8 | 3,63 GB | **0 B** |
-| Container | 8 | 97 KB | 0 B |
-| Volumes | 8 | 72,4 MB | 479 B |
-| Build-Cache | 0 | 0 B | 0 B |
+| Images | 25 (davon 16 benannt) | 5,80 GB | 87,7 MB (1 %) |
+| Container | 14 | 76,3 MB | 0 B |
+| Volumes | 8 | 75,4 MB | 479 B |
+| Build-Cache | 24 | 102,4 MB | 49,2 kB |
 
-*Gemessen am 18.08.2026 nach dem Aufräumen.*
+*Gemessen am 13.09.2026* (`sudo docker system df`). Der Build-Cache ist neu: Er entstand
+beim Bauen von `yt-werk:1.0.0` und war vorher leer. Er bleibt bewusst liegen — er
+beschleunigt den Neubau, der bei jedem yt-dlp-Sprung ansteht, und 102 MB sind auf einer zu
+95 % freien SD-Karte kein Argument.
+
+Ebenfalls neu und **nicht** zugeordnet: `alpine:3.20` (8,82 MB). Kein Container und keine
+Compose-Datei verweist darauf (13.09.2026 geprüft). Aufräumen: [09](09-empfehlungen.md), 3.4.
 
 ---
 
@@ -515,24 +545,36 @@ Alle Stacks liegen unter `/home/simon/raspi/` und sind in einem **Git-Repository
 versioniert (`git@github.com:qsimonbrn/raspi.git`).
 
 ```
-/home/simon/raspi/
-├── .git/
+/home/simon/raspi/                    (13.09.2026)
 ├── .gitignore              # schliesst .env, *.db, **/data/, *.log, secrets/ aus
-├── _archiviert/            # abgeschaltete Dienste, Konfiguration bleibt nachvollziehbar
-│   ├── README.md
-│   ├── dashy/docker-compose.yml
-│   └── filebrowser/docker-compose.yml
-├── backup/                 # restic-Backup: Skript, Service, Timer
-├── bichon/                 # docker-compose.yml + .env (nicht versioniert)
-├── firewall/               # pi-guard: Zugriffsbegrenzung, siehe 07
-├── homepage/               # docker-compose.yml + config/
-├── messung/                # befristete Speichermessung, siehe README dort
-├── ntfy/                   # docker-compose.yml + server.yml + .env
-├── paperless/              # docker-compose.yml + .env
-├── portainer/docker-compose.yml
-├── sudoers/                # versionierte Kopie der Regeln fuer das Konto claude
-└── updates/                # unattended-upgrades, daemon.json, cmdline.txt
+├── CHANGELOG.md            # Verlauf der DOKUMENTATION
+├── README.md
+├── docs/                   # Kapitel 01 bis 20
+├── inventar/               # collect.sh und die Kennzahl-Schnappschuesse
+├── stacks/                 # LAEUFT VON HIER
+│   ├── _archiviert/        # dashy, filebrowser -- abgeschaltet 18.08.2026
+│   ├── bichon/             # docker-compose.yml + .env (nicht versioniert)
+│   ├── diun/
+│   ├── homepage/           # docker-compose.yml + config/
+│   ├── insta-triage/       # + app/, lokal gebautes Image
+│   ├── n8n/                # + .env (Verschluesselungsschluessel)
+│   ├── ntfy/               # + server.yml + .env
+│   ├── paperless/          # + .env
+│   ├── portainer/
+│   ├── vaultwarden/        # + .env
+│   └── yt-werk/            # + Dockerfile, app/ -- lokal gebautes Image
+└── system/                 # NUR KOPIE der installierten Fassung
+    ├── abgleich/           # manifest.tsv, pi-abgleich.sh
+    ├── backup/             # restic-Backup: Skript, Service, Timer
+    ├── firewall/           # pi-guard: Zugriffsbegrenzung, siehe 07
+    ├── journald/, messung/, pihole/, sudoers/, updates/, wartung/
+    └── ...
 ```
+
+**Richtiggestellt am 13.09.2026.** Dieser Baum zeigte bis dahin noch die flache Ablage vor
+der Zusammenlegung der Repositories am 18.08.2026 — ohne `stacks/` und `system/`, ohne
+`docs/`, und ohne die fünf seither dazugekommenen Stacks. Er beschrieb damit einen Zustand,
+den es seit vier Wochen nicht mehr gab. Gemessen mit `ls`, nicht fortgeschrieben.
 
 **Achtung, wiederkehrender Fallstrick:** Die Skripte liegen **doppelt** vor — unter
 `/usr/local/bin/` läuft die installierte Fassung, im Repository steht eine Kopie.

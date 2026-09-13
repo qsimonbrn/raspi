@@ -2,7 +2,7 @@
 
 Vollständige Dokumentation des Heimservers `raspberrypi` (`192.168.178.80`).
 
-> **Stand:** 04.09.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
+> **Stand:** 13.09.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
 > **Nächste Prüfung empfohlen:** bei jeder Änderung am Setup, mindestens quartalsweise
 
 ---
@@ -18,7 +18,7 @@ Ein Raspberry Pi 4B als Heimserver mit drei Rollen:
 | **Dateiablage** | Samba auf einer 1-TB-SSD |
 
 Dazu Tailscale für den Fernzugriff, Portainer zur Container-Verwaltung und Homepage als
-Einstiegsseite. Dreizehn Docker-Container in neun Stacks; die Compose-Dateien liegen seit dem
+Einstiegsseite. Vierzehn Docker-Container in zehn Stacks; die Compose-Dateien liegen seit dem
 18.08.2026 in **diesem** Repository unter `stacks/` und laufen direkt von dort — seit dem
 16.08.2026 durchgängig auf feste Image-Versionen gepinnt.
 
@@ -47,6 +47,7 @@ Einstiegsseite. Dreizehn Docker-Container in neun Stacks; die Compose-Dateien li
 | [17 — Wo was liegt](docs/17-wo-was-liegt.md) | Welche Datei ist Original, welche Kopie — Repositories, installierte Fassungen, Rechte |
 | [18 — Vaultwarden](docs/18-vaultwarden.md) | Passwort-Tresor: Aufbau, Absicherung, Sicherung der Tresor-Datenbank, Wiederherstellung |
 | [19 — n8n](docs/19-n8n.md) | Automatisierungsserver: Aufbau, Abschottung über pi-guard, Sicherung, Wiederherstellung |
+| [20 — yt-werk](docs/20-yt-werk.md) | Beschaffungsdienst der Workbench: holt Playlists, Metadaten und Transkripte von YouTube |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 
@@ -56,25 +57,26 @@ Einstiegsseite. Dreizehn Docker-Container in neun Stacks; die Compose-Dateien li
 
 | | |
 |---|---|
-| Uptime | 1 Woche, 4 Tage (04.09.2026) |
-| Load (1/5/15 min) | 0,65 / 0,32 / 0,22 bei 4 Kernen |
-| Temperatur | 47,2 °C — nie gedrosselt (`throttled=0x0`) |
-| RAM verfügbar | 2,0 von 3,7 GiB (04.09.2026) |
-| Systemdatenträger | 4 % belegt (8,5 G von 235 G) |
-| Datenspeicher SSD | 36 % belegt (311 G von 916 G) |
-| Ausstehende OS-Updates | **2** (04.09.2026) — `tailscale` wird von `unattended-upgrades` nie erfasst (Fremd-Repository), zuletzt am 20.08.2026 von Hand auf 1.102.3 gezogen |
+| Uptime | 6 Tage, 14 Stunden (13.09.2026) |
+| Load (1/5/15 min) | 0,85 / 0,38 / 0,28 bei 4 Kernen (13.09.2026) |
+| Temperatur | 46,2 °C — nie gedrosselt (`throttled=0x0`, 13.09.2026) |
+| RAM verfügbar | 1,8 von 3,7 GiB (13.09.2026) |
+| Systemdatenträger | 5 % belegt (11 G von 235 G, 13.09.2026) |
+| Datenspeicher SSD | 36 % belegt (311 G von 916 G, 13.09.2026) |
+| Ausstehende OS-Updates | **3** (13.09.2026) — `tailscale` wird von `unattended-upgrades` nie erfasst (Fremd-Repository), zuletzt am 20.08.2026 von Hand auf 1.102.3 gezogen |
 | Fehlgeschlagene Dienste | 0 |
-| Backup | täglich, 31 Snapshots (12.09.2026); zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
+| Backup | täglich, 33 Snapshots (13.09.2026); zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
 | Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
-| Container | **13**, alle mit Logrotation und `no-new-privileges` (07.09.2026) |
+| Container | **14**, alle mit Logrotation und `no-new-privileges` (13.09.2026) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
-| Speicher-Limits | **für alle 13 Container gesetzt**, Summe 4.816 von 3.796 MiB — seit n8n **bewusst überbucht** ([05](docs/05-docker.md)) |
+| Speicher-Limits | **für alle 14 Container gesetzt**, Summe 5.072 von 3.796 MiB — **bewusst überbucht** ([05](docs/05-docker.md)) |
 | Passwort-Tresor | **Vaultwarden 1.37.2** seit 23.08.2026, nur über Tailscale auf Port 8443 ([18](docs/18-vaultwarden.md)) |
 | Benachrichtigungen | **ntfy stellt seit 25.08.2026 nachweislich aufs iPhone zu** — Alarmkette erstmals geschlossen ([14](docs/14-benachrichtigungen.md)) |
 | Automatisierung | **n8n 2.37.10** seit 07.09.2026, nur über Tailscale auf Port 5678 ([19](docs/19-n8n.md)) |
-| Update-Meldungen | **Diun 4.33.0** seit 25.08.2026, täglich 06:15, überwacht 11 Images ([05](docs/05-docker.md)) |
+| Workbench | **yt-werk 1.0.0** seit 12.09.2026 — **kein Port auf dem Host**, nur für n8n im Docker-Netz `werkbank` erreichbar ([20](docs/20-yt-werk.md)) |
+| Update-Meldungen | **Diun 4.33.0** seit 25.08.2026, täglich 06:15, überwacht 12 Images (13.09.2026) ([05](docs/05-docker.md)) |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.
 

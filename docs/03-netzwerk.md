@@ -1,6 +1,6 @@
 # 03 — Netzwerk
 
-*Erfasst: 18.08.2026 · ergänzt 23.08.2026*
+*Erfasst: 18.08.2026 · ergänzt 23.08.2026 · Netze und Ports nachgemessen: 13.09.2026*
 
 ## Anbindung
 
@@ -78,22 +78,44 @@ Die Ablösung von WireGuard und ihre Begründung stehen in
 
 ## Docker-Netzwerke
 
-| Bridge | Netz | Stack |
-|---|---|---|
-| `br-5b3f94d4d9ce` | `172.20.0.0/16` | bichon |
-| `br-cc867486ae27` | `172.23.0.0/16` | homepage |
-| `br-f56477634ea2` | `172.24.0.0/16` | ntfy |
-| `br-3a32f2228553` | `172.18.0.0/16` | paperless |
-| `br-4123f2bc2193` | `172.19.0.0/16` | portainer |
-| `docker0` | `172.17.0.0/16` | **DOWN**, ungenutzt |
+*Nachgemessen am 13.09.2026.*
 
-Die Netze von Dashy (`172.22.0.0/16`) und Filebrowser (`172.21.0.0/16`) sind mit den
-Diensten am 18.08.2026 entfallen.
+| Bridge | Netz | Stack bzw. Zweck | Container darin |
+|---|---|---|---|
+| `br-3a32f2228553` | `172.18.0.0/16` | paperless | paperless, paperless-db-1, paperless-redis-1 |
+| `br-4123f2bc2193` | `172.19.0.0/16` | portainer | portainer |
+| `br-5b3f94d4d9ce` | `172.20.0.0/16` | bichon | bichon |
+| `br-595d6ab60da4` | `172.21.0.0/16` | vaultwarden | vaultwarden |
+| `br-5e5230370cca` | `172.22.0.0/16` | diun | diun, diun-dockerproxy |
+| `br-cc867486ae27` | `172.23.0.0/16` | homepage | homepage, homepage-dockerproxy |
+| `br-f56477634ea2` | `172.24.0.0/16` | ntfy | ntfy |
+| `br-18b595dd662e` | `172.25.0.0/16` | insta-triage | insta-triage |
+| `br-1e6c4fb71502` | `172.26.0.0/16` | `n8n_default` | **leer** — siehe unten |
+| `br-a802d3804ca0` | `172.27.0.0/16` | **`werkbank`** — stackübergreifend, außerhalb beider Stacks angelegt | n8n, yt-werk |
+| `docker0` | `172.17.0.0/16` | Standard-Bridge | **DOWN**, ungenutzt |
 
-**Bewertung:** Jeder Compose-Stack hat sein eigenes Netz — das ist die saubere Variante.
-Container können nur die Dienste im eigenen Stack direkt erreichen. Paperless kann so
-etwa nicht auf die Bichon-Datenbank zugreifen, obwohl beide auf demselben Host
-laufen.
+Die Netze von Dashy und Filebrowser sind mit den Diensten am 18.08.2026 entfallen; ihre
+damaligen Nummern (`172.21`, `172.22`) sind inzwischen an Vaultwarden und Diun neu
+vergeben. Die Zuordnung Bridge → Stack ist deshalb nichts, was man aus einer alten
+Fassung dieser Tabelle ablesen darf.
+
+**Bewertung:** Die Grundregel gilt weiter — jeder Compose-Stack hat sein eigenes Netz,
+und Container erreichen einander nur innerhalb des eigenen Stacks. Paperless kann so etwa
+nicht auf die Bichon-Datenbank zugreifen, obwohl beide auf demselben Host laufen.
+
+**`werkbank` ist seit dem 12.09.2026 die eine bewusste Ausnahme.** n8n und `yt-werk`
+liegen in zwei getrennten Stacks, müssen sich aber erreichen: n8n ruft den Sidecar unter
+`http://yt-werk:8722` auf. Das Netz ist deshalb **außerhalb beider Stacks** angelegt
+(`docker network create werkbank`, in beiden Compose-Dateien als `external: true`
+eingetragen) — läge es in einem der beiden, zöge ein `compose down` es dem anderen unter
+den Füßen weg. Der Preis der Ausnahme ist benannt: Zwischen diesen beiden Containern
+trennt die Stack-Grenze nicht mehr. Vertretbar ist sie, weil `yt-werk` überhaupt keinen
+Port auf dem Host veröffentlicht und damit *ausschließlich* über dieses Netz erreichbar
+ist — siehe [20 — yt-werk](20-yt-werk.md).
+
+**`n8n_default` ist seit dem 12.09.2026 leer**, weil n8n nur noch in `werkbank` hängt.
+Compose legt das Netz beim nächsten `up` trotzdem wieder an; es kostet nichts außer einer
+Zeile in dieser Tabelle. Aufräumen: [09 — Empfehlungen](09-empfehlungen.md), 3.4.
 
 Der ungenutzte `docker0` ist der Standard-Bridge, den Compose-Projekte nicht verwenden.
 Dass er DOWN ist, bestätigt: Es läuft kein Container außerhalb eines Compose-Stacks.
@@ -112,6 +134,8 @@ Dass er DOWN ist, bestätigt: Es läuft kein Container außerhalb eines Compose-
 | 8000 | Paperless-ngx | `0.0.0.0` + `[::]` — 🔒 per Firewall auf Tailscale begrenzt |
 | 9000 / 9443 | Portainer | `0.0.0.0` + `[::]` — 🔒 per Firewall auf Tailscale begrenzt |
 | 15630 | Bichon | `0.0.0.0` + `[::]` — 🔒 per Firewall auf Tailscale begrenzt |
+| 5678 | n8n | `0.0.0.0` + `[::]` — 🔒 per Firewall auf Tailscale begrenzt |
+| 8080 | insta-triage | **nur `100.108.219.87`** — an die Tailscale-Adresse gebunden, lauscht im Heimnetz gar nicht |
 | zufällig (UDP) | Tailscale (`tailscaled`) | `100.108.219.87` + Tailnet-IPv6 |
 
 > **🔒 bedeutet nicht „nicht gebunden".** Diese Dienste lauschen weiterhin auf allen
@@ -124,6 +148,13 @@ Dass er DOWN ist, bestätigt: Es läuft kein Container außerhalb eines Compose-
 | Port | Dienst |
 |---|---|
 | `127.0.0.1:5335` | unbound |
+| `127.0.0.1:8222` | Vaultwarden — von außen nur über `tailscale serve` auf 8443, siehe [18](18-vaultwarden.md) |
+
+**Gar nicht auf dem Host:** `yt-werk` lauscht auf 8722, aber nur *im Container*. Die
+Compose-Datei veröffentlicht keinen Port; der Dienst taucht in `ss -tulpn` deshalb nicht
+auf und ist ausschließlich aus dem Docker-Netz `werkbank` erreichbar (13.09.2026
+nachgemessen). Das ist die dichteste der drei Varianten, die hier vorkommen — dichter als
+die Firewall-Sperre (`pi-guard`) und dichter als die Bindung an die Tailscale-Adresse.
 
 **Bewertung:** Dass unbound ausschließlich auf `127.0.0.1` lauscht, ist genau richtig —
 ein offener rekursiver Resolver im Netz wäre für DNS-Amplification-Angriffe missbrauchbar.

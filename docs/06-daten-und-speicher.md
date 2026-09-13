@@ -1,6 +1,6 @@
 # 06 — Daten & Speicher
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · Belegung und Verzeichnisse nachgemessen: 13.09.2026*
 
 > **Dies ist das wichtigste Kapitel dieser Dokumentation.** Alle anderen Befunde sind
 > Optimierungen. Dieser hier betrifft möglichen dauerhaften Datenverlust.
@@ -11,8 +11,8 @@
 
 | Ort | Größe | Belegt | Inhalt |
 |---|---|---|---|
-| `/` (SD-Karte) | 235 G | **7,8 G** | Betriebssystem, Docker-Layer, Logs — am 18.08.2026 durch Image-Aufräumen um rund 5 G entlastet |
-| `/mnt/usb-hdd` (SSD) | 916 G | **310 G** | Alle Nutzdaten |
+| `/` (SD-Karte) | 235 G | **11 G** (5 %, 13.09.2026) | Betriebssystem, Docker-Layer, Logs. Der Anstieg gegenüber 7,8 G am 18.08.2026 ist der Zuwachs an Images: n8n (1,57 G), yt-werk (211 M) und der Build-Cache (102 M) |
+| `/mnt/usb-hdd` (SSD) | 916 G | **311 G** (36 %, 13.09.2026) | Alle Nutzdaten |
 
 Die Trennung ist grundsätzlich richtig: Nutzdaten liegen auf der SSD, nicht auf der
 SD-Karte. Zum Risiko des Systemdatenträgers siehe [01 — Hardware](01-hardware.md).
@@ -23,6 +23,13 @@ SD-Karte. Zum Risiko des Systemdatenträgers siehe [01 — Hardware](01-hardware
 |---|---|---|
 | `paperless/` | **Dokumentenarchiv**, Thumbnails, Datenbankdaten | 🔴 sehr hoch |
 | `bichon/` | **E-Mail-Archiv** | 🔴 sehr hoch |
+| `second-brain/` | **Sicherungsziel des Obsidian-Vaults** vom Mac: `unterlagen/` (402 M), `vault.git/` (568 K), `literatur/` (263 M, bewusst ungesichert) und seit 12.09.2026 `eingang/` (320 K) — siehe unten | 🔴 sehr hoch |
+| `n8n/` | **n8n-Ablage**: SQLite-Datenbank, Workflows, verschlüsselte Zugangsdaten, Verschlüsselungsschlüssel (7,7 M) | 🔴 sehr hoch |
+| `vaultwarden/` | **Passwort-Tresor**: JWT-Schlüssel, Anhänge, Datenbank (716 K) | 🔴 sehr hoch |
+| `ntfy/` | Benutzer, Zugriffsregeln, Nachrichten-Cache der Alarmierung | 🟠 wichtig |
+| `claude-skills/` | Skills und MCP-Server, eigenes Repository (1,2 M) | 🟠 wichtig |
+| `insta-triage/` | Daten des Instagram-Triage-Dienstes (19 M) | 🟡 mittel |
+| `diun/` | Zustandsdatenbank der Update-Meldungen (192 K) | 🟢 gering — in zwei Minuten neu aufgebaut, siehe [11](11-disaster-recovery.md) |
 | ~~`filebrowser-data/`~~ | Filebrowser-Datenbank — Dienst am 18.08.2026 abgeschaltet, Verzeichnis am selben Tag nach `_to_delete/filebrowser-data-20260818` verschoben und aus dem Backup genommen | — |
 | `messungen/` | CSV der befristeten Speichermessung, siehe [05](05-docker.md) | 🟢 gering |
 | `_to_delete/` | Zum Löschen vorgemerkt, wartet auf eine Entscheidung | 🟢 gering |
@@ -36,6 +43,33 @@ SD-Karte. Zum Risiko des Systemdatenträgers siehe [01 — Hardware](01-hardware
 
 Die zahlreichen `._*`-Dateien und `.DS_Store` stammen von macOS-Zugriffen über Samba.
 Harmlos, aber sie lassen sich mit einer Samba-Option (`veto files`) künftig vermeiden.
+
+### Das Ablagefach `second-brain/eingang/` (seit 12.09.2026)
+
+| | |
+|---|---|
+| Pfad | `/mnt/usb-hdd/second-brain/eingang/` |
+| Besitzer, Rechte | `simon:pi-admin`, Modus **2750** — nachgemessen 13.09.2026 |
+| Beschrieben von | `yt-werk` und `n8n`, beide laufen als UID/GID **1000:1000** (= `simon`) |
+| Inhalt am 13.09.2026 | zwei Videoverzeichnisse und `.verarbeitet`, zusammen 320 K |
+| Im Backup | ja, seit 12.09.2026; `.tmp-*` ausgenommen — siehe [12](12-backup.md) |
+
+**Warum es nicht unter `second-brain/unterlagen/` liegt:** Dorthin spiegelt der Mac mit
+`rsync --delete`. Was der Pi dort ablegte, wäre beim nächsten Sync spurlos weg.
+
+**Warum setgid (die 2 in 2750):** Es vererbt die Gruppe `pi-admin` an alles, was darin
+entsteht. Ohne das bekämen die Verzeichnisse, die `yt-werk` je Video anlegt, die
+Primärgruppe des schreibenden Prozesses, und wer sonst noch hineinsehen soll, müsste
+jedes Mal nachgebessert werden.
+
+> **⚠️ Befund vom 13.09.2026: Das Konto `claude` kann in `eingang/` nicht schreiben.**
+> Gemessen, nicht vermutet: `touch` als `claude` scheitert mit `Permission denied`,
+> während derselbe Befehl in `second-brain/unterlagen/` durchläuft. Grund ist Modus
+> **2750** — die Gruppe `pi-admin` hat `r-x`, kein `w`. Solange nur `yt-werk` und `n8n`
+> (beide UID 1000) schreiben, stört das nicht. Es stört in dem Moment, in dem der
+> **Abholvorgang vom Mac** etwas zurückschreiben oder Verarbeitetes wegräumen soll: Der
+> läuft über das Konto `claude`. Zu entscheiden ist, ob `eingang/` auf 2770 gehen soll
+> oder ob das Wegräumen Sache der UID 1000 bleibt — [09](09-empfehlungen.md), 3.11.
 
 ### Verwaistes Verzeichnis
 

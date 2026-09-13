@@ -1,6 +1,6 @@
 # 11 — Notfallwiederherstellung
 
-*Stand: 16.08.2026*
+*Stand: 16.08.2026 · Bestandsaufnahme nachgezogen: 13.09.2026*
 
 Was passiert, wenn der Pi morgen nicht mehr startet?
 
@@ -21,7 +21,10 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | 9 | **Vaultwarden** (Tresor-Datenbank und JWT-Schlüssel) | ✅ **ja** | restic-Backup, seit 23.08.2026 — konsistenter SQLite-Abzug, nicht die laufende Datei |
 | 10 | **n8n** (Workflows, verschlüsselte Zugangsdaten, Verschlüsselungsschlüssel) | ✅ **ja** | restic-Backup, seit 07.09.2026 — konsistenter SQLite-Abzug wie bei Vaultwarden. **Der Schlüssel `config` liegt mit im Backup; ohne ihn ist die Datenbank wertlos** |
 | 11 | **Diun-Zustand und ntfy-Token** (`/mnt/usb-hdd/diun`, `/etc/diun/ntfy-token`) | ❌ **nein, bewusst** | In zwei Minuten neu erzeugt, siehe unten |
-| 12 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
+| 12 | **Second Brain** (`unterlagen/`, `vault.git/`) | ✅ **ja** | restic-Backup, seit 03.09.2026. `literatur/` bewusst nicht — ersetzbar, siehe [12](12-backup.md) |
+| 13 | **Workbench-Ablagefach** (`second-brain/eingang/`) | ✅ **ja** | restic-Backup, seit 12.09.2026, `.tmp-*` ausgenommen. Der Inhalt ist eine Warteschlange, kein Bestand — im Notfall ist der Verlust ein neuer Holvorgang, keine verlorene Arbeit |
+| 14 | **yt-werk** (Image, Dockerfile, Anwendung) | ✅ **ja** | GitHub: `qsimonbrn/raspi`, `stacks/yt-werk/`. Das **Image** liegt nirgends gesichert — es wird aus dem Dockerfile neu gebaut, und `yt-dlp` ist darin gepinnt, siehe [20](20-yt-werk.md) |
+| 15 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
 
 **Zu 11 — Diun nach einem Totalverlust wiederherstellen.** Das ntfy-Konto `diun`
 selbst ist gesichert (es liegt in `user.db` unter `/mnt/usb-hdd/ntfy`), nur sein
@@ -40,13 +43,17 @@ Datei, Diun setzt ihn in den `Authorization`-Header, und der Versand scheitert m
 Zustandsdatenbank baut sich beim ersten Lauf neu auf; sie kostet höchstens eine
 Meldungswelle.
 
-**Neun von zehn** — seit Einrichtung des Backups am 13.08.2026, um Position 7 und 8
-erweitert am 18.08.2026, um Position 9 am 23.08.2026. Am 20.08.2026 erstmals nachgewiesen, dass sich das Gesicherte
-auch zurückholen lässt: `restic check` über alle 10 Snapshots ohne Fehler, Stichprobe aus
-Snapshot `af02aa04` zurückgeholt und byte-identisch.
-Details in [12 — Backup](12-backup.md).
+**Dreizehn von fünfzehn** (13.09.2026) — seit Einrichtung des Backups am 13.08.2026, um
+Position 7 und 8 erweitert am 18.08.2026, um 9 am 23.08.2026, um 10 am 07.09.2026, um 12
+am 03.09.2026 und um 13 am 12.09.2026. Position 11 ist bewusst ausgenommen, Position 14
+braucht kein Backup, weil sie aus dem Repository neu entsteht.
 
-Offen bleibt Position 10: die 222 GB unter `SSD_Müll` und 86 GB unter `rclone_bak`.
+Der Nachweis, dass sich das Gesicherte auch zurückholen lässt, läuft seit dem 20.08.2026
+bei **jeder** Bestandsaufnahme mit: zuletzt am 13.09.2026 `restic check --read-data-subset`
+über 5 von 5 Packs ohne Fehler, Stichprobe `README.md` aus Snapshot `014e39dd` zurückgeholt
+und byte-identisch. Details in [12 — Backup](12-backup.md).
+
+Offen bleibt Position 15: die 222 GB unter `SSD_Müll` und 86 GB unter `rclone_bak`.
 Empfehlung dazu in [12 — Backup, Abschnitt 8](12-backup.md#8-was-dieses-backup-nicht-abdeckt).
 
 ---

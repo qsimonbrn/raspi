@@ -148,11 +148,15 @@ Wiederaufbau.
 /mnt/usb-hdd/paperless/media          Originaldateien
 /mnt/usb-hdd/vaultwarden              Tresor: JWT-Schluessel und Anhaenge
                                       (db.sqlite3* ausgeschlossen, siehe unten)
+/mnt/usb-hdd/n8n                      n8n: Workflows, Zugangsdaten, Schluessel
+                                      (database.sqlite* ausgeschlossen, eigener Abzug)
 /var/lib/docker/volumes/portainer_portainer_data/_data
 /mnt/usb-hdd/claude-skills            Skills und MCP-Server (eigenes Repository)
 /home/simon/raspi                     Compose-Dateien, Systemkonfiguration, Doku
 /mnt/usb-hdd/second-brain/unterlagen  Second Brain: Kursunterlagen, eigene Arbeiten
 /mnt/usb-hdd/second-brain/vault.git   Second Brain: Notizen samt Versionsgeschichte
+/mnt/usb-hdd/second-brain/eingang     Workbench: Ablagefach zwischen yt-werk, n8n
+                                      und dem Mac (.tmp-* ausgeschlossen)
 ```
 
 **Richtiggestellt am 04.09.2026.** Die Liste nannte `/home/simon/raspi` zweimal — ein
@@ -170,6 +174,11 @@ Sicherungsziel. Befüllt wird `/mnt/usb-hdd/second-brain/` von einem `rsync`- un
 `git push`-Skript **auf dem Mac** (launchd, täglich 21:30) — nicht vom Pi aus. Der Ordner
 gehört `claude:claude` mit Modus 750; gegengeprüft: `claude` darf daneben auf
 `/mnt/usb-hdd` nichts anlegen.
+
+**Das Unterverzeichnis `eingang/` fällt aus dieser Regel heraus** (13.09.2026
+nachgemessen): Es gehört `simon:pi-admin` mit Modus 2750, weil `yt-werk` und `n8n` als UID
+1000 hineinschreiben. Für das Backup ist das unerheblich — restic läuft als `root`. Für
+den Abholvorgang vom Mac ist es das nicht, siehe [06](06-daten-und-speicher.md).
 
 Bewusst **nicht** gesichert wird `second-brain/literatur` (263 MB Fachbücher). Sie sind
 ersetzbar und kosten bei jedem OneDrive-Lauf Übertragungszeit; sie liegen nur auf der
@@ -192,7 +201,23 @@ sein Inhalt ist notfalls neu aufbaubar, und das ist der Preis dafür, Portainer 
 jede Nacht anzuhalten. `filebrowser-data` gehörte zu einem am 18.08.2026
 abgeschalteten Dienst und liegt jetzt unter `/mnt/usb-hdd/_to_delete/`.
 
-Ausgeschlossen: `*/tmp/*`, `*/logs/*`, `*.lock`, Cache-Verzeichnisse.
+**Geändert am 12.09.2026.** `/mnt/usb-hdd/second-brain/eingang` kam dazu — das Ablagefach
+der Workbench, in das `yt-werk` die geholten Videos legt und `n8n` die fertigen Fahrpläne
+schreibt. Damit sichert der Lauf **13 Pfade** (nachgemessen am 13.09.2026 am Snapshot
+`014e39dd`, nicht an diesem Text). Ausgenommen ist `eingang/.tmp-*`: Dateien, an denen ein
+Holvorgang gerade schreibt. Sie wären im Backup halbe Dateien, und der nächste Lauf holt
+sie ohnehin vollständig — oder gar nicht, weil der Holvorgang abgebrochen ist.
+
+> **Richtiggestellt am 13.09.2026.** Diese Liste nannte `/mnt/usb-hdd/n8n` nicht, obwohl
+> es seit dem 07.09.2026 mitgesichert wird. Gemessen an `system/backup/pi-backup.sh`, nicht
+> am Text — dieselbe Prüfung, die am 04.09.2026 schon zwei andere Abweichungen gefunden hat.
+> Der Grund ist immer derselbe: Ein Pfad wird im Skript ergänzt, und die Prosa daneben
+> bleibt stehen.
+
+Ausgeschlossen sind, gemessen am Skript (13.09.2026): `*/tmp/*`, `*/logs/*`, `*.lock`,
+Cache-Verzeichnisse (`--exclude-caches`), die laufenden Datenbankdateien von Vaultwarden
+und n8n (beide haben einen eigenen, konsistenten Abzug), `/mnt/usb-hdd/n8n/*.log` und
+`/mnt/usb-hdd/second-brain/eingang/.tmp-*`.
 
 **Schritt 6 — Aufräumen.** Alte Stände werden nach den Regeln aus Abschnitt 5 entfernt
 und der Speicher freigegeben (`--prune`).
