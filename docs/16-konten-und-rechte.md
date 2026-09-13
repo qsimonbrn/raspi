@@ -1,6 +1,6 @@
 # 16 — Konten, Rechte und Überwachung
 
-*Erfasst: 18.08.2026*
+*Erfasst: 18.08.2026 · Rechte und `umask` nachgemessen: 13.09.2026*
 
 Wer darf auf diesem Pi was, und wie ist nachvollziehbar, wer was getan hat. Dieses
 Kapitel ist der Einstiegspunkt, wenn ein Zugang eingerichtet, geprüft oder entzogen
@@ -65,6 +65,68 @@ Damit ist auch die Anmeldung selbst unmöglich, nicht nur die Rechteausweitung.
 Enthält `simon` und `claude`. Beide Repositories gehören dieser Gruppe mit gesetztem
 setgid-Bit (`2775`), damit neu angelegte Dateien die Gruppe erben und beide Konten
 gleichberechtigt arbeiten können.
+
+#### Das setgid-Bit allein genügt nicht — die `umask` gehört dazu (13.09.2026)
+
+**setgid vererbt die Gruppe, nicht das Schreibrecht.** Bis zum 13.09.2026 liefen beide
+Konten mit `umask 022`. Jedes neu angelegte Verzeichnis wurde damit `2755`: Gruppe
+`pi-admin` korrekt geerbt, aber ohne `w`. Wer das Verzeichnis angelegt hatte, konnte
+darin arbeiten — das jeweils **andere** Konto nicht.
+
+Der Fehler fällt selten sofort auf, weil er sich als etwas anderes tarnt: Die
+Automatisierung weicht auf `sudo` aus, das funktioniert, und zurück bleiben Dateien, die
+`root` gehören. Vier solche Dateien lagen am 13.09.2026 unter `inventar/snapshots/`.
+
+| Gemessen am 13.09.2026, vorher | nachher |
+|---|---|
+| 8 Verzeichnisse `2755 claude:pi-admin` — `simon` ausgesperrt | 0 |
+| 1 Verzeichnis `2755 simon:pi-admin` (am 12.09. von Hand repariert) | — |
+| 60 Dateien `644 claude:pi-admin` | 0 |
+| 4 Dateien `root:pi-admin` | 0 |
+
+**Behoben in zwei Teilen.** Der Bestand mit `chmod g+w` (Verzeichnisse und Dateien der
+Gruppe `pi-admin`, **Geheimnisse ausdrücklich ausgenommen**), die Ursache mit `umask 002`
+in `/home/claude/.bashrc` und `/home/simon/.bashrc`.
+
+> **Die Zeile steht dort ganz oben, vor der `If not running interactively`-Sperre, und
+> das ist kein Schönheitsfehler.** Die SSH-Automatisierung läuft in einer
+> nicht-interaktiven Shell. Die liest `.bashrc` zwar — Debians bash tut das für
+> SSH-Verbindungen —, kehrt an der Sperre aber sofort zurück. Eine `umask`-Zeile weiter
+> unten wäre für genau den Fall wirkungslos, um den es geht. **Nachgemessen**, nicht
+> angenommen: Eine Probezeile `umask 0077` am Dateianfang schlug in der
+> Automatisierungs-Shell durch, dieselbe Zeile hinter der Sperre nicht.
+>
+> `/etc/login.defs` hilft hier nicht: `UMASK 022` steht dort zwar, aber **`pam_umask` ist
+> in keiner Datei unter `/etc/pam.d/` eingebunden** (13.09.2026 geprüft). Der Wert wirkt
+> deshalb nur für `login` und `su`, nicht für eine SSH-Sitzung.
+>
+> `.profile` hilft ebenfalls nicht — sie wird nur von Login-Shells gelesen.
+
+**Was `umask 002` kostet.** Neue Dateien werden `664` statt `644`, Verzeichnisse `2775`.
+Außerhalb der Repositories betrifft das nur die eigene Primärgruppe jedes Kontos
+(`simon:simon`, `claude:claude`) und damit niemanden sonst. **Innerhalb** der
+Repositories ist die Gruppe `pi-admin`, und genau das ist gewollt.
+
+> **Die Ausnahme, die man nicht vergessen darf: Geheimnisse.** Eine unter `umask 002` neu
+> angelegte `.env` bekäme `664` und wäre für `pi-admin` **schreibbar**. Geheimnisse
+> deshalb immer ausdrücklich setzen, nie der `umask` überlassen:
+> `chmod 600` nach dem Anlegen, Gegenprobe `git check-ignore -v stacks/<name>/.env`.
+> Beim Aufräumen am 13.09.2026 waren `stacks/*/.env` und `stacks/n8n/.n8n-api-key`
+> ausdrücklich vom `chmod g+w` ausgenommen; ein pauschales `chmod -R g+w` hätte sie von
+> 600 bzw. 640 auf 660 gezogen und damit das Gegenteil bewirkt.
+
+**Zwei Dinge bleiben bewusst stehen:**
+
+| Was | Warum |
+|---|---|
+| `stacks/homepage/config/logs/` (`2755 simon:simon`) | Wird vom Homepage-Container geschrieben, nicht von einem der beiden Konten. Über `.gitignore` ausgeschlossen. Gruppe `pi-admin` bringt hier nichts |
+| `system/backup/pi-backup.sh` (`755 simon:simon`) | Ungeklärte Ausnahme, siehe [09 — Empfehlungen](09-empfehlungen.md), 3.10 |
+
+**Nachweis am 13.09.2026, in beide Richtungen und mit Negativkontrolle:**
+`umask` in der Automatisierungs-Shell `0002` · `claude` legt ein Verzeichnis an → `2775` ·
+`simon` ebenso → `2775` · `claude` legt in `stacks/paperless/` an und ändert `docs/05` ·
+`simon` legt in `stacks/yt-werk/` an und ändert `stacks/yt-werk/app/app.py` ·
+**Negativkontrolle: `claude` kann `stacks/n8n/.env` weiterhin nicht lesen.**
 
 `/home/simon` steht auf `710` mit Gruppe `pi-admin`: `claude` darf das Verzeichnis
 **durchqueren**, um an die Repositories zu kommen, es aber **nicht auflisten**. Der

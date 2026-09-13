@@ -9,6 +9,50 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.20.0] — 2026-09-13 (abends)
+
+Ein Eingriff am System und seine Aufzeichnung: Das Gruppenschreibrecht im Repository ist
+hergestellt, die Ursache abgestellt.
+
+### Behoben
+
+- **`umask` beider Konten auf `002`** (`/home/claude/.bashrc`, `/home/simon/.bashrc`) und
+  Bestand mit `chmod g+w` bereinigt. Vorher: acht Verzeichnisse und 60 Dateien, in denen
+  `simon` nicht arbeiten konnte, dazu vier `root`-Dateien. Nachher: keine.
+  → [15](docs/15-aenderungshistorie.md), [16](docs/16-konten-und-rechte.md),
+  [09](docs/09-empfehlungen.md) 3.11
+
+### Hinzugefügt
+
+- **Kapitel [16](docs/16-konten-und-rechte.md):** Abschnitt „Das setgid-Bit allein genügt
+  nicht — die `umask` gehört dazu". Warum `.bashrc` und nicht `.profile` oder
+  `/etc/login.defs`, was `umask 002` kostet, und die Ausnahme für Geheimnisse.
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Tagebucheintrag mit Nachweis in beide
+  Richtungen, zwei Nebenbefunden und einem eigenen Fehlgriff.
+- **Kapitel [09](docs/09-empfehlungen.md):** Punkt **3.12** — das Schreibrecht im
+  Ablagefach `second-brain/eingang/`, aus 3.11 herausgelöst, weil es keine `umask`-Frage
+  ist, sondern eine Entscheidung im Projekt „Workbench".
+
+### Richtiggestellt
+
+- **Punkt 3.11 selbst war an zwei Stellen falsch**, beides erst durch Messung
+  aufgefallen: `.profile` wird von der SSH-Automatisierung **nicht** gelesen (`.bashrc`
+  schon, aber nur oberhalb der Interaktiv-Sperre — mit einer Probezeile nachgewiesen),
+  und `/etc/login.defs` wirkt hier nicht, weil `pam_umask` in keiner Datei unter
+  `/etc/pam.d/` eingebunden ist. Außerdem hätte das vorgeschlagene pauschale
+  `chmod -R g+w` die `.env`-Dateien von 600 auf 660 gezogen.
+- **Kapitel [17](docs/17-wo-was-liegt.md):** Der Befund vom Nachmittag ist als behoben
+  vermerkt, die Zahlen stehen auf dem Stand nach der Bereinigung.
+
+### Offen geblieben
+
+`stacks/homepage/config/logs/` (Container-Verzeichnis) und `system/backup/pi-backup.sh`
+(Punkt 3.10) sind bewusst nicht angefasst. `stacks/bichon/.env` und
+`stacks/paperless/.env` stehen auf 660, die drei anderen auf 600 — ungeklärt, nicht
+geändert.
+
+---
+
 ## [2.19.0] — 2026-09-13
 
 Die Querverweis-Kapitel holen die Workbench nach. Kapitel 19, 20, 15 beschrieben den neuen

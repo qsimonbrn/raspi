@@ -1,6 +1,6 @@
 # 17 — Wo was liegt
 
-*Erfasst: 18.08.2026 · Rechte nachgemessen: 13.09.2026*
+*Erfasst: 18.08.2026 · Rechte nachgemessen und bereinigt: 13.09.2026*
 
 Dieses Kapitel beantwortet eine Frage, die sich sonst über ein halbes Dutzend Kapitel
 verteilt: **Welche Datei ist das Original, welche nur eine Kopie?** Wer das verwechselt,
@@ -42,41 +42,36 @@ Konten — `simon` und `claude` — sind in `pi-admin`. `.git` und `.git/objects
 > `insufficient permission for adding an object to repository database`. Entscheidend
 > ist die **Gruppe** `pi-admin` samt Gruppenschreibrecht, nicht der Besitzer.
 
-### ⚠️ Das Gruppenschreibrecht gilt nicht überall (nachgemessen 13.09.2026)
+### ✅ Behoben am 13.09.2026: Das Gruppenschreibrecht gilt jetzt überall
 
-Die Aussage „Verzeichnisse `2775`" stimmte am 18.08.2026 und stimmt seither nicht mehr
-durchgängig. Gezählt über `find -type d`, ohne `.git`:
+Die Aussage „Verzeichnisse `2775`" stimmte am 18.08.2026 und stimmte danach nicht mehr
+durchgängig. **Der Befund und seine Behebung stehen im Betriebstagebuch**
+([15](15-aenderungshistorie.md), Eintrag 13.09.2026), die Begründung zur `umask` in
+[16 — Konten und Rechte](16-konten-und-rechte.md). Hier nur der Stand.
+
+Gezählt über `find -type d` bzw. `-type f`, ohne `.git`, am 13.09.2026 **nach** der
+Bereinigung:
 
 | Modus, Besitzer | Anzahl | Wer kann darin anlegen |
 |---|---|---|
 | `2775 simon:pi-admin` | 24 | beide Konten |
-| `2755 claude:pi-admin` | 8 | **nur `claude`** |
+| `2775 claude:pi-admin` | 8 | beide Konten |
 | `2775 simon:simon` | 1 | nur `simon` |
-| `2755 simon:simon` | 1 | nur `simon` (`stacks/homepage/config/logs`) |
+| `2755 simon:simon` | 1 | `stacks/homepage/config/logs` — Container-Verzeichnis, bleibt bewusst |
 
-Die acht Verzeichnisse ohne Gruppenschreibrecht sind `stacks/diun`, `stacks/insta-triage`
-(samt `app/`, `app/static/`), `stacks/yt-werk` (samt `app/`), `system/journald` und
-`system/pihole` — durchweg Verzeichnisse, die das Konto `claude` angelegt hat.
+Dateien: 67 × `664 simon:pi-admin`, 63 × `664 claude:pi-admin`, dazu ausführbare `775`.
+**Ohne Gruppenschreibrecht bleiben nur noch sechs**, jede davon mit Grund: die drei `.env`
+mit Modus 600, `stacks/n8n/.n8n-api-key` (640), das Logfile des Homepage-Containers und
+`system/backup/pi-backup.sh` (offener Punkt 3.10). **Keine Datei gehört mehr `root`.**
 
-**Negativkontrolle statt Vermutung:** `sudo -u simon touch stacks/yt-werk/.schreibtest`
-scheitert mit `Permission denied`, während `touch stacks/paperless/.schreibtest` als
-`claude` durchläuft. Die Sperre wirkt also **gegen `simon`**, nicht gegen `claude` — genau
-umgekehrt zu der Annahme, die am 12.09.2026 zum `chmod g+w` auf `stacks/n8n/` geführt hat.
-Dort lag der Fall andersherum: Das Verzeichnis hatte `simon` angelegt.
-
-**Die Ursache ist in beiden Fällen dieselbe und liegt nicht im Repository, sondern in der
-`umask`.** Beide Konten laufen mit `022` (`/etc/login.defs`, Zeile 151; für `claude` in der
-Anmelde- *und* der interaktiven Shell nachgemessen). Jedes neu angelegte Verzeichnis
-bekommt damit `755` plus das geerbte setgid-Bit — also `2755`, ohne Gruppenschreibrecht.
-Wer das mit `chmod g+w` repariert, repariert den heutigen Bestand; das nächste `mkdir`
-erzeugt denselben Fall erneut. Vorschlag und Preis in
-[09 — Empfehlungen](09-empfehlungen.md), 3.11.
-
-**Vier Dateien gehören `root`** (`inventar/snapshots/2026-09-07-00{22,40}-*`, Modus 644
-`root:pi-admin`). Sie sind der sichtbare Rest genau dieses Musters: Wo das
-Gruppenschreibrecht fehlt, weicht die Automatisierung auf `sudo` aus, und was danach
-liegen bleibt, gehört `root`. Überschreiben kann sie keines der beiden Konten; ersetzen
-schon, weil das umgebende Verzeichnis gruppenschreibbar ist.
+> **Die Ursache lag nicht im Repository, sondern in der `umask`** beider Konten. setgid
+> vererbt die Gruppe, nicht das Schreibrecht. Seit dem 13.09.2026 steht `umask 002` in
+> beiden `.bashrc` — **vor** der Interaktiv-Sperre, weil die SSH-Automatisierung in einer
+> nicht-interaktiven Shell läuft. Einzelheiten und der Nachweis in
+> [16](16-konten-und-rechte.md).
+>
+> **Für neue Geheimnisse gilt damit ausdrücklich:** `chmod 600` von Hand, nicht der
+> `umask` überlassen — unter `002` entstünde sonst eine `.env` mit 664.
 
 ---
 

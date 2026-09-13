@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 12.09.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 13.09.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,63 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 13.09.2026 — `umask` beider Konten auf 002, Gruppenschreibrecht im Repository
+
+**Anlass:** Am 12.09.2026 war `stacks/n8n/` von Hand auf `g+w` gesetzt worden, weil
+`claude` darin nichts anlegen konnte. Die Frage war, ob dasselbe fürs ganze Repository
+sinnvoll ist. **Die Messung am 13.09. ergab ein anderes Bild als erwartet:** Von den
+Verzeichnissen ohne Gruppenschreibrecht gehörten acht `claude` — dort war **`simon`**
+ausgesperrt, nicht umgekehrt.
+
+**Ursache:** setgid vererbt die Gruppe, nicht das Schreibrecht. Beide Konten liefen mit
+`umask 022`, jedes neue Verzeichnis wurde `2755`. Wer es anlegte, konnte darin arbeiten,
+das andere Konto nicht — in beide Richtungen, je nachdem, wer zuerst da war.
+
+| Was | Wie |
+|---|---|
+| Bestand | `chmod g+w` auf alle Verzeichnisse und alle Dateien der Gruppe `pi-admin` |
+| **Ausgenommen** | `stacks/*/.env` und `stacks/n8n/.n8n-api-key` — ein pauschales `chmod -R g+w` hätte sie von 600/640 auf 660 gezogen |
+| Vier `root`-Dateien | `chown simon:pi-admin`, `chmod 664` (`inventar/snapshots/2026-09-07-*`) |
+| Ursache | `umask 002` in `/home/claude/.bashrc` und `/home/simon/.bashrc`, **vor** der `If not running interactively`-Sperre |
+| Sicherung | `.bashrc.vor-umask-20260913` neben jeder Datei |
+| Nicht angefasst | `stacks/homepage/config/logs/` (Container-Verzeichnis) und `system/backup/pi-backup.sh` (offener Punkt 3.10) |
+
+**Warum `.bashrc` und nicht `.profile` oder `/etc/login.defs`.** Beides wäre für den Fall,
+um den es geht, wirkungslos gewesen, und beides sieht aus, als würde es wirken:
+
+- `.profile` liest nur eine **Login-Shell**. Die Automatisierung bekommt keine.
+- `/etc/login.defs` enthält zwar `UMASK 022`, aber **`pam_umask` ist in keiner Datei unter
+  `/etc/pam.d/` eingebunden** — der Wert gilt für `login` und `su`, nicht für SSH.
+- `.bashrc` **wird** von der nicht-interaktiven SSH-Shell gelesen (Debians bash tut das
+  für SSH-Verbindungen), kehrt aber an der Interaktiv-Sperre zurück. Die Zeile muss
+  deshalb **darüber** stehen.
+
+Gemessen statt angenommen: Eine Probezeile `umask 0077` am Dateianfang schlug in der
+Automatisierungs-Shell durch (`0022` → `0077`), dieselbe Zeile hinter der Sperre nicht.
+
+**Nachweis, in beide Richtungen und mit Negativkontrolle:** `umask` in einer frischen
+Automatisierungs-Shell `0002` · neue Verzeichnisse beider Konten `2775` · `claude` legt in
+`stacks/paperless/` an und ändert `docs/05-docker.md` · `simon` legt in `stacks/yt-werk/`
+an und ändert `stacks/yt-werk/app/app.py` · **`claude` kann `stacks/n8n/.env` weiterhin
+nicht lesen.** Alle Proben anschließend entfernt, Arbeitsbaum sauber.
+
+**Zwei Nebenbefunde, nicht geändert:**
+
+- `stacks/bichon/.env` und `stacks/paperless/.env` stehen auf **660**, die drei anderen
+  auf 600. Die Gruppe `pi-admin` kann diese beiden also lesen. Ob das Absicht ist, ist
+  ungeklärt — angleichen würde nichts brechen, weil Compose ohnehin über `sudo` läuft.
+- `stacks/n8n/.n8n-api-key` (640, `pi-admin` lesend) ist für `claude` absichtlich lesbar —
+  `stacks/n8n/workflows-einspielen.py` braucht ihn. Über `.gitignore` ausgeschlossen, nie
+  committet (geprüft).
+
+**Ein eigener Fehlgriff, festgehalten:** Für die Negativkontrolle „kann `claude` eine
+fremde 644-Datei ändern?" fiel die Wahl auf `stacks/n8n/.n8n-api-key`, und das Skript legte
+vorher eine Sicherungskopie nach `/tmp` — also eine **Kopie eines Geheimnisses an einem
+Ort ohne Zugriffsschutz**. Sofort gelöscht. Die Lehre: Eine Probe sucht sich ihr Objekt
+nicht nach „erste passende Datei" aus, wenn Geheimnisse im Suchraum liegen.
 
 ---
 

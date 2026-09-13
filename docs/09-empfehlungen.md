@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 25.08.2026 · ergänzt 13.09.2026*
+*Stand: 25.08.2026 · ergänzt und fortgeschrieben 13.09.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -312,7 +312,7 @@ Pfade), ist ungeklärt. **Zu tun:** entscheiden und entweder angleichen
 (`sudo chgrp pi-admin && chmod 664`) oder die Ausnahme in
 [07 — Sicherheit](07-sicherheit.md) begründen. Fünf Minuten plus die Entscheidung.
 
-### 3.11 `umask` der beiden Konten auf `002` setzen — 🟡 offen, klein
+### 3.11 `umask` der beiden Konten auf `002` setzen — ✅ **erledigt am 13.09.2026**
 
 **Befund (13.09.2026, mit Negativkontrolle gemessen).** Im Repository gibt es acht
 Verzeichnisse ohne Gruppenschreibrecht; `simon` kann darin nichts anlegen, weil `claude`
@@ -336,15 +336,45 @@ jeweils eigene Gruppe — niemanden sonst. **Innerhalb** des Repositories ist di
 `umask 002` neu angelegte `.env` bekäme 664 und wäre für `pi-admin` **schreib**bar.
 Geheimnisse also weiterhin ausdrücklich auf 600 setzen, nicht der `umask` überlassen.
 
-**Zu tun:** `umask 002` in `/home/claude/.profile` und `/home/simon/.profile`, dazu einmal
-`chmod -R g+w` über `/home/simon/raspi` (das setgid-Bit steht bereits). Zehn Minuten.
-Anschließend gegenprüfen, indem jedes Konto im Verzeichnis des jeweils anderen eine Datei
-anlegt — nicht, indem man die `umask` ausliest.
+> **✅ Umgesetzt am 13.09.2026.** Bestand mit `chmod g+w` bereinigt, Ursache mit
+> `umask 002` in **`/home/claude/.bashrc` und `/home/simon/.bashrc`** behoben. Ablauf,
+> Nachweis und Nebenbefunde im Betriebstagebuch ([15](15-aenderungshistorie.md)), die
+> Begründung in [16 — Konten und Rechte](16-konten-und-rechte.md).
+>
+> **Zwei Korrekturen gegenüber dem Vorschlag oben, beide durch Messung:**
+>
+> 1. **Nicht `.profile`, sondern `.bashrc`** — und dort vor der Interaktiv-Sperre.
+>    `.profile` liest nur eine Login-Shell; die SSH-Automatisierung bekommt keine. Der
+>    ursprüngliche Vorschlag hätte für genau den Fall nichts bewirkt, um den es geht.
+>    (`/etc/login.defs` hilft ebenfalls nicht: `pam_umask` ist nirgends eingebunden.)
+> 2. **Nicht `chmod -R g+w`**, sondern gezielt Verzeichnisse und Dateien der Gruppe
+>    `pi-admin` unter **Ausschluss der Geheimnisse**. Pauschal hätte der Befehl
+>    `stacks/*/.env` von 600 auf 660 und `.n8n-api-key` von 640 auf 660 gezogen — das
+>    Gegenteil des Gewollten.
 
-**Schmalere Alternative, falls die globale `umask` zu weit greift:** eine Standard-ACL nur
-auf dem Repository (`setfacl -R -d -m g::rwx /home/simon/raspi`). Sie wirkt genau dort und
-sonst nirgends, ist dafür ein Mechanismus mehr, den ein Betrachter kennen muss — `ls -l`
-zeigt ihn nur als `+` an. Vorher prüfen, ob das Dateisystem mit `acl` eingehängt ist.
+**Die schmalere Alternative wurde nicht gebraucht:** eine Standard-ACL nur auf dem
+Repository (`setfacl -R -d -m g::rwx /home/simon/raspi`) wirkt genau dort und sonst
+nirgends, ist dafür ein Mechanismus mehr, den ein Betrachter kennen muss — `ls -l` zeigt
+ihn nur als `+` an. Bleibt als Rückfallebene, falls sich `umask 002` an anderer Stelle als
+zu weit erweist.
+
+### 3.12 Schreibrecht im Ablagefach `second-brain/eingang/` klären — 🟡 offen, braucht eine Entscheidung
+
+Aus 3.11 herausgelöst, weil es keine `umask`-Frage ist. `eingang/` steht auf **2750**
+`simon:pi-admin`: `yt-werk` und `n8n` (beide UID 1000) schreiben, **`claude` kann nur
+lesen** (13.09.2026 mit Gegenprobe gemessen). Der Abholvorgang vom Mac läuft als `claude`.
+
+**Solange der Mac nur holt, ist nichts zu tun.** Soll er Verarbeitetes wegräumen oder
+umbenennen, geht das so nicht — und zwar still, nicht mit einem Fehler, den jemand sieht.
+Zwei Wege:
+
+| Weg | Preis |
+|---|---|
+| `eingang/` auf **2770** | Die Gruppe `pi-admin` darf löschen. Wirkt **nicht** in den bestehenden Videoverzeichnissen: die sind 750 **ohne** setgid, Dateien darin gehören teils `simon:simon`. Die müssten einzeln nachgezogen und `yt-werk` beim Anlegen geändert werden |
+| Wegräumen bleibt bei der **UID 1000** (n8n oder yt-werk) | Keine Rechteänderung, aber die Aufräumlogik muss in einen Workflow statt in das Mac-Skript |
+
+**Die Entscheidung gehört ins Projekt „Workbench"**, weil sie vom Zuschnitt des
+Abholvorgangs abhängt, nicht von der Infrastruktur.
 
 ### 3.4 Aufräumen
 
@@ -362,7 +392,7 @@ zeigt ihn nur als `+` an. Vorher prüfen, ob das Dateisystem mit `acl` eingehän
 | Fünf verwaiste anonyme Volumes entfernen | 5 min | `docker volume prune`, faktisch leer (479 B) |
 | Leeres Docker-Netz `n8n_default` entfernen | 2 min | Seit 12.09.2026 ohne Container, weil n8n nur noch in `werkbank` hängt. Compose legt es beim nächsten `up` wieder an — kosmetisch, siehe [03](03-netzwerk.md) |
 | Ungenutztes Image `alpine:3.20` entfernen | 2 min | 8,82 MB, von keinem Container und keiner Compose-Datei referenziert (13.09.2026 geprüft) |
-| Vier `root`-Dateien unter `inventar/snapshots/` bereinigen | 5 min | Rest aus `sudo`-Ausweichmanövern, siehe 3.11 und [17](17-wo-was-liegt.md) |
+| ~~Vier `root`-Dateien unter `inventar/snapshots/` bereinigen~~ | — | ✅ **erledigt am 13.09.2026** — `chown simon:pi-admin`, `chmod 664`; keine Datei im Repository gehört mehr `root` |
 
 **Vorsicht bei `dhcpcd`/`NetworkManager`:** Ein Fehler kappt die Netzwerkverbindung. Nur
 mit physischem Zugang oder zweitem Zugangsweg durchführen.
