@@ -25,12 +25,12 @@ N8N = "http://100.108.219.87:5678/api/v1"
 SCHLUESSEL = (Path(__file__).parent / ".n8n-api-key").read_text().strip()
 
 PLAYLIST_ID = "PLScL2m9be3F8"
-MODELL = "qwen3.5:4b"
-OLLAMA = "http://100.69.172.65:11434"
+MODELL = "qwen3.5:9b"
+OLLAMA = "http://100.91.148.49:11434"
 YTWERK = "http://yt-werk:8722"
 
-TAKT_A = "0 8-22 * * *"
-TAKT_B = "20 8-22 * * *"
+TAKT_A = "0 18 * * *"
+TAKT_B = "20 18 * * *"
 
 
 def api(pfad: str, methode: str = "GET", daten: dict | None = None) -> dict:
