@@ -1,7 +1,7 @@
 # yt-werk
 
 Beschaffungsdienst für die Workbench: holt Playlist-Einträge, Metadaten und
-Transkripte von YouTube und legt sie unter `/mnt/usb-hdd/second-brain/eingang/`
+Transkripte von YouTube und legt sie unter `/mnt/usb-hdd/workbench-eingang/`
 ab. Wird ausschließlich von n8n aufgerufen.
 
 Vollständige Dokumentation: `docs/20-yt-werk.md`

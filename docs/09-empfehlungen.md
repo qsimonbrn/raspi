@@ -358,23 +358,28 @@ nirgends, ist dafür ein Mechanismus mehr, den ein Betrachter kennen muss — `l
 ihn nur als `+` an. Bleibt als Rückfallebene, falls sich `umask 002` an anderer Stelle als
 zu weit erweist.
 
-### 3.12 Schreibrecht im Ablagefach `second-brain/eingang/` klären — 🟡 offen, braucht eine Entscheidung
+### ~~3.12 Schreibrecht im Ablagefach klären~~ — ✅ erledigt am 14.09.2026
 
-Aus 3.11 herausgelöst, weil es keine `umask`-Frage ist. `eingang/` steht auf **2750**
-`simon:pi-admin`: `yt-werk` und `n8n` (beide UID 1000) schreiben, **`claude` kann nur
-lesen** (13.09.2026 mit Gegenprobe gemessen). Der Abholvorgang vom Mac läuft als `claude`.
+Gelöst durch den **Umzug** des Ablagefachs von `/mnt/usb-hdd/second-brain/eingang` nach
+`/mnt/usb-hdd/workbench-eingang`, `simon:pi-admin`, **2770**. Das Konto `claude` schreibt
+und verschiebt dort ohne `sudo` (14.09.2026 mit `touch` und einem `mv` nach `_geholt/`
+gegengeprüft). Der Umzug hatte ohnehin einen zweiten Grund: `second-brain/` gehört
+`claude:claude` mit 0750, weshalb Simon das Rohmaterial über die Samba-Freigabe
+`usb-share` gar nicht sehen konnte. Beide Anliegen fallen mit einer Maßnahme.
 
-**Solange der Mac nur holt, ist nichts zu tun.** Soll er Verarbeitetes wegräumen oder
-umbenennen, geht das so nicht — und zwar still, nicht mit einem Fehler, den jemand sieht.
-Zwei Wege:
+Die Entscheidung fiel im Projekt **Workbench**, weil sie vom Zuschnitt des Abholvorgangs
+abhing. Zwei dort geprüfte Wege wurden **verworfen** — festgehalten, damit sie niemand
+in einem Jahr neu vorschlägt:
 
-| Weg | Preis |
+| Verworfen | Grund |
 |---|---|
-| `eingang/` auf **2770** | Die Gruppe `pi-admin` darf löschen. Wirkt **nicht** in den bestehenden Videoverzeichnissen: die sind 750 **ohne** setgid, Dateien darin gehören teils `simon:simon`. Die müssten einzeln nachgezogen und `yt-werk` beim Anlegen geändert werden |
-| Wegräumen bleibt bei der **UID 1000** (n8n oder yt-werk) | Keine Rechteänderung, aber die Aufräumlogik muss in einen Workflow statt in das Mac-Skript |
+| **Lösch-Endpunkt in `yt-werk`** | Der Mac kann den Dienst gar nicht aufrufen: `yt-werk` hat bewusst keinen veröffentlichten Port und hängt nur im Docker-Netz `werkbank`. Es bräuchte entweder einen Host-Port (kippt genau die Entscheidung, die pi-guard heraushält) oder `sudo docker exec` — also das, was man loswerden wollte |
+| **Aufräumen in Workflow B** | n8n räumte weg, bevor der Mac geholt hat. Der Abholvorgang hängt am 21:30-Sync, der Workflow am Abendtakt — die Reihenfolge ist nicht garantiert |
 
-**Die Entscheidung gehört ins Projekt „Workbench"**, weil sie vom Zuschnitt des
-Abholvorgangs abhängt, nicht von der Infrastruktur.
+Übrig bleibt **ein** Griff mit `sudo`: das `rm -rf` in einem abgelaufenen
+`_geholt/<video_id>/`. Diese Verzeichnisse legt `yt-werk` mit 0750 ohne
+Gruppenschreibrecht an; das zu ändern hieße, `yt-werk` beim Anlegen zu ändern, und
+lohnt für einen Griff nicht.
 
 ### 3.4 Aufräumen
 

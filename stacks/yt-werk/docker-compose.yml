@@ -41,7 +41,7 @@ services:
     mem_limit: 256m
 
     volumes:
-      - /mnt/usb-hdd/second-brain/eingang:/eingang
+      - /mnt/usb-hdd/workbench-eingang:/eingang
 
     environment:
       TZ: Europe/Berlin

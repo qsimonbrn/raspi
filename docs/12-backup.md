@@ -155,7 +155,7 @@ Wiederaufbau.
 /home/simon/raspi                     Compose-Dateien, Systemkonfiguration, Doku
 /mnt/usb-hdd/second-brain/unterlagen  Second Brain: Kursunterlagen, eigene Arbeiten
 /mnt/usb-hdd/second-brain/vault.git   Second Brain: Notizen samt Versionsgeschichte
-/mnt/usb-hdd/second-brain/eingang     Workbench: Ablagefach zwischen yt-werk, n8n
+/mnt/usb-hdd/workbench-eingang        Workbench: Ablagefach zwischen yt-werk, n8n
                                       und dem Mac (.tmp-* ausgeschlossen)
 ```
 
@@ -217,7 +217,7 @@ sie ohnehin vollständig — oder gar nicht, weil der Holvorgang abgebrochen ist
 Ausgeschlossen sind, gemessen am Skript (13.09.2026): `*/tmp/*`, `*/logs/*`, `*.lock`,
 Cache-Verzeichnisse (`--exclude-caches`), die laufenden Datenbankdateien von Vaultwarden
 und n8n (beide haben einen eigenen, konsistenten Abzug), `/mnt/usb-hdd/n8n/*.log` und
-`/mnt/usb-hdd/second-brain/eingang/.tmp-*`.
+`/mnt/usb-hdd/workbench-eingang/.tmp-*`.
 
 **Schritt 6 — Aufräumen.** Alte Stände werden nach den Regeln aus Abschnitt 5 entfernt
 und der Speicher freigegeben (`--prune`).

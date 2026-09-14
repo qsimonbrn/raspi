@@ -44,32 +44,43 @@ SD-Karte. Zum Risiko des Systemdatenträgers siehe [01 — Hardware](01-hardware
 Die zahlreichen `._*`-Dateien und `.DS_Store` stammen von macOS-Zugriffen über Samba.
 Harmlos, aber sie lassen sich mit einer Samba-Option (`veto files`) künftig vermeiden.
 
-### Das Ablagefach `second-brain/eingang/` (seit 12.09.2026)
+### Das Ablagefach `workbench-eingang/` (seit 12.09.2026, umgezogen am 14.09.2026)
 
 | | |
 |---|---|
-| Pfad | `/mnt/usb-hdd/second-brain/eingang/` |
-| Besitzer, Rechte | `simon:pi-admin`, Modus **2750** — nachgemessen 13.09.2026 |
-| Beschrieben von | `yt-werk` und `n8n`, beide laufen als UID/GID **1000:1000** (= `simon`) |
-| Inhalt am 13.09.2026 | zwei Videoverzeichnisse und `.verarbeitet`, zusammen 320 K |
+| Pfad | `/mnt/usb-hdd/workbench-eingang/` |
+| Besitzer, Rechte | `simon:pi-admin`, Modus **2770** — nachgemessen 14.09.2026 |
+| Beschrieben von | `yt-werk` und `n8n` (beide UID/GID **1000:1000** = `simon`) sowie vom Abholvorgang des Macs (Konto `claude`, Gruppe `pi-admin`) |
+| Inhalt am 14.09.2026 | neun Videoverzeichnisse, `_geholt/` und `.verarbeitet`, zusammen 4,4 MB |
 | Im Backup | ja, seit 12.09.2026; `.tmp-*` ausgenommen — siehe [12](12-backup.md) |
+
+**Umgezogen am 14.09.2026** von `second-brain/eingang/` hierher. Zwei Gründe, beide
+gemessen:
+
+- **Samba.** Die Freigabe `usb-share` zeigt auf `/mnt/usb-hdd`, aber `second-brain/`
+  gehört `claude:claude` mit 0750 — als `simon` scheitert schon das Öffnen des
+  Verzeichnisses (`sudo -u simon ls /mnt/usb-hdd/second-brain/` → `Permission denied`,
+  14.09.2026 gegengeprüft). Unter `/mnt/usb-hdd/workbench-eingang` liegt das Rohmaterial
+  direkt in der Freigabe, und Simon kann darin schreiben.
+- **Modus 2770 statt 2750.** Damit schreibt das Konto `claude` ohne `sudo`. Der Befund
+  vom 13.09.2026 ist damit erledigt — siehe [09](09-empfehlungen.md), 3.12.
 
 **Warum es nicht unter `second-brain/unterlagen/` liegt:** Dorthin spiegelt der Mac mit
 `rsync --delete`. Was der Pi dort ablegte, wäre beim nächsten Sync spurlos weg.
 
-**Warum setgid (die 2 in 2750):** Es vererbt die Gruppe `pi-admin` an alles, was darin
+**Warum setgid (die 2 in 2770):** Es vererbt die Gruppe `pi-admin` an alles, was darin
 entsteht. Ohne das bekämen die Verzeichnisse, die `yt-werk` je Video anlegt, die
 Primärgruppe des schreibenden Prozesses, und wer sonst noch hineinsehen soll, müsste
 jedes Mal nachgebessert werden.
 
-> **⚠️ Befund vom 13.09.2026: Das Konto `claude` kann in `eingang/` nicht schreiben.**
-> Gemessen, nicht vermutet: `touch` als `claude` scheitert mit `Permission denied`,
-> während derselbe Befehl in `second-brain/unterlagen/` durchläuft. Grund ist Modus
-> **2750** — die Gruppe `pi-admin` hat `r-x`, kein `w`. Solange nur `yt-werk` und `n8n`
-> (beide UID 1000) schreiben, stört das nicht. Es stört in dem Moment, in dem der
-> **Abholvorgang vom Mac** etwas zurückschreiben oder Verarbeitetes wegräumen soll: Der
-> läuft über das Konto `claude`. Zu entscheiden ist, ob `eingang/` auf 2770 gehen soll
-> oder ob das Wegräumen Sache der UID 1000 bleibt — [09](09-empfehlungen.md), 3.11.
+> **✅ Erledigt am 14.09.2026.** Bis dahin stand das Ablagefach auf **2750**: die Gruppe
+> `pi-admin` hatte `r-x`, kein `w`, und `touch` als `claude` scheiterte mit
+> `Permission denied`. Der Abholvorgang vom Mac läuft über dieses Konto und brauchte für
+> jedes `mv` aus dem Eingang heraus `sudo`. Seit dem Umzug auf **2770** laufen `touch`
+> und `mv` als `claude` ohne `sudo` durch (14.09.2026 mit Gegenprobe gemessen). Übrig
+> bleibt genau **ein** Griff mit `sudo`: das `rm -rf` in einem abgelaufenen
+> `_geholt/<video_id>/` — diese Verzeichnisse legt `yt-werk` mit 0750 ohne
+> Gruppenschreibrecht an.
 
 ### Verwaistes Verzeichnis
 

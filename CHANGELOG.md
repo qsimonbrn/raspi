@@ -9,6 +9,41 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.21.0] — 2026-09-14
+
+Das Ablagefach der Workbench ist umgezogen; die Doku ist an sechs Stellen nachgezogen und
+ein offener Empfehlungspunkt geschlossen.
+
+### Geändert
+
+- **Kapitel [06](docs/06-daten-und-speicher.md):** Der Abschnitt heißt jetzt „Das
+  Ablagefach `workbench-eingang/`" und nennt Pfad, Modus **2770** und den Inhalt vom
+  14.09.2026. Der Warnkasten vom 13.09.2026 („`claude` kann nicht schreiben") ist als
+  erledigt umgeschrieben, mit dem verbliebenen `sudo`-Griff.
+- **Kapitel [12](docs/12-backup.md):** gesicherter Pfad und Ausschlussregel zeigen auf
+  den neuen Ort. Die historischen Absätze vom 12. und 13.09.2026 bleiben unangetastet —
+  sie beschreiben, was damals galt.
+- **Kapitel [11](docs/11-disaster-recovery.md), [19](docs/19-n8n.md),
+  [20](docs/20-yt-werk.md), `stacks/yt-werk/README.md`:** Pfadangaben nachgezogen.
+
+### Hinzugefügt
+
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Tagebucheintrag zum Umzug mit sechs
+  Nachweisen und einem Nebenbefund zum Backup-Timeout.
+- **Kapitel [17](docs/17-wo-was-liegt.md):** Die Werkstatt fehlte dort bisher ganz. Neu:
+  `workflows-einspielen.py` und `app/app.py` unter „Sorte B" (Repository ist nur das
+  Original, gelaufen wird von woanders — aus der n8n-Datenbank bzw. aus dem Image), und
+  `/mnt/usb-hdd/workbench-eingang/` unter „Was bewusst nicht im Git liegt".
+
+### Behoben
+
+- **Punkt [3.12](docs/09-empfehlungen.md) geschlossen.** Das Schreibrecht im Ablagefach
+  ist durch den Umzug auf 2770 erledigt. Die beiden im Projekt „Workbench" geprüften und
+  **verworfenen** Wege — Lösch-Endpunkt in `yt-werk`, Aufräumen in Workflow B — stehen
+  jetzt mit Begründung dort, damit sie niemand neu vorschlägt.
+
+---
+
 ## [2.20.0] — 2026-09-13 (abends)
 
 Ein Eingriff am System und seine Aufzeichnung: Das Gruppenschreibrecht im Repository ist

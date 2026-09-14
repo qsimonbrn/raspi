@@ -107,6 +107,8 @@ ausschließlich `/etc/sudoers.d`.
 | `messung/docker-stats-messung.service` | `/etc/systemd/system/` | identisch |
 | `messung/docker-stats-messung.timer` | `/etc/systemd/system/` | identisch |
 | `updates/pi-reboot-check.sh` | `/usr/local/sbin/pi-reboot-check.sh` | identisch |
+| `stacks/n8n/workflows-einspielen.py` | den Workflows **in der n8n-Datenbank** (`/mnt/usb-hdd/n8n/database.sqlite`) | 14.09.2026 eingetragen. Das Skript erzeugt sie über die n8n-API. **Wer sie im n8n-Editor ändert, verliert die Änderung** beim nächsten Lauf des Skripts |
+| `stacks/yt-werk/app/app.py` | dem **Image** `yt-werk:1.0.0` | 14.09.2026 eingetragen. Die Anwendung steckt im Image; eine Änderung wirkt erst nach `docker compose build` **und** einem neuen Tag — kein `:latest` |
 | `updates/pi-reboot-check.service` | `/etc/systemd/system/` | identisch |
 | `updates/pi-reboot-check.timer` | `/etc/systemd/system/` | identisch |
 | `updates/docker-daemon.json` | `/etc/docker/daemon.json` | identisch |
@@ -161,6 +163,7 @@ vereinheitlicht und installiert. Die alten Fassungen liegen unter
 | Nutzdaten | `/mnt/usb-hdd/{paperless,bichon,ntfy,n8n,vaultwarden,insta-triage,diun,second-brain}` | zu groß bzw. Geheimnisse, im restic-Backup — siehe [06](06-daten-und-speicher.md) |
 | `/mnt/usb-hdd/messungen/` | dort | laufende Messwerte, keine Konfiguration |
 | `/mnt/usb-hdd/backups-manuell/` | dort, Modus 600 | Rückfallebene vom 18.08.2026, **enthält `.env` im Klartext** |
+| `/mnt/usb-hdd/workbench-eingang/` | dort, `simon:pi-admin` **2770** | Ablagefach der Workbench: Rohmaterial und fertige Notizen auf dem Weg in den Vault. Warteschlange, kein Bestand — im restic-Backup, siehe [06](06-daten-und-speicher.md). Seit 14.09.2026 an diesem Ort, vorher unter `second-brain/eingang/` |
 | `/mnt/usb-hdd/_to_delete/` | dort | zum Löschen vorgemerkt |
 
 ---

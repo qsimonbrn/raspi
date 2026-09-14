@@ -33,7 +33,7 @@ Rechnung eine andere.
 | Speicherlimit | 256 MB (gemessen im Leerlauf: rund 43 MB) |
 | Netz | `werkbank` (extern angelegt), gemeinsam mit n8n |
 | Port | **keiner veröffentlicht** — nur `http://yt-werk:8722` innerhalb des Netzes |
-| Ablage | `/mnt/usb-hdd/second-brain/eingang:/eingang` |
+| Ablage | `/mnt/usb-hdd/workbench-eingang:/eingang` |
 
 Weil kein Port auf dem Host erscheint, ist **pi-guard hier nicht beteiligt**. Das
 ist der Unterschied zu n8n, wo die Abschottung an einer einzigen Firewall-Regel

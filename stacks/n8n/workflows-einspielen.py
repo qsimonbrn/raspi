@@ -87,19 +87,37 @@ def workflow_a(takt: str) -> dict:
     p_holen, _ = http(f"{YTWERK}/holen", "POST",
                       "={{ JSON.stringify({ video_id: $json.video_id }) }}", 300000)
     p_liste, _ = http("=" + YTWERK + "/playlist/{{ $json.playlist_id }}")
+    # Muss VOR dem Holen stehen: /holen ist zwar idempotent, prueft aber nur,
+    # ob der Videoordner gerade unter eingang/ liegt. Ein vom Mac nach _geholt/
+    # weggeraeumtes Video gilt ihm als neu -- so entstanden die Karteileichen
+    # vom 14.09., die ohne ablage.json dauerhaft im Eingang lagen.
+    p_verarbeitet, _ = http(f"{YTWERK}/verarbeitet", timeout=15000)
 
     knoten_liste = [
         knoten("Takt", "n8n-nodes-base.scheduleTrigger", 1.2, [0, 0],
                {"rule": {"interval": [{"field": "cronExpression", "expression": takt}]}}),
-        knoten("Playlist festlegen", "n8n-nodes-base.set", 3.4, [200, 0],
+        knoten("Verarbeitete lesen", "n8n-nodes-base.httpRequest", 4.2, [200, 0],
+               p_verarbeitet),
+        knoten("Playlist festlegen", "n8n-nodes-base.set", 3.4, [400, 0],
                {"assignments": {"assignments": [
                    {"id": "pl", "name": "playlist_id", "value": PLAYLIST_ID, "type": "string"}]},
                 "options": {}}),
-        knoten("Playlist lesen", "n8n-nodes-base.httpRequest", 4.2, [400, 0], p_liste),
-        knoten("Videos einzeln", "n8n-nodes-base.splitOut", 1, [600, 0],
+        knoten("Playlist lesen", "n8n-nodes-base.httpRequest", 4.2, [600, 0], p_liste),
+        knoten("Videos einzeln", "n8n-nodes-base.splitOut", 1, [800, 0],
                {"fieldToSplitOut": "videos", "options": {}}),
-        knoten("Video holen", "n8n-nodes-base.httpRequest", 4.2, [800, 0], p_holen),
-        knoten("Nur neue", "n8n-nodes-base.filter", 2, [1000, 0],
+        knoten("Noch nicht verarbeitet", "n8n-nodes-base.filter", 2, [1000, 0],
+               {"conditions": {
+                   "options": {"caseSensitive": True, "leftValue": "",
+                               "typeValidation": "loose", "version": 2},
+                   "conditions": [{"id": "unverarbeitet",
+                                   "leftValue":
+                                       "={{ $('Verarbeitete lesen').first().json.video_ids }}",
+                                   "rightValue": "={{ $json.video_id }}",
+                                   "operator": {"type": "array", "operation": "notContains",
+                                                "rightType": "any"}}],
+                   "combinator": "and"}, "options": {}}),
+        knoten("Video holen", "n8n-nodes-base.httpRequest", 4.2, [1200, 0], p_holen),
+        knoten("Nur neue", "n8n-nodes-base.filter", 2, [1400, 0],
                {"conditions": {
                    "options": {"caseSensitive": True, "leftValue": "",
                                "typeValidation": "strict", "version": 2},
@@ -108,13 +126,14 @@ def workflow_a(takt: str) -> dict:
                                    "operator": {"type": "boolean", "operation": "false",
                                                 "singleValue": True}}],
                    "combinator": "and"}, "options": {}}),
-        knoten("Eingesammelt", "n8n-nodes-base.noOp", 1, [1200, 0], {}),
+        knoten("Eingesammelt", "n8n-nodes-base.noOp", 1, [1600, 0], {}),
     ]
     return {
         "name": "Workbench A -- Einsammeln",
         "nodes": knoten_liste,
-        "connections": kette("Takt", "Playlist festlegen", "Playlist lesen",
-                             "Videos einzeln", "Video holen", "Nur neue", "Eingesammelt"),
+        "connections": kette("Takt", "Verarbeitete lesen", "Playlist festlegen",
+                             "Playlist lesen", "Videos einzeln", "Noch nicht verarbeitet",
+                             "Video holen", "Nur neue", "Eingesammelt"),
         "settings": {"executionOrder": "v1", "executionTimeout": 1800,
                      "saveDataErrorExecution": "all", "saveDataSuccessExecution": "all"},
     }

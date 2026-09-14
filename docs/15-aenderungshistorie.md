@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 13.09.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 14.09.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -75,6 +75,54 @@ Ort ohne Zugriffsschutz**. Sofort gelöscht. Die Lehre: Eine Probe sucht sich ih
 nicht nach „erste passende Datei" aus, wenn Geheimnisse im Suchraum liegen.
 
 ---
+
+## 14.09.2026 (früh) — Ablagefach der Workbench umgezogen
+
+**Freigabe lag vor** (Arbeitsauftrag im Projekt „Workbench", *ändern und selbst
+nachweisen*). Vor dem Eingriff ein Sicherungslauf: Snapshot `0a31d606`, 04:55.
+
+| Was | Von | Nach |
+|---|---|---|
+| Ablagefach | `/mnt/usb-hdd/second-brain/eingang`, 2750 | `/mnt/usb-hdd/workbench-eingang`, **2770**, `simon:pi-admin` |
+| Mount in `stacks/yt-werk/docker-compose.yml` | alter Pfad | neuer Pfad — Containerpfad `/eingang` unverändert |
+| Mount in `stacks/n8n/docker-compose.yml` | alter Pfad | neuer Pfad — desgleichen |
+| `pi-backup.sh`: gesicherter Pfad **und** `--exclude`-Regel | alter Pfad | neuer Pfad |
+| `_system/hol-eingang.sh` im Vault (auf dem Mac) | alter Pfad | neuer Pfad — eine Zeile |
+| Workflow A „Einsammeln" | holte alles aus der Playlist | prüft vorher `eingang/.verarbeitet` |
+
+**Zwei Gründe, beide gemessen.** Erstens Samba: die Freigabe `usb-share` zeigt auf
+`/mnt/usb-hdd`, aber `second-brain/` gehört `claude:claude` mit 0750 — als `simon`
+scheiterte schon `ls` auf dem Elternverzeichnis. Zweitens der Modus: mit 2750 konnte das
+Konto `claude`, über das der Abholvorgang des Macs läuft, im Eingang nicht schreiben und
+brauchte für jedes `mv` ein `sudo`.
+
+**Nachgewiesen, nicht angenommen:**
+
+- `touch` und `mv` als `claude` **ohne** `sudo` im neuen Eingang: beides läuft durch.
+  Vorher `Permission denied`. Damit ist [09](09-empfehlungen.md) 3.12 geschlossen.
+- `sudo -u simon ls` und `touch` im neuen Eingang: beides läuft durch; dasselbe `ls` auf
+  `/mnt/usb-hdd/second-brain/` scheitert weiterhin mit `Permission denied`. Das war der
+  Zweck des Umzugs.
+- `yt-werk` nach dem Neustart: `/health` meldet `eingang_beschreibbar: true`,
+  `/verarbeitet` liefert unverändert neun Video-IDs. Nichts ist beim `mv` verloren
+  gegangen.
+- `pi-guard.sh status` nach dem `up -d` auf dem n8n-Stack: 5678 steht in der
+  multiport-DROP-Regel.
+- Backup mit dem neuen Pfad: Snapshot `8efc5adc`, 05:26. `restic snapshots --json` nennt
+  weiterhin **13 Pfade**, darunter `/mnt/usb-hdd/workbench-eingang`; `restic ls` zeigt
+  alle neun Videoverzeichnisse, `_geholt/` und `.verarbeitet`.
+- Workflow A in beide Richtungen: mit einer künstlich um einen Eintrag gekürzten
+  `.verarbeitet` passiert **genau ein** Video den neuen Filter (`czsdQlIiyEM`,
+  `/holen` meldete `uebersprungen: true`, es wurde also nichts neu geladen); mit der
+  vollständigen Datei passieren **null** von neun, und `Video holen` läuft gar nicht
+  erst an. `.verarbeitet` danach per SHA-256 gegen das Original geprüft: identisch.
+
+**Nebenbefund, nicht behoben:** Der zweite Sicherungslauf scheiterte mit
+`Fatal: unable to open repository ... context deadline exceeded` — ein Timeout von
+restic zu rclone, keine Folge des Umzugs (der Fehler tritt auf, bevor eine Datei gelesen
+wird). Ursache war die Last: drei volle Läufe in einer halben Stunde bringen den Pi auf
+über 90 % I/O-Wartezeit. Der Wiederholungslauf lief durch. Zu beobachten, ob es beim
+nächtlichen 03:17-Lauf wieder auftritt.
 
 ## 12.09.2026 (abends) — Workbench in Betrieb: yt-werk, zwei Workflows, Ablagefach
 

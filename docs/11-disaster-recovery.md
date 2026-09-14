@@ -22,7 +22,7 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | 10 | **n8n** (Workflows, verschlüsselte Zugangsdaten, Verschlüsselungsschlüssel) | ✅ **ja** | restic-Backup, seit 07.09.2026 — konsistenter SQLite-Abzug wie bei Vaultwarden. **Der Schlüssel `config` liegt mit im Backup; ohne ihn ist die Datenbank wertlos** |
 | 11 | **Diun-Zustand und ntfy-Token** (`/mnt/usb-hdd/diun`, `/etc/diun/ntfy-token`) | ❌ **nein, bewusst** | In zwei Minuten neu erzeugt, siehe unten |
 | 12 | **Second Brain** (`unterlagen/`, `vault.git/`) | ✅ **ja** | restic-Backup, seit 03.09.2026. `literatur/` bewusst nicht — ersetzbar, siehe [12](12-backup.md) |
-| 13 | **Workbench-Ablagefach** (`second-brain/eingang/`) | ✅ **ja** | restic-Backup, seit 12.09.2026, `.tmp-*` ausgenommen. Der Inhalt ist eine Warteschlange, kein Bestand — im Notfall ist der Verlust ein neuer Holvorgang, keine verlorene Arbeit |
+| 13 | **Workbench-Ablagefach** (`workbench-eingang/`) | ✅ **ja** | restic-Backup, seit 12.09.2026, `.tmp-*` ausgenommen. Der Inhalt ist eine Warteschlange, kein Bestand — im Notfall ist der Verlust ein neuer Holvorgang, keine verlorene Arbeit |
 | 14 | **yt-werk** (Image, Dockerfile, Anwendung) | ✅ **ja** | GitHub: `qsimonbrn/raspi`, `stacks/yt-werk/`. Das **Image** liegt nirgends gesichert — es wird aus dem Dockerfile neu gebaut, und `yt-dlp` ist darin gepinnt, siehe [20](20-yt-werk.md) |
 | 15 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
 
