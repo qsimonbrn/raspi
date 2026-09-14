@@ -1,6 +1,6 @@
 # 10 — Zugriff
 
-*Erfasst: 18.08.2026 · ergänzt 23.08.2026 · nachgemessen: 13.09.2026*
+*Erfasst: 18.08.2026 · ergänzt 23.08.2026 · nachgemessen: 14.09.2026*
 
 Alle Zugangswege zum System auf einen Blick.
 
@@ -20,6 +20,8 @@ Alle Zugangswege zum System auf einen Blick.
 | **n8n** | `http://100.108.219.87:5678` 🔒 | Automatisierungsserver, siehe [19](19-n8n.md) |
 | **insta-triage** | `http://100.108.219.87:8080` 🔒 | Instagram-Abos sichten — an die Tailscale-Adresse gebunden, nicht per Firewall gesperrt |
 | ~~yt-werk~~ | **keine Adresse** | Kein Port auf dem Host. Nur für n8n unter `http://yt-werk:8722` im Docker-Netz `werkbank`, siehe [20](20-yt-werk.md) |
+| **SnapOtter** | `http://192.168.178.80:1349` | Dateiwerkzeuge. **Aus dem Heimnetz erreichbar** — kein 🔒, das ist Absicht. Anmeldung `admin`, siehe [22](22-snapotter.md) |
+| **Stirling PDF** | `http://192.168.178.80:8090` | PDF-Werkzeuge. **Derzeit angehalten**, die Adresse antwortet nicht. Anmeldung `admin`, siehe [21](21-stirling-pdf.md) |
 
 > Alle Weboberflächen laufen unverschlüsselt über HTTP (Ausnahmen: Portainer auf 9443
 > und Vaultwarden auf 8443, das seit dem 23.08.2026 über `tailscale serve` mit einem
@@ -155,6 +157,8 @@ in [05 — Docker](05-docker.md), Compose-Dateien unter `stacks/_archiviert/`.
 | n8n | ❌ 🔒 | ✅ | ❌ |
 | insta-triage | ❌ (gar nicht gebunden) | ✅ | ❌ |
 | yt-werk | ❌ (kein Port) | ❌ (kein Port) | ❌ |
+| **SnapOtter** | ✅ | ✅ | ❌ |
+| **Stirling PDF** | ✅ (wenn gestartet) | ✅ (wenn gestartet) | ❌ |
 | Samba | ✅ | ✅ | ❌ |
 | SSH | ✅ | ✅ | ❌ |
 | Tailscale | ✅ | — | ❌ (kein eingehender Port) |

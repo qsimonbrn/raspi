@@ -1,6 +1,6 @@
 # 17 — Wo was liegt
 
-*Erfasst: 18.08.2026 · Rechte nachgemessen und bereinigt: 13.09.2026*
+*Erfasst: 18.08.2026 · Rechte nachgemessen und bereinigt: 14.09.2026*
 
 Dieses Kapitel beantwortet eine Frage, die sich sonst über ein halbes Dutzend Kapitel
 verteilt: **Welche Datei ist das Original, welche nur eine Kopie?** Wer das verwechselt,
@@ -109,6 +109,7 @@ ausschließlich `/etc/sudoers.d`.
 | `updates/pi-reboot-check.sh` | `/usr/local/sbin/pi-reboot-check.sh` | identisch |
 | `stacks/n8n/workflows-einspielen.py` | den Workflows **in der n8n-Datenbank** (`/mnt/usb-hdd/n8n/database.sqlite`) | 14.09.2026 eingetragen. Das Skript erzeugt sie über die n8n-API. **Wer sie im n8n-Editor ändert, verliert die Änderung** beim nächsten Lauf des Skripts |
 | `stacks/yt-werk/app/app.py` | dem **Image** `yt-werk:1.0.0` | 14.09.2026 eingetragen. Die Anwendung steckt im Image; eine Änderung wirkt erst nach `docker compose build` **und** einem neuen Tag — kein `:latest` |
+| `stacks/stirling-pdf/docker-compose.yml`, Zeile `JAVA_BASE_OPTS` | den **JVM-Einstellungen des laufenden Dienstes** | 14.09.2026 eingetragen. **`JAVA_TOOL_OPTIONS` wäre hier wirkungslos** — das Startskript des Images überschreibt die Variable. Wer den Speicher ändern will, ändert `JAVA_BASE_OPTS` oder `mem_limit`, siehe [21](21-stirling-pdf.md) |
 | `updates/pi-reboot-check.service` | `/etc/systemd/system/` | identisch |
 | `updates/pi-reboot-check.timer` | `/etc/systemd/system/` | identisch |
 | `updates/docker-daemon.json` | `/etc/docker/daemon.json` | identisch |

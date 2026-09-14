@@ -1,6 +1,6 @@
 # 16 — Konten, Rechte und Überwachung
 
-*Erfasst: 18.08.2026 · Rechte und `umask` nachgemessen: 13.09.2026*
+*Erfasst: 18.08.2026 · Rechte und `umask` nachgemessen: 14.09.2026*
 
 Wer darf auf diesem Pi was, und wie ist nachvollziehbar, wer was getan hat. Dieses
 Kapitel ist der Einstiegspunkt, wenn ein Zugang eingerichtet, geprüft oder entzogen
@@ -121,6 +121,38 @@ Repositories ist die Gruppe `pi-admin`, und genau das ist gewollt.
 |---|---|
 | `stacks/homepage/config/logs/` (`2755 simon:simon`) | Wird vom Homepage-Container geschrieben, nicht von einem der beiden Konten. Über `.gitignore` ausgeschlossen. Gruppe `pi-admin` bringt hier nichts |
 | `system/backup/pi-backup.sh` (`755 simon:simon`) | Ungeklärte Ausnahme, siehe [09 — Empfehlungen](09-empfehlungen.md), 3.10 |
+
+> **Richtigstellung vom 14.09.2026: Es sind nicht zwei Ausnahmen, es sind dreizehn.**
+> Beim Ergänzen der Homepage-Kacheln für die neuen Dienste scheiterte `claude` an
+> `stacks/homepage/config/services.yaml` mit `Permission denied`. Gemessen: Die Datei
+> gehört `simon:simon` mit Modus 664 — Gruppe `simon`, und `claude` ist in `claude` und
+> `pi-admin`, nicht in `simon`.
+>
+> Anschließend gezählt: **13** Objekte im Repository tragen die Gruppe `simon`, **814**
+> die Gruppe `pi-admin`. Die Reparatur vom 13.09.2026 hat sie nicht erfasst, weil sie
+> ausdrücklich nur Objekte der Gruppe `pi-admin` anfasste — der Bestand wurde über
+> `chmod g+w` auf genau diese Gruppe gesetzt.
+>
+> **Die Lehre ist dieselbe wie am 13.09., nur eine Ebene höher:** Damals hat eine
+> Reparatur die Rechte berichtigt und die Gruppe unangetastet gelassen; die Prüfung
+> danach maß Schreibrechte, nicht Gruppenzugehörigkeit, und konnte den Rest deshalb nicht
+> finden. **Eine Reparatur, die nach ihrem eigenen Kriterium auswählt, prüft sich selbst
+> nicht.**
+>
+> Behelf bis zur Entscheidung: `sudo -u simon` — dabei bleibt der Eigentümer erhalten.
+> Der Punkt steht in [09](09-empfehlungen.md), 3.10.
+
+### Die `.env` der neuen Stacks (14.09.2026)
+
+`stacks/snapotter/.env` und `stacks/stirling-pdf/.env` wurden beim Anlegen ausdrücklich
+auf **600** gesetzt und über `git check-ignore -v` gegengeprüft — beide greifen an
+Zeile 7 der `.gitignore`. Das ist seit `umask 002` kein Selbstläufer mehr: Ohne das
+`chmod` wäre eine neu angelegte `.env` mit **664** entstanden und für `pi-admin`
+schreibbar.
+
+Die Passwörter darin wurden auf dem Pi mit `openssl rand` erzeugt und **nie durch den
+Chat gereicht**. Vor dem Commit wurde gegengeprüft, dass keiner der vier Werte im
+Commit-Inhalt vorkommt.
 
 **Nachweis am 13.09.2026, in beide Richtungen und mit Negativkontrolle:**
 `umask` in der Automatisierungs-Shell `0002` · `claude` legt ein Verzeichnis an → `2775` ·

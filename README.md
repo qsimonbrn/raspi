@@ -48,6 +48,8 @@ Einstiegsseite. Vierzehn Docker-Container in zehn Stacks; die Compose-Dateien li
 | [18 — Vaultwarden](docs/18-vaultwarden.md) | Passwort-Tresor: Aufbau, Absicherung, Sicherung der Tresor-Datenbank, Wiederherstellung |
 | [19 — n8n](docs/19-n8n.md) | Automatisierungsserver: Aufbau, Abschottung über pi-guard, Sicherung, Wiederherstellung |
 | [20 — yt-werk](docs/20-yt-werk.md) | Beschaffungsdienst der Workbench: holt Playlists, Metadaten und Transkripte von YouTube |
+| [21 — Stirling PDF](docs/21-stirling-pdf.md) | PDF-Werkzeugkasten: eingerichtet, aber **angehalten** — warum, und der JVM-Speicher-Fallstrick |
+| [22 — SnapOtter](docs/22-snapotter.md) | Dateiwerkzeuge für Bild, Video, Audio und PDF: Drei-Container-Stack, Backup, offene Telemetriefrage |
 
 Änderungen an der Dokumentation: [CHANGELOG.md](CHANGELOG.md)
 
@@ -57,11 +59,11 @@ Einstiegsseite. Vierzehn Docker-Container in zehn Stacks; die Compose-Dateien li
 
 | | |
 |---|---|
-| Uptime | 6 Tage, 14 Stunden (13.09.2026) |
-| Load (1/5/15 min) | 0,85 / 0,38 / 0,28 bei 4 Kernen (13.09.2026) |
-| Temperatur | 46,2 °C — nie gedrosselt (`throttled=0x0`, 13.09.2026) |
-| RAM verfügbar | 1,8 von 3,7 GiB (13.09.2026) |
-| Systemdatenträger | 5 % belegt (11 G von 235 G, 13.09.2026) |
+| Uptime | 10 Stunden (14.09.2026, Neustart um 05:56) |
+| Load (1/5/15 min) | 1,25 / 0,52 / 0,36 bei 4 Kernen (14.09.2026) |
+| Temperatur | 47,7 °C — nie gedrosselt (`throttled=0x0`, 14.09.2026) |
+| RAM verfügbar | 1,1 von 3,7 GiB (14.09.2026) |
+| Systemdatenträger | **9 % belegt (19 G von 235 G, 14.09.2026)** — von 11 G am 13.09. Die Images wuchsen von 5,9 auf 14,2 GB: SnapOtter 5,44 G und Stirling PDF 2,20 G kamen dazu |
 | Datenspeicher SSD | 36 % belegt (311 G von 916 G, 13.09.2026) |
 | Ausstehende OS-Updates | **3** (13.09.2026) — `tailscale` wird von `unattended-upgrades` nie erfasst (Fremd-Repository), zuletzt am 20.08.2026 von Hand auf 1.102.3 gezogen |
 | Fehlgeschlagene Dienste | 0 |
@@ -71,11 +73,13 @@ Einstiegsseite. Vierzehn Docker-Container in zehn Stacks; die Compose-Dateien li
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
-| Speicher-Limits | **für alle 14 Container gesetzt**, Summe 5.072 von 3.796 MiB — **bewusst überbucht** ([05](docs/05-docker.md)) |
+| Speicher-Limits | **für alle 18 Container gesetzt** (17 laufen, Stirling PDF ist angehalten), Summe 7.824 von 3.796 MiB — **bewusst überbucht** ([05](docs/05-docker.md)) |
 | Passwort-Tresor | **Vaultwarden 1.37.2** seit 23.08.2026, nur über Tailscale auf Port 8443 ([18](docs/18-vaultwarden.md)) |
 | Benachrichtigungen | **ntfy stellt seit 25.08.2026 nachweislich aufs iPhone zu** — Alarmkette erstmals geschlossen ([14](docs/14-benachrichtigungen.md)) |
 | Automatisierung | **n8n 2.37.10** seit 07.09.2026, nur über Tailscale auf Port 5678 ([19](docs/19-n8n.md)) |
 | Workbench | **yt-werk 1.0.0** seit 12.09.2026 — **kein Port auf dem Host**, nur für n8n im Docker-Netz `werkbank` erreichbar ([20](docs/20-yt-werk.md)) |
+| Dateiwerkzeuge | **SnapOtter 2.2.0** seit 14.09.2026 auf Port 1349 — **aus dem Heimnetz erreichbar**, drei Container ([22](docs/22-snapotter.md)) |
+| PDF-Werkzeuge | **Stirling PDF 2.14.3** eingerichtet, aber **angehalten** — beide zusammen passen nicht in den Speicher ([21](docs/21-stirling-pdf.md)) |
 | Update-Meldungen | **Diun 4.33.0** seit 25.08.2026, täglich 06:15, überwacht 12 Images (13.09.2026) ([05](docs/05-docker.md)) |
 
 **Dashboard:** [Homepage](http://192.168.178.80:3000) ist der Einstieg zu allen Diensten.

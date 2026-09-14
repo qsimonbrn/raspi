@@ -1,6 +1,6 @@
 # 05 — Docker
 
-*Erfasst: 18.08.2026 · Verbrauchswerte nachgemessen: 20.08.2026 · Bestand nachgemessen: 13.09.2026*
+*Erfasst: 18.08.2026 · Verbrauchswerte nachgemessen: 20.08.2026 · Bestand nachgemessen: 14.09.2026*
 
 ## Überblick
 
@@ -32,8 +32,15 @@
 | **n8n** | `docker.n8n.io/n8nio/n8n:2.37.10` | 5678 🔒 | Automatisierungsserver (Workflows), siehe [19](19-n8n.md) | `unless-stopped` |
 | **insta-triage** | `insta-triage:1.0.0` (lokal gebaut, Basis `python:3.12.8-slim-bookworm`) | 8080 🔒 | Instagram-Abos sichten und sortieren, siehe [Stack-README](../stacks/insta-triage/README.md) | `unless-stopped` |
 | **yt-werk** | `yt-werk:1.0.0` (lokal gebaut, Basis `python:3.12.8-slim-bookworm`, `yt-dlp` gepinnt) | **— keiner** | Holt Playlists, Metadaten und Transkripte von YouTube für die Workbench, siehe [20](20-yt-werk.md) | `unless-stopped` |
+| **snapotter** | `snapotter/snapotter:2.2.0` | **1349 — offen im Heimnetz** | Dateiwerkzeuge für Bild, Video, Audio, PDF, siehe [22](22-snapotter.md) | `unless-stopped` |
+| snapotter-postgres | `postgres:17-alpine` | — (intern) | Datenbank von SnapOtter | `unless-stopped` |
+| snapotter-redis | `redis:8-alpine` | — (intern) | Auftragswarteschlange von SnapOtter | `unless-stopped` |
+| **stirling-pdf** | `stirlingtools/stirling-pdf:2.14.3` | **8090 — offen im Heimnetz**, derzeit ohne Wirkung | PDF-Werkzeugkasten. **Angehalten** — Begründung in [21](21-stirling-pdf.md) | `unless-stopped`, aber von Hand gestoppt |
 
-**Vierzehn Container** (seit 12.09.2026). 🔒 markiert Dienste, die nur über Tailscale
+**Achtzehn Container** (seit 14.09.2026), davon **siebzehn laufend** — Stirling PDF ist
+eingerichtet und bewusst angehalten.
+
+**Vierzehn waren es bis zum 13.09.2026.** 🔒 markiert Dienste, die nur über Tailscale
 erreichbar sind — siehe [07 — Sicherheit](07-sicherheit.md).
 
 **yt-werk ist der erste Dienst, der überhaupt keinen Port auf dem Host veröffentlicht.**
@@ -210,7 +217,25 @@ Grundlage ist die Messung, die vom 18.08.2026 bis zum 12.09.2026 alle fünf Minu
 | diun-dockerproxy | 19 MiB | **48 MiB** | 153 % |
 | paperless-redis | 16 MiB | **128 MiB** | 700 % |
 | yt-werk | — (keine Messreihe) | **256 MiB** | — |
-| **Summe** | **2.623 MiB** (13 Container) | **5.072 MiB** (14 Container) | von 3.796 MiB RAM |
+| snapotter | — (Einzelmessung 393 MiB am 14.09.) | **1024 MiB** | — |
+| snapotter-postgres | — (Einzelmessung 43 MiB) | **256 MiB** | — |
+| snapotter-redis | — (Einzelmessung 11 MiB) | **192 MiB** | — |
+| stirling-pdf | — (Einzelmessung **819 MiB**, angehalten) | **1280 MiB** | — |
+| **Summe** | **2.623 MiB** (13 Container) | **7.824 MiB** (18 Container) | von 3.796 MiB RAM |
+
+> **Am 14.09.2026 hat die Überbuchung zum ersten Mal wehgetan.** Mit Stirling PDF,
+> SnapOtter und dem nächtlichen `restic`-Lauf gleichzeitig war der Swap zu **100 %**
+> belegt (511 von 511 MiB), der Load stand bei 25 auf vier Kernen, und SSH nahm
+> mehrfach keine Verbindung mehr an. Nach dem Anhalten von Stirling: 1.390 MiB
+> verfügbar, Load 1,6.
+>
+> **Das war kein OOM-Kill** — kein Container wurde beendet, im Kernelprotokoll steht
+> nichts. Es war Swap-Thrashing, und das trifft zuerst die Bedienbarkeit, nicht die
+> Dienste. Wer nur auf `OOMKilled` achtet, sieht diesen Zustand nicht.
+>
+> **`mem_limit` ist eine Obergrenze, keine Reservierung.** Es senkt den tatsächlichen
+> Verbrauch nur, wo es einen Prozess zwingt, kleiner zu werden — bei einer JVM über den
+> Heap-Prozentsatz, siehe [21](21-stirling-pdf.md).
 
 **Für yt-werk gibt es keinen Messreihenwert.** Der Dienst kam am 12.09.2026 dazu, da war
 die Fünf-Minuten-Messung bereits abgeschaltet. Was vorliegt, ist eine Einzelmessung:

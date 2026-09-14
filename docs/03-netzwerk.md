@@ -1,6 +1,6 @@
 # 03 — Netzwerk
 
-*Erfasst: 18.08.2026 · ergänzt 23.08.2026 · Netze und Ports nachgemessen: 13.09.2026*
+*Erfasst: 18.08.2026 · ergänzt 23.08.2026 · Netze und Ports nachgemessen: 14.09.2026*
 
 ## Anbindung
 
@@ -92,6 +92,8 @@ Die Ablösung von WireGuard und ihre Begründung stehen in
 | `br-18b595dd662e` | `172.25.0.0/16` | insta-triage | insta-triage |
 | `br-1e6c4fb71502` | `172.26.0.0/16` | `n8n_default` | **leer** — siehe unten |
 | `br-a802d3804ca0` | `172.27.0.0/16` | **`werkbank`** — stackübergreifend, außerhalb beider Stacks angelegt | n8n, yt-werk |
+| `br-7dced95a724d` | `172.29.0.0/16` | `snapotter` | snapotter, snapotter-postgres, snapotter-redis |
+| (Stack `stirling-pdf`) | — | Netz wird erst beim Start angelegt, der Dienst ist **angehalten** | — |
 | `docker0` | `172.17.0.0/16` | Standard-Bridge | **DOWN**, ungenutzt |
 
 Die Netze von Dashy und Filebrowser sind mit den Diensten am 18.08.2026 entfallen; ihre
@@ -149,6 +151,24 @@ Dass er DOWN ist, bestätigt: Es läuft kein Container außerhalb eines Compose-
 |---|---|
 | `127.0.0.1:5335` | unbound |
 | `127.0.0.1:8222` | Vaultwarden — von außen nur über `tailscale serve` auf 8443, siehe [18](18-vaultwarden.md) |
+
+### Aus dem Heimnetz erreichbar, bewusst ohne `pi-guard`
+
+| Port | Dienst |
+|---|---|
+| `1349` | **SnapOtter** — Entscheidung vom 13.09.2026, siehe [22](22-snapotter.md) |
+| `8090` | **Stirling PDF** — Entscheidung vom 14.09.2026; der Dienst ist derzeit angehalten, der Port also frei, siehe [21](21-stirling-pdf.md) |
+
+> **Diese beiden Ports stehen absichtlich NICHT in der Sperrliste von `pi-guard`.**
+> Wer die Liste erweitert, darf sie nicht „der Vollständigkeit halber" mit aufnehmen —
+> das wäre eine stille Rücknahme einer getroffenen Entscheidung. Die Datenbanken der
+> beiden Dienste veröffentlichen dagegen **keinen** Port (14.09.2026 mit `ss -tlnp`
+> nachgemessen): 5432 und 6379 von SnapOtter sind auf dem Host nicht gebunden. Das ist
+> wichtig, weil `pi-guard` sie nicht abfangen würde — beide stehen nicht in seiner Liste.
+
+> **Port 8090 statt der Vorgabe 8080 bei Stirling PDF:** 8080 ist belegt, `insta-triage`
+> bindet dort auf `100.108.219.87`. Eine zweite Bindung auf `0.0.0.0:8080` schlösse diese
+> Adresse ein und scheiterte mit `EADDRINUSE`.
 
 **Gar nicht auf dem Host:** `yt-werk` lauscht auf 8722, aber nur *im Container*. Die
 Compose-Datei veröffentlicht keinen Port; der Dienst taucht in `ss -tulpn` deshalb nicht

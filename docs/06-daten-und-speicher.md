@@ -1,6 +1,6 @@
 # 06 — Daten & Speicher
 
-*Erfasst: 18.08.2026 · Belegung und Verzeichnisse nachgemessen: 13.09.2026*
+*Erfasst: 18.08.2026 · Belegung und Verzeichnisse nachgemessen: 14.09.2026*
 
 > **Dies ist das wichtigste Kapitel dieser Dokumentation.** Alle anderen Befunde sind
 > Optimierungen. Dieser hier betrifft möglichen dauerhaften Datenverlust.
@@ -11,8 +11,24 @@
 
 | Ort | Größe | Belegt | Inhalt |
 |---|---|---|---|
-| `/` (SD-Karte) | 235 G | **11 G** (5 %, 13.09.2026) | Betriebssystem, Docker-Layer, Logs. Der Anstieg gegenüber 7,8 G am 18.08.2026 ist der Zuwachs an Images: n8n (1,57 G), yt-werk (211 M) und der Build-Cache (102 M) |
-| `/mnt/usb-hdd` (SSD) | 916 G | **311 G** (36 %, 13.09.2026) | Alle Nutzdaten |
+| `/` (SD-Karte) | 235 G | **19 G** (9 %, 14.09.2026) | Betriebssystem, Docker-Layer, Logs |
+| `/mnt/usb-hdd` (SSD) | 916 G | **311 G** (36 %, 14.09.2026) | Alle Nutzdaten |
+
+> **Die Belegung der SD-Karte ist am 14.09.2026 von 11 auf 19 G gesprungen, die
+> Docker-Images von 5,9 auf 14,2 GB (+139 %).** Die Behauptungsprüfung hat das als
+> `ACHTUNG` gemeldet — zu Recht, auch wenn die Ursache bekannt ist: SnapOtter packt
+> sich zu **5,44 GB** aus, Stirling PDF zu **2,20 GB**. Zum Vergleich: n8n 1,57 G,
+> yt-werk 211 M.
+>
+> **Das trifft genau das Bauteil, das ohnehin der wahrscheinlichste Ausfall ist** — die
+> Karte stammt von 02/2023, und ihr Ausfall nimmt den DNS des ganzen Haushalts mit. Der
+> Umzug des Wurzeldateisystems auf die SSD ([09](09-empfehlungen.md), 1.3) ist damit
+> nicht dringender geworden, aber teurer im Verzug: Jedes weitere Image landet dort.
+>
+> **Die Nutzdaten der beiden neuen Dienste liegen dagegen richtig**, nämlich auf der
+> SSD unter `/mnt/usb-hdd/snapotter/` und `/mnt/usb-hdd/stirling-pdf/`. SnapOtters
+> KI-Modelle können laut Hersteller auf bis zu 35 GB anwachsen — auf der Karte wäre das
+> nicht tragbar.
 
 Die Trennung ist grundsätzlich richtig: Nutzdaten liegen auf der SSD, nicht auf der
 SD-Karte. Zum Risiko des Systemdatenträgers siehe [01 — Hardware](01-hardware.md).

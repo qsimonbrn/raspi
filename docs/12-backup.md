@@ -1,7 +1,7 @@
 # 12 — Backup
 
 *Eingerichtet: 13.08.2026 · Prüfung erweitert: 20.08.2026 · Vaultwarden ergänzt: 23.08.2026 ·
-Second Brain ergänzt: 03.09.2026*
+Second Brain ergänzt: 03.09.2026 · SnapOtter und Stirling PDF ergänzt: 14.09.2026*
 
 Vollständige Beschreibung der Sicherungsstrategie: was gesichert wird, was
 bewusst nicht, wie wiederhergestellt wird — und wo die Lücken bleiben.
@@ -157,6 +157,10 @@ Wiederaufbau.
 /mnt/usb-hdd/second-brain/vault.git   Second Brain: Notizen samt Versionsgeschichte
 /mnt/usb-hdd/workbench-eingang        Workbench: Ablagefach zwischen yt-werk, n8n
                                       und dem Mac (.tmp-* ausgeschlossen)
+/mnt/usb-hdd/stirling-pdf/configs     Stirling PDF: Einstellungen, Benutzerkonten
+                                      (cache und heap_dumps ausgeschlossen)
+/mnt/usb-hdd/snapotter/data/files     SnapOtter: Nutzdateien
+                                      (data/ai und pgdata NICHT gesichert)
 ```
 
 **Richtiggestellt am 04.09.2026.** Die Liste nannte `/home/simon/raspi` zweimal — ein

@@ -9,6 +9,46 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.24.0] — 2026-09-14
+
+Die Querverweis-Kapitel kennen jetzt SnapOtter und Stirling PDF. Vorher standen beide
+Dienste nur in ihren eigenen Kapiteln 21 und 22 — genau die Lücke, die bei `yt-werk` am
+13.09.2026 schon einmal aufgetreten ist.
+
+### Geändert
+
+- **[README](README.md):** beide Kapitel verlinkt, „Zustand auf einen Blick" auf die
+  Messung vom 14.09.2026 gezogen (Systemdatenträger **9 %** statt 5 %), Speicher-Limits
+  auf **18 Container / 7.824 MiB**, zwei Zeilen für die neuen Dienste.
+- **Kapitel [03](docs/03-netzwerk.md):** neuer Abschnitt „Aus dem Heimnetz erreichbar,
+  bewusst ohne `pi-guard`" für 1349 und 8090, dazu das SnapOtter-Netz und der Hinweis,
+  warum Stirling auf 8090 statt 8080 liegt.
+- **Kapitel [05](docs/05-docker.md):** vier Container in der Tabelle, Limits-Tabelle
+  ergänzt, und der Kasten zum Lastgipfel vom 14.09.2026 — **Swap zu 100 % belegt, aber
+  kein OOM-Kill**. Wer nur auf `OOMKilled` achtet, sieht diesen Zustand nicht.
+- **Kapitel [06](docs/06-daten-und-speicher.md):** Belegung der SD-Karte von 11 auf
+  **19 G**, Images von 5,9 auf **14,2 GB** (+139 %) — die Behauptungsprüfung meldet das
+  als `ACHTUNG`, die Ursache ist bekannt und trotzdem erwähnenswert.
+- **Kapitel [10](docs/10-zugriff.md):** beide Adressen in Übersicht und Zugriffsmatrix.
+  SnapOtter **ohne** 🔒 — das ist Absicht, kein Versehen.
+- **Kapitel [11](docs/11-disaster-recovery.md):** zwei Zeilen in der Tabelle „gesichert?".
+  Stirling steht auf 🟡 **teilweise** — die H2-Datenbank wird als laufende Datei kopiert.
+- **Kapitel [12](docs/12-backup.md):** drei neue Pfade in der Liste, mit den Ausschlüssen.
+- **Kapitel [16](docs/16-konten-und-rechte.md):** Richtigstellung — es sind **13**
+  Objekte mit Gruppe `simon`, nicht zwei. Dazu ein Abschnitt zu den `.env` der neuen
+  Stacks.
+- **Kapitel [17](docs/17-wo-was-liegt.md):** `JAVA_BASE_OPTS` als Fall „Datei im
+  Repository, Wirkung woanders" aufgenommen.
+
+### Richtiggestellt
+
+- **Kapitel [16](docs/16-konten-und-rechte.md):** Der Satz „Zwei Dinge bleiben bewusst
+  stehen" stimmte nicht. Die Reparatur vom 13.09.2026 wählte ihren Bestand nach der
+  Gruppe `pi-admin` aus und konnte die Objekte mit Gruppe `simon` deshalb nicht finden —
+  **eine Reparatur, die nach ihrem eigenen Kriterium auswählt, prüft sich selbst nicht.**
+
+---
+
 ## [2.23.0] — 2026-09-14
 
 Offene Punkte aus der Nacht nachgetragen, dazu die Domain-Entscheidung.
