@@ -1,0 +1,183 @@
+# =============================================================================
+#  Stirling PDF — Werkzeugkasten fuer PDF-Arbeiten
+#
+#  Erreichbar AUS DEM LAN und aus dem Tailnet:
+#      http://192.168.178.80:8090
+#  Anders als Paperless, Portainer, bichon und n8n steht 8090 BEWUSST NICHT in
+#  der Sperrliste von pi-guard. Das ist eine Entscheidung vom 14.09.2026:
+#  Simon will das Werkzeug ohne Tailscale erreichen. Wer die Sperrliste
+#  spaeter erweitert, darf 8090 also nicht "der Vollstaendigkeit halber"
+#  mit aufnehmen -- das waere eine stille Ruecknahme dieser Entscheidung.
+#
+#  Warum Port 8090 und nicht 8080: 8080 ist bereits belegt. insta-triage
+#  bindet dort auf 100.108.219.87. Eine zweite Bindung auf 0.0.0.0:8080
+#  wuerde diese Adresse einschliessen und mit EADDRINUSE scheitern.
+#
+#  Kein HTTPS. Im LAN unverschluesselt, ueber Tailscale verschluesselt der
+#  Tunnel. Deshalb steht hier auch ein echtes Anmeldepasswort und nicht die
+#  Werkseinstellung "admin/stirling" -- im LAN erreichbar UND Standardpasswort
+#  waere die schlechteste der beiden Welten.
+#
+#  Warum kein Ollama, keine KI: braucht Stirling PDF nicht. Reine
+#  Dokumentenverarbeitung mit LibreOffice, Ghostscript und Tesseract.
+#
+#  Admin-Passwort steht in .env (ueber .gitignore ausgeschlossen, Modus 600).
+#  Dokumentation: docs/21-stirling-pdf.md
+# =============================================================================
+
+# --- Logrotation -------------------------------------------------------------
+#  Docker dreht Logdateien NUR, wenn es beim Erstellen des Containers gesetzt
+#  ist. Die Vorgabe in /etc/docker/daemon.json greift erst nach einem echten
+#  Daemon-Neustart -- deshalb steht sie hier ausdruecklich.
+# -----------------------------------------------------------------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  stirling-pdf:
+    # Fest gepinnt. 2.14.3 ist der Stand vom 06.08.2026; das Manifest fuehrt
+    # linux/arm64 (nachgeprueft). Dieser Release behebt ausdruecklich
+    # "merge/split funktioniert nicht auf Debian 12" -- also genau die
+    # Kombination, die hier laeuft. Aeltere 2.14.x nicht verwenden.
+    image: stirlingtools/stirling-pdf:2.14.3
+    # Der Name lautet "stirlingpdf" ohne Bindestrich, und das ist kein
+    # Schoenheitsfehler: Am 14.09.2026 blieb beim ersten Anlegen der Name
+    # "stirling-pdf" im Namensregister des Docker-Daemons haengen, weil die
+    # Cowork-Bruecke den "compose up" nach 60 s abbrach und Docker die halb
+    # angelegte Instanz zurueckrollte. Das Container-Verzeichnis unter
+    # /var/lib/docker/containers existiert nicht mehr, "docker rm" und
+    # "docker container prune" greifen nicht -- nur ein Daemon-Neustart baut
+    # das Register neu auf. Nach dem naechsten Neustart des Pi ist der Name
+    # wieder frei und kann hier zurueckgeaendert werden.
+    container_name: stirlingpdf
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+    # Bezugsgroesse fuer die JVM: der Heap wird prozentual gegen dieses
+    # Limit berechnet (siehe JAVA_BASE_OPTS weiter unten). 1280 statt der
+    # urspruenglich geplanten 1024 MiB, weil in 1024 die Anmeldung nicht
+    # startet -- ausfuehrlich bei JAVA_BASE_OPTS begruendet.
+    # Daneben laufen LibreOffice, Ghostscript und Tesseract als eigene
+    # Prozesse INNERHALB desselben Limits.
+    # Der Pi hat 3.796 MiB gesamt und ist mit den Limits bereits ueberbucht;
+    # das ist eine bewusste Entscheidung, siehe docs/05.
+    mem_limit: 1280m
+
+    ports:
+      # host:container -- 8080 im Container ist fest, 8090 aussen frei gewaehlt.
+      - "8090:8080"
+
+    # Nur die drei Verzeichnisse, die wirklich Nutzerdaten tragen.
+    # /usr/share/tessdata wird BEWUSST NICHT eingehaengt: ein leeres
+    # Host-Verzeichnis wuerde die mitgelieferten Sprachdateien verdecken
+    # und OCR still unbrauchbar machen.
+    volumes:
+      - /mnt/usb-hdd/stirling-pdf/configs:/configs
+      - /mnt/usb-hdd/stirling-pdf/logs:/logs
+      - /mnt/usb-hdd/stirling-pdf/pipeline:/pipeline
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: Europe/Berlin
+
+      # --- Speicher der JVM, bewusst selbst gesetzt -----------------------
+      # JAVA_TOOL_OPTIONS waere hier WIRKUNGSLOS: /scripts/init-without-ocr.sh
+      # setzt die Variable selbst und ueberschreibt jeden Wert von aussen.
+      # (Die Zeile "Picked up JAVA_TOOL_OPTIONS: ..." im Log stammt von einem
+      # kurzlebigen Versions-Aufruf beim Start, nicht von der Anwendung.)
+      #
+      # Der vorgesehene Weg ist JAVA_BASE_OPTS. Das Skript prueft, ob darin
+      # bereits "MaxRAMPercentage" vorkommt: wenn ja, uebernimmt es die
+      # Werte unveraendert ("keeping user values"); wenn nein, haengt es
+      # seine eigenen, nach mem_limit gestuften Werte an.
+      #
+      # WARUM UEBERHAUPT: Am 14.09.2026 startete der Dienst mit den
+      # Standardwerten NICHT. Bei mem_limit 1024m waehlt das Skript die Stufe
+      # "bis 1024 MiB" mit MaxMetaspaceSize=128m -- und mit eingeschalteter
+      # Anmeldung (Spring-Profil "security") laedt Stirling mehr Klassen, als
+      # dort hineinpassen. Der Lauf endete nach rund vier Minuten mit
+      #     java.lang.OutOfMemoryError: Metaspace
+      # und wegen -XX:+ExitOnOutOfMemoryError mit Exitcode 0, also ohne jedes
+      # Fehlerbild in "docker ps" -- der Container startete einfach neu.
+      #
+      # Blosses Anheben von mem_limit loest das nur scheinbar: der Heap
+      # skaliert prozentual MIT, das Verhaeltnis bleibt eng. Deshalb hier
+      # Heap klein (40 %) und Metaspace gross (256m) statt umgekehrt.
+      # Rechnung bei 1280 MiB Limit: 384 Heap + 256 Metaspace + rund 200
+      # Grundlast der JVM + rund 250 fuer LibreOffice/Ghostscript/Tesseract
+      # als eigene Prozesse = rund 1.090 MiB.
+      #
+      # Von 40 % auf 30 % gesenkt am 14.09.2026, nachdem der Pi mit Stirling
+      # UND SnapOtter UND dem naechtlichen restic-Lauf gleichzeitig in den
+      # Swap lief (511 von 511 MiB belegt, Load 25, SSH zeitweise nicht mehr
+      # erreichbar). mem_limit allein haette daran nichts geaendert: es ist
+      # eine Obergrenze, keine Reservierung -- gespart wird nur, wenn der
+      # Heap kleiner WIRD, und das steuert dieser Prozentsatz.
+      #
+      # Preis: Bei einer sehr grossen PDF kann der Heap knapp werden. Der
+      # Container beendet sich dann wegen ExitOnOutOfMemoryError und startet
+      # neu -- das trifft nur diesen Dienst, nicht den Pi.
+      #
+      # HeapDumpPath zeigt auf /tmp und NICHT auf /configs: /configs liegt im
+      # Backup, und ein Speicherabzug von mehreren hundert MB hat dort
+      # nichts verloren.
+      JAVA_BASE_OPTS: >-
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:G1HeapRegionSize=4m
+        -XX:G1PeriodicGCInterval=60000
+        -XX:+UseStringDeduplication
+        -XX:+UseCompactObjectHeaders
+        -XX:+ExplicitGCInvokesConcurrent
+        -Dspring.threads.virtual.enabled=true
+        -Djava.awt.headless=true
+        -XX:InitialRAMPercentage=15
+        -XX:MaxRAMPercentage=30
+        -XX:MaxMetaspaceSize=256m
+
+
+      # Anmeldung. DOCKER_ENABLE_SECURITY schaltet den Sicherheitsteil im
+      # Image ueberhaupt erst frei; SECURITY_ENABLELOGIN allein genuegt nicht.
+      DOCKER_ENABLE_SECURITY: "true"
+      SECURITY_ENABLELOGIN: "true"
+      SECURITY_INITIALLOGIN_USERNAME: "admin"
+      # Wert kommt aus .env. Wirkt NUR beim allerersten Start, solange die
+      # Benutzerdatenbank unter /configs noch nicht existiert. Spaetere
+      # Aenderungen hier bleiben wirkungslos -- Passwort dann in der
+      # Oberflaeche aendern.
+      SECURITY_INITIALLOGIN_PASSWORD: ${STIRLING_ADMIN_PASSWORD}
+
+      # Keine Nutzungsdaten nach aussen.
+      SYSTEM_ENABLEANALYTICS: "false"
+
+      SYSTEM_DEFAULTLOCALE: de-DE
+      UI_APPNAME: "PDF-Werkstatt"
+
+      # Obergrenze je Datei in MB. Ohne Grenze kann eine einzelne grosse
+      # Datei den 512-MiB-Heap sprengen und den Container in den OOM treiben.
+      SYSTEM_MAXFILESIZE: "100"
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf --max-time 5 http://127.0.0.1:8080/api/v1/info/status || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      # Java plus LibreOffice-Vorwaermung braucht auf einem Pi 4 lange.
+      # 180 s waren zu wenig: am 14.09.2026 gemessen brauchte der erste Start
+      # rund sechs Minuten, und der Dienst stand danach zwischenzeitlich als
+      # "unhealthy" da, obwohl er einwandfrei lief. Eine Anzeige, die im
+      # Normalbetrieb faelschlich Alarm schlaegt, wird nach dem dritten Mal
+      # ignoriert -- deshalb 420 s. Danach ist "unhealthy" wieder eine
+      # Aussage. /api/v1/info/status antwortet ohne Anmeldung mit 200;
+      # geprueft wurde auch die Gegenrichtung: "/" liefert 401.
+      start_period: 420s

@@ -60,6 +60,29 @@
         server: pi
         container: vaultwarden
 
+- Werkzeuge:
+    - Stirling PDF:
+        # Aus dem LAN erreichbar, bewusst nicht ueber pi-guard gesperrt.
+        href: http://192.168.178.80:8090
+        # /api/v1/info/status antwortet OHNE Anmeldung mit 200. Die
+        # Startseite "/" taugt NICHT als Monitor: sie liefert 401, solange
+        # niemand angemeldet ist, und die Kachel stuende dauerhaft auf Rot.
+        siteMonitor: http://192.168.178.80:8090/api/v1/info/status
+        description: PDF-Werkzeugkasten, Anmeldung erforderlich
+        icon: stirling-pdf.png
+        server: pi
+        # Der Container heisst "stirlingpdf" ohne Bindestrich -- siehe die
+        # Begruendung in stacks/stirling-pdf/docker-compose.yml.
+        container: stirlingpdf
+
+    - SnapOtter:
+        href: http://192.168.178.80:1349
+        siteMonitor: http://192.168.178.80:1349/api/v1/health
+        description: Dateiwerkzeuge fuer Bild, Video, Audio und PDF
+        icon: mdi-toolbox
+        server: pi
+        container: snapotter
+
 - Verwaltung:
     - Portainer:
         href: http://100.108.219.87:9000

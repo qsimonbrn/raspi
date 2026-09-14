@@ -1,0 +1,219 @@
+# =============================================================================
+#  SnapOtter — Werkzeugkasten fuer Dateien (Bild, Video, Audio, PDF)
+#
+#  Erreichbar AUS DEM LAN und aus dem Tailnet:
+#      http://192.168.178.80:1349
+#  Port 1349 steht BEWUSST NICHT in der Sperrliste von pi-guard. Entscheidung
+#  vom 13.09.2026: Simon will das Werkzeug ohne Tailscale erreichen. Wer die
+#  Sperrliste spaeter erweitert, darf 1349 nicht "der Vollstaendigkeit halber"
+#  mit aufnehmen -- das waere eine stille Ruecknahme dieser Entscheidung.
+#
+#  DREI Container, nicht einer: Seit 2.0 verlangt SnapOtter PostgreSQL und
+#  Redis. Der Einzelcontainer-Modus mit eingebauter Datenbank existiert, setzt
+#  aber Root im Container voraus -- deshalb hier der Compose-Weg.
+#
+#  ABWEICHUNG VON DER HERSTELLERVORLAGE, bewusst und gemessen:
+#  Deren Referenz will 6g fuer die App, 1g Postgres, 1g Redis und 2g shm.
+#  Der Pi hat 3.796 MiB GESAMT. Hier: 1024 / 256 / 192 MiB und 256m shm.
+#  Folge: Die KI-Werkzeuge (faster-whisper, Hochskalierung, Freisteller)
+#  laufen zaeh oder gar nicht. Das ist in Kauf genommen -- der Zweck ist die
+#  Nicht-KI-Haelfte: konvertieren, komprimieren, PDF. Fuer Transkription und
+#  Bild-KI ist der Mac zustaendig, fuer Dokumenten-OCR Paperless.
+#
+#  Kein Auslagern der KI moeglich: SnapOtter kennt keine Konfiguration fuer
+#  einen externen Endpunkt (Quelltext am 13.09.2026 nach OLLAMA,
+#  OPENAI_BASE_URL, AI_ENDPOINT, REMOTE_WORKER durchsucht -- kein Treffer).
+#
+#  TELEMETRIE: Das offizielle Image ist mit SNAPOTTER_ANALYTICS=on gebaut,
+#  und es gibt dafuer KEINE Laufzeitvariable, nur einen Build-Parameter.
+#  Ob es tatsaechlich nach aussen funkt, wurde nach dem ersten Start an den
+#  Verbindungen des Containers gemessen -- Ergebnis siehe docs/22.
+#
+#  Alle Passwoerter stehen in .env (ueber .gitignore ausgeschlossen, Modus 600).
+#  Dokumentation: docs/22-snapotter.md
+# =============================================================================
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+
+  # --- Anwendung -------------------------------------------------------------
+  snapotter:
+    # Fest gepinnt. 2.2.0 ist der Stand vom 29.07.2026; das Manifest fuehrt
+    # linux/arm64 (nachgeprueft). Kein Pull auf :latest -- die 2.0 hat die
+    # Datenhaltung von SQLite auf Postgres umgestellt, ein unbeabsichtigter
+    # Versionssprung waere eine Migration.
+    image: snapotter/snapotter:2.2.0
+    container_name: snapotter
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+    # Die Vorlage des Herstellers legt ALLE Faehigkeiten ab und gibt sechs
+    # zurueck. Unveraendert uebernommen -- einschliesslich DAC_OVERRIDE.
+    #
+    # Am 14.09.2026 wurde DAC_OVERRIDE hier zunaechst WEGGELASSEN, mit der
+    # Begruendung, die Datenverzeichnisse gehoerten dem Container ohnehin.
+    # Diese Begruendung war falsch, und der Start ist daran gescheitert:
+    # Das Image startet als root (Config.User ist leer) und wechselt erst im
+    # entrypoint.sh auf PUID/PGID. In diesem ersten Moment gehoeren ihm die
+    # Verzeichnisse eben NICHT -- sie gehoeren 1000:1000 mit Modus 755, und
+    # root ohne DAC_OVERRIDE darf dort nicht schreiben. Die Folge war eine
+    # Neustartschleife mit
+    #     mkdir: cannot create directory '/data/ai': Permission denied
+    # Wer die Liste kuerzen will, muss vorher pruefen, als WELCHER Benutzer
+    # das Image tatsaechlich startet, nicht als welcher es spaeter laeuft.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+      - FOWNER
+      - KILL
+
+    mem_limit: 1024m
+    memswap_limit: 1024m
+    pids_limit: 512
+    # Hersteller: 2gb. Auf einem Pi mit 3.796 MiB gesamt undenkbar -- shm
+    # liegt im Arbeitsspeicher.
+    shm_size: '256m'
+
+    ports:
+      - "1349:1349"
+
+    volumes:
+      # Nutzerdateien, nachgeladene KI-Modelle, Python-Umgebung. Liegt auf der
+      # USB-HDD, nicht auf der SD-Karte: die Modelle koennen laut Hersteller
+      # auf bis zu 35 GB anwachsen.
+      - /mnt/usb-hdd/snapotter/data:/data
+      # Zwischenablage der Verarbeitung. Die Vorlage schlaegt tmpfs vor --
+      # hier ausdruecklich NICHT, das ginge auf den Arbeitsspeicher.
+      - /mnt/usb-hdd/snapotter/workspace:/tmp/workspace
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: Europe/Berlin
+
+      # UID/GID der Prozesse im Container. Vorgabe des Images ist 999 -- auf
+      # diesem Host gehoert 999 dem nativen Benutzer "pihole" und 999 der
+      # Gruppe "systemd-journal". Deshalb 1000 (simon), wie bei n8n.
+      PUID: "1000"
+      PGID: "1000"
+
+      AUTH_ENABLED: "true"
+      DEFAULT_USERNAME: admin
+      # Wert aus .env. Wirkt nur beim allerersten Start. Der erzwungene
+      # Wechsel bleibt an -- SKIP_MUST_CHANGE_PASSWORD ausdruecklich false.
+      DEFAULT_PASSWORD: ${SNAPOTTER_ADMIN_PASSWORD}
+      SKIP_MUST_CHANGE_PASSWORD: "false"
+
+      # Kein Reverse Proxy davor. Die Vorgabe der Hersteller-Compose ist
+      # "true" und wuerde JEDEM Aufrufer erlauben, seine eigene Client-IP per
+      # X-Forwarded-For zu behaupten -- damit waere die Ratenbegrenzung
+      # wirkungslos. Hier die engere Variante aus deren Doku.
+      TRUST_PROXY: loopback,linklocal,uniquelocal
+
+      # Drosseln, damit ein einzelner Auftrag den Pi nicht mitreisst.
+      # Vier Kerne, aber nur 1024 MiB Limit fuer alles zusammen.
+      CONCURRENT_JOBS: "1"
+      MAX_WORKER_THREADS: "2"
+      PROCESSING_TIMEOUT_S: "1800"
+      MAX_UPLOAD_SIZE_MB: "200"
+      MAX_PIPELINE_STEPS: "20"
+      RATE_LIMIT_PER_MIN: "300"
+
+      DATABASE_URL: postgres://snapotter:${POSTGRES_PASSWORD}@snapotter-postgres:5432/snapotter
+      REDIS_URL: redis://:${REDIS_PASSWORD}@snapotter-redis:6379
+
+    depends_on:
+      snapotter-postgres:
+        condition: service_healthy
+      snapotter-redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "--max-time", "5", "http://localhost:1349/api/v1/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      # Erster Start legt das Schema an; auf einem Pi 4 dauert das.
+      start_period: 300s
+
+  # --- Datenbank -------------------------------------------------------------
+  snapotter-postgres:
+    image: postgres:17-alpine
+    container_name: snapotter-postgres
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    mem_limit: 256m
+
+    # KEIN ports-Abschnitt. Die Datenbank ist ausschliesslich ueber das
+    # Compose-Netz erreichbar. Wer hier einen Port veroeffentlicht, oeffnet
+    # Postgres ins LAN -- pi-guard faengt das nicht ab, weil 5432 nicht in
+    # seiner Liste steht.
+    environment:
+      TZ: Europe/Berlin
+      POSTGRES_USER: snapotter
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: snapotter
+
+    volumes:
+      # Bind-Mount statt benanntem Volume, damit das Verzeichnis fuer das
+      # Backup auffindbar ist. ACHTUNG: pi-backup.sh sichert diesen Pfad NICHT
+      # direkt -- ein laufendes Postgres-Datenverzeichnis live wegzukopieren
+      # ergibt kein wiederherstellbares Backup. Gesichert wird ein pg_dump,
+      # genau wie bei Vaultwarden und n8n.
+      - /mnt/usb-hdd/snapotter/pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U snapotter"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  # --- Auftragswarteschlange -------------------------------------------------
+  snapotter-redis:
+    image: redis:8-alpine
+    container_name: snapotter-redis
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    mem_limit: 192m
+    user: "1000:1000"
+
+    # Hersteller: --maxmemory 512mb. Passt nicht zu einem 192-MiB-Limit;
+    # Redis wuerde bis 512 MiB wachsen wollen und vorher vom OOM-Killer
+    # geholt. Deshalb 128mb, klar unter dem Containerlimit.
+    # noeviction ist Absicht: Auftraege duerfen nicht still verschwinden,
+    # lieber ein Fehler beim Einstellen eines neuen Auftrags.
+    command: >-
+      redis-server
+      --maxmemory-policy noeviction
+      --maxmemory 128mb
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+
+    volumes:
+      - /mnt/usb-hdd/snapotter/redis:/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}

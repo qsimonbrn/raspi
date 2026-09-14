@@ -62,7 +62,7 @@ log "=== Backup gestartet ==="
 
 # --- Zwischenablage vorbereiten ----------------------------------------------
 rm -rf "$STAGE"
-mkdir -p "$STAGE"/{paperless,vaultwarden,n8n,pihole,etc,system}
+mkdir -p "$STAGE"/{paperless,vaultwarden,n8n,snapotter,pihole,etc,system}
 chmod 700 "$STAGE"
 
 # --- 1. Paperless: Export inklusive Metadaten --------------------------------
@@ -186,6 +186,48 @@ else
   warn "n8n-Container laeuft nicht -- uebersprungen"
 fi
 
+# --- 2c. SnapOtter: Datenbankabzug (seit 14.09.2026) --------------------------
+# SnapOtter haelt seinen Bestand seit Version 2.0 in PostgreSQL: Benutzer,
+# gespeicherte Pipelines, Auftragsverlauf. Das Datenverzeichnis
+# /mnt/usb-hdd/snapotter/pgdata steht deshalb NICHT in der Pfadliste von
+# restic -- ein laufendes Postgres-Datenverzeichnis bytweise wegzukopieren
+# ergibt keinen wiederherstellbaren Stand, weil WAL-Segmente und Heap-Dateien
+# zu verschiedenen Zeitpunkten erwischt werden. Gesichert wird der pg_dump.
+#
+# Die Nutzdateien liegen daneben unter data/files und werden direkt gesichert.
+# data/ai wird bewusst ausgelassen: dort liegen nachgeladene KI-Modelle, laut
+# Hersteller bis zu 35 GB, jederzeit neu ladbar. Sie wuerden das
+# OneDrive-Kontingent von 5 GB im Alleingang sprengen.
+if docker ps --format '{{.Names}}' | grep -qx snapotter-postgres; then
+  log "SnapOtter: Datenbankabzug"
+  if docker exec snapotter-postgres pg_dump -U snapotter -d snapotter \
+       > "$STAGE/snapotter/datenbank.sql" 2>/dev/null \
+       && [ -s "$STAGE/snapotter/datenbank.sql" ]; then
+    # Gegenprobe. Ein abgebrochener pg_dump hinterlaesst eine Datei, die
+    # anfaengt wie ein gueltiger Abzug und einfach aufhoert -- die
+    # Dateigroesse allein beweist also nichts. pg_dump schreibt als LETZTE
+    # Zeile die Marke "PostgreSQL database dump complete"; fehlt sie, ist der
+    # Abzug abgeschnitten. Zusaetzlich wird gezaehlt, ob ueberhaupt Tabellen
+    # enthalten sind: der Abzug einer leeren Datenbank ist syntaktisch
+    # vollstaendig und trotzdem wertlos -- derselbe Fall, der bei Vaultwarden
+    # am 23.08.2026 die integrity_check-Pruefung ausgetrickst hat.
+    if ! tail -5 "$STAGE/snapotter/datenbank.sql" | grep -q "PostgreSQL database dump complete"; then
+      warn "SnapOtter: Abzug abgeschnitten -- Schlussmarke fehlt"
+    else
+      TAB=$(grep -c "^CREATE TABLE " "$STAGE/snapotter/datenbank.sql")
+      if [ "${TAB:-0}" -lt 1 ]; then
+        warn "SnapOtter: Abzug enthaelt keine einzige Tabelle -- kein brauchbares Backup"
+      else
+        log "SnapOtter: Datenbank gesichert ($(du -h "$STAGE/snapotter/datenbank.sql" | cut -f1), $TAB Tabellen)"
+      fi
+    fi
+  else
+    warn "SnapOtter: pg_dump fehlgeschlagen"
+  fi
+else
+  warn "SnapOtter-Datenbank laeuft nicht -- uebersprungen"
+fi
+
 # --- 3. Pi-hole: Teleporter-Export -------------------------------------------
 # Enthaelt Einstellungen, lokale DNS-Eintraege und Blocklisten-Quellen --
 # wenige hundert Kilobyte statt 424 MB Query-Datenbank.
@@ -248,7 +290,9 @@ restic backup \
   --exclude '/mnt/usb-hdd/vaultwarden/icon_cache' \
   --exclude '/mnt/usb-hdd/n8n/database.sqlite*' \
   --exclude '/mnt/usb-hdd/n8n/*.log' \
-  --exclude '/mnt/usb-hdd/second-brain/eingang/.tmp-*' \
+  --exclude '/mnt/usb-hdd/workbench-eingang/.tmp-*' \
+  --exclude '/mnt/usb-hdd/stirling-pdf/configs/cache' \
+  --exclude '/mnt/usb-hdd/stirling-pdf/configs/heap_dumps' \
   "$STAGE" \
   /mnt/usb-hdd/bichon \
   /mnt/usb-hdd/ntfy \
@@ -261,7 +305,9 @@ restic backup \
   /home/simon/raspi \
   /mnt/usb-hdd/second-brain/unterlagen \
   /mnt/usb-hdd/second-brain/vault.git \
-  /mnt/usb-hdd/second-brain/eingang
+  /mnt/usb-hdd/workbench-eingang \
+  /mnt/usb-hdd/stirling-pdf/configs \
+  /mnt/usb-hdd/snapotter/data/files
 RC=$?
 
 if [ $RC -ne 0 ]; then

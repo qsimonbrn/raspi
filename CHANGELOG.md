@@ -9,6 +9,39 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.22.0] — 2026-09-14
+
+Zwei Werkzeugdienste eingerichtet und dokumentiert. SnapOtter läuft, Stirling PDF ist
+fertig eingerichtet, aber angehalten — der Pi hat für beide zusammen keine Reserve.
+
+### Hinzugefügt
+
+- **Kapitel [21 — Stirling PDF](docs/21-stirling-pdf.md):** neu. Warum der Dienst
+  angehalten ist, die Speichermessung dahinter, der `JAVA_TOOL_OPTIONS`-Fallstrick, der
+  hängengebliebene Containername, Healthcheck-Pfade mit Gegenprobe.
+- **Kapitel [22 — SnapOtter](docs/22-snapotter.md):** neu. Drei-Container-Aufbau, die
+  Abweichungen von der Hersteller-Vorlage samt Begründung, der `DAC_OVERRIDE`-Fallstrick,
+  die Backup-Prüfung mit ihren Negativkontrollen und die **offen gebliebene**
+  Telemetriefrage.
+- **`stacks/snapotter/`** und **`stacks/stirling-pdf/`:** Compose-Dateien mit
+  ausführlicher Begründung jeder Abweichung.
+- **`stacks/homepage/config/services.yaml`:** neue Gruppe „Werkzeuge" mit beiden
+  Kacheln. Bei Stirling PDF prüft `siteMonitor` `/api/v1/info/status`, nicht `/` —
+  gemessen: die Startseite liefert ohne Anmeldung 401 und stünde dauerhaft auf Rot.
+
+### Geändert
+
+- **`system/backup/pi-backup.sh`:** Abschnitt 2c für den `pg_dump` der
+  SnapOtter-Datenbank, neue Pfade `snapotter/data/files` und `stirling-pdf/configs`,
+  Ausschlüsse für `configs/cache` und `configs/heap_dumps`.
+  Diese Fassung trägt außerdem die zwei Zeilen des Ablagefach-Umzugs nach
+  `workbench-eingang` nach: Commit `e103d2d` hatte `docs/12` darauf umgeschrieben, das
+  Skript selbst aber nicht mitcommittet.
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Betriebstagebucheintrag vom
+  14.09.2026 mit den Messwerten des Lastgipfels und vier offenen Punkten.
+
+---
+
 ## [2.21.0] — 2026-09-14
 
 Das Ablagefach der Workbench ist umgezogen; die Doku ist an sechs Stellen nachgezogen und

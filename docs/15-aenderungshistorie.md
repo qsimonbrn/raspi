@@ -19,6 +19,72 @@ Backup.
 
 ---
 
+## 14.09.2026 — Zwei Werkzeugdienste eingerichtet: SnapOtter läuft, Stirling PDF steht
+
+**Anlass:** Ein Werkzeugkasten für wiederkehrende Kleinarbeit an Dateien und PDFs.
+Ausführlich in [21 — Stirling PDF](21-stirling-pdf.md) und
+[22 — SnapOtter](22-snapotter.md).
+
+| Dienst | Zustand | Adresse | Limit | Ruheverbrauch |
+|---|---|---|---|---|
+| SnapOtter (3 Container) | **läuft** | `192.168.178.80:1349` | 1024 / 256 / 192 MiB | 393 / 43 / 11 MiB |
+| Stirling PDF | **eingerichtet, angehalten** | `192.168.178.80:8090` | 1280 MiB | 819 MiB |
+
+**Beide Ports sind bewusst aus dem LAN erreichbar** und stehen nicht in der Sperrliste
+von `pi-guard` — anders als 8000, 5678, 9000, 9443 und 15630. Entscheidung vom
+13./14.09.2026. Nach jedem `compose up` wurde `pi-guard.sh status` geprüft; die
+Portliste blieb unverändert.
+
+**Warum Stirling PDF steht.** Beide Dienste zusammen mit dem nächtlichen `restic`-Lauf
+haben den Pi zum ersten Mal in die Knie gezwungen:
+
+| Größe | im Gipfel | nach dem Anhalten von Stirling |
+|---|---|---|
+| Arbeitsspeicher belegt | 3.360 von 3.796 MiB | 2.406 MiB |
+| Swap | **511 von 511 MiB** | 511 von 511 MiB (leert sich nicht von selbst) |
+| Load average | 25,4 | 1,6 |
+| SSH | zeitweise nicht erreichbar | normal |
+
+Mit Stirling bleiben 604 MiB verfügbar, ohne ihn 1.390 MiB. Das genügt im Leerlauf,
+aber nicht mit Reserve — und die Sicherung um 03:18 läuft jede Nacht. Der Dienst bleibt
+deshalb angehalten, bis entschieden ist, wo der Platz herkommt. Ein von Hand
+angehaltener Container startet trotz `restart: unless-stopped` weder beim
+Daemon-Neustart noch beim Reboot.
+
+**Drei Dinge, die aussahen, als würden sie wirken, und es nicht taten:**
+
+1. `JAVA_TOOL_OPTIONS` bei Stirling PDF — das Startskript des Images überschreibt die
+   Variable. Die Zeile „Picked up JAVA_TOOL_OPTIONS" im Log stammt von einem
+   Versions-Aufruf, nicht von der Anwendung. Wirksam ist `JAVA_BASE_OPTS`.
+2. Die gekürzte Fähigkeitenliste bei SnapOtter ohne `DAC_OVERRIDE` — das Image startet
+   als root und braucht sie, bevor es auf PUID 1000 wechselt.
+3. Der Healthcheck von Stirling mit `start_period: 180s` — der erste Start dauert rund
+   sechs Minuten, der Dienst stand währenddessen fälschlich auf `unhealthy`. Jetzt 420 s.
+
+**Backup erweitert** (`pi-backup.sh`, Abschnitt 2c): `pg_dump` der SnapOtter-Datenbank,
+dazu `data/files` und Stirlings `configs`. Ausgeschlossen: `pgdata`, `data/ai` (bis
+35 GB Modelle), `configs/cache`, `configs/heap_dumps`. Die Prüfung des Abzugs wurde mit
+zwei Negativkontrollen belegt — ein abgeschnittener Abzug fällt über die fehlende
+Schlussmarke auf, ein Abzug einer leeren Datenbank über die Tabellenzählung.
+
+**Nebenbefund, bereinigt:** Der Metaspace-Absturz von Stirling hatte einen
+Speicherabzug von **236 MB** unter `configs/heap_dumps` hinterlassen — in einem
+Verzeichnis, das ins Backup geht, bei 5 GB Kontingent. Gelöscht, `HeapDumpPath` auf
+`/tmp` umgelegt, zusätzlich eine Ausschlussregel gesetzt.
+
+**Offen geblieben:**
+
+- **Telemetrie von SnapOtter unbekannt.** Das Image ist mit `SNAPOTTER_ANALYTICS=on`
+  gebaut. Drei Messmethoden sind an ihrer eigenen Negativkontrolle gescheitert; siehe
+  [22](22-snapotter.md). Nicht „funkt nicht", sondern **ungeklärt**.
+- **Containername `stirlingpdf` statt `stirling-pdf`.** Ein abgebrochener `compose up`
+  hat den Namen im Namensregister des Docker-Daemons hinterlassen, ohne dass ein
+  Container dazu existiert. Nach dem nächsten Reboot ist er frei.
+- **13 Dateien im Repository tragen noch die Gruppe `simon`** statt `pi-admin`, darunter
+  `stacks/homepage/config/services.yaml`. Die Reparatur vom 13.09.2026 hat sie nicht
+  erfasst; `claude` kann dort nur über `sudo -u simon` schreiben.
+- **Stirlings H2-Datenbank** wird als laufende Datei gesichert, nicht als Abzug.
+
 ## 13.09.2026 — `umask` beider Konten auf 002, Gruppenschreibrecht im Repository
 
 **Anlass:** Am 12.09.2026 war `stacks/n8n/` von Hand auf `g+w` gesetzt worden, weil
