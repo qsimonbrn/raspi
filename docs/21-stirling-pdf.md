@@ -18,7 +18,7 @@ das Archiv, Stirling die Werkbank daneben.
 |---|---|
 | Stack | `/home/simon/raspi/stacks/stirling-pdf/` |
 | Image | `stirlingtools/stirling-pdf:2.14.3`, arm64 nachgeprüft |
-| Container | **`stirlingpdf`** — ohne Bindestrich, siehe unten |
+| Container | `stirling-pdf` |
 | Adresse | `http://192.168.178.80:8090` — **aus dem LAN**, nicht nur über Tailscale |
 | Anmeldung | Benutzer `admin`, Passwort in `stacks/stirling-pdf/.env` |
 | Daten | `/mnt/usb-hdd/stirling-pdf/{configs,logs,pipeline}` |
@@ -65,22 +65,27 @@ wo der Platz herkommt. Möglichkeiten, grob nach Aufwand:
 Ein manuell angehaltener Container bleibt trotz `restart: unless-stopped` auch nach
 einem Daemon-Neustart und nach einem Reboot aus. Das ist so gewollt.
 
-## Der Containername
+## Der Containername — erledigt, aber merkenswert
 
-Der Container heißt `stirlingpdf`, nicht `stirling-pdf`. Beim ersten Anlegen brach die
-Cowork-Brücke den `compose up` nach 60 Sekunden ab; Docker rollte die halb angelegte
-Instanz zurück, ließ den Namen aber im Namensregister des Daemons stehen. Nachgemessen:
+Der Container hieß am 14.09.2026 einige Stunden `stirlingpdf` ohne Bindestrich. Beim
+ersten Anlegen brach die Cowork-Brücke den `compose up` nach 60 Sekunden ab; Docker
+rollte die halb angelegte Instanz zurück, ließ den Namen aber im Namensregister des
+Daemons stehen. Der Zustand war eindeutig gemessen:
 
-- `docker ps -a` zeigt keinen solchen Container
-- `docker inspect <ID>` meldet „no such object"
-- `/var/lib/docker/containers/<ID>` existiert nicht
-- `docker rm -f`, `docker container prune` greifen nicht
-- ein Wegwerf-Container mit demselben Namen scheitert weiterhin am Konflikt
+- `docker ps -a` zeigte keinen solchen Container
+- `docker inspect <ID>` meldete „no such object"
+- `/var/lib/docker/containers/<ID>` existierte nicht
+- `docker rm -f` und `docker container prune` griffen nicht
+- ein Wegwerf-Container mit demselben Namen scheiterte weiterhin am Konflikt
 
-Nur ein Neustart des Docker-Daemons baut das Register neu auf. Dafür 18 laufende
-Container durchzustarten stand in keinem Verhältnis. **Nach dem nächsten Reboot ist
-der Name frei und kann in `docker-compose.yml` und in
-`stacks/homepage/config/services.yaml` zurückgeändert werden.**
+**Behoben durch den Reboot am 14.09.2026, 05:54.** Danach war der Name frei — geprüft
+mit einem Wegwerf-Container —, der alte wurde entfernt und der Stack unter dem richtigen
+Namen neu angelegt.
+
+**Fürs nächste Mal:** Wenn ein `compose up` in die 60-Sekunden-Grenze der Brücke läuft,
+ist der Zustand danach nicht „nichts passiert". Erst den Zustand abfragen, und wenn ein
+Name hängt, ihn beim nächsten geplanten Neustart zurücksetzen statt dauerhaft
+auszuweichen.
 
 ## Speicher der JVM — der Fallstrick
 

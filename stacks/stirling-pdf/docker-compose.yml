@@ -43,16 +43,16 @@ services:
     # "merge/split funktioniert nicht auf Debian 12" -- also genau die
     # Kombination, die hier laeuft. Aeltere 2.14.x nicht verwenden.
     image: stirlingtools/stirling-pdf:2.14.3
-    # Der Name lautet "stirlingpdf" ohne Bindestrich, und das ist kein
-    # Schoenheitsfehler: Am 14.09.2026 blieb beim ersten Anlegen der Name
-    # "stirling-pdf" im Namensregister des Docker-Daemons haengen, weil die
-    # Cowork-Bruecke den "compose up" nach 60 s abbrach und Docker die halb
-    # angelegte Instanz zurueckrollte. Das Container-Verzeichnis unter
-    # /var/lib/docker/containers existiert nicht mehr, "docker rm" und
-    # "docker container prune" greifen nicht -- nur ein Daemon-Neustart baut
-    # das Register neu auf. Nach dem naechsten Neustart des Pi ist der Name
-    # wieder frei und kann hier zurueckgeaendert werden.
-    container_name: stirlingpdf
+    # Am 14.09.2026 hiess dieser Container voruebergehend "stirlingpdf":
+    # Beim ersten Anlegen brach die Cowork-Bruecke den "compose up" nach 60 s
+    # ab, Docker rollte die halb angelegte Instanz zurueck und liess den Namen
+    # "stirling-pdf" im Namensregister des Daemons stehen -- ohne dass ein
+    # Container dazu existierte. Weder "docker rm" noch "container prune"
+    # halfen; erst der Reboot am selben Tag hat das Register neu aufgebaut.
+    # Seitdem wieder der richtige Name. Falls das noch einmal vorkommt: nicht
+    # den Namen aendern und vergessen, sondern beim naechsten Neustart
+    # zuruecksetzen.
+    container_name: stirling-pdf
     logging: *logging
     security_opt:
       - no-new-privileges:true

@@ -72,14 +72,22 @@ Speicherabzug von **236 MB** unter `configs/heap_dumps` hinterlassen — in eine
 Verzeichnis, das ins Backup geht, bei 5 GB Kontingent. Gelöscht, `HeapDumpPath` auf
 `/tmp` umgelegt, zusätzlich eine Ausschlussregel gesetzt.
 
+**Reboot um 05:54 — Nachprüfung.** Alle 17 Container kamen zurück, keiner fehlte und
+keiner kam hinzu; alle mit Healthcheck meldeten `healthy`. Stirling PDF blieb `exited`
+mit Neustartzähler 0 — der Nachweis, dass `unless-stopped` einen von Hand angehaltenen
+Container auch über einen Reboot hinweg aus lässt. Der Swap ging von 511/511 auf **4 von
+511 MiB** zurück, verfügbarer Arbeitsspeicher 1.526 MiB. `pi-guard` unverändert bei vier
+Regeln, 1349 und 8090 weiterhin in keiner. DNS mit Gegenprobe geprüft: `example.com`
+löst auf, `doubleclick.net` liefert `0.0.0.0`. Abgleich 25 von 25 Paaren identisch.
+
+Der hängengebliebene Containername war danach frei; der Dienst heißt seitdem wieder
+`stirling-pdf`.
+
 **Offen geblieben:**
 
 - **Telemetrie von SnapOtter unbekannt.** Das Image ist mit `SNAPOTTER_ANALYTICS=on`
   gebaut. Drei Messmethoden sind an ihrer eigenen Negativkontrolle gescheitert; siehe
   [22](22-snapotter.md). Nicht „funkt nicht", sondern **ungeklärt**.
-- **Containername `stirlingpdf` statt `stirling-pdf`.** Ein abgebrochener `compose up`
-  hat den Namen im Namensregister des Docker-Daemons hinterlassen, ohne dass ein
-  Container dazu existiert. Nach dem nächsten Reboot ist er frei.
 - **13 Dateien im Repository tragen noch die Gruppe `simon`** statt `pi-admin`, darunter
   `stacks/homepage/config/services.yaml`. Die Reparatur vom 13.09.2026 hat sie nicht
   erfasst; `claude` kann dort nur über `sudo -u simon` schreiben.

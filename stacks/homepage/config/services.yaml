@@ -71,9 +71,7 @@
         description: PDF-Werkzeugkasten, Anmeldung erforderlich
         icon: stirling-pdf.png
         server: pi
-        # Der Container heisst "stirlingpdf" ohne Bindestrich -- siehe die
-        # Begruendung in stacks/stirling-pdf/docker-compose.yml.
-        container: stirlingpdf
+        container: stirling-pdf
 
     - SnapOtter:
         href: http://192.168.178.80:1349

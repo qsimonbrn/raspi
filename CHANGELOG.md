@@ -9,6 +9,23 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.22.1] — 2026-09-14
+
+Nachtrag nach dem Neustart um 05:54.
+
+### Geändert
+
+- **Kapitel [21](docs/21-stirling-pdf.md):** Der Abschnitt zum Containernamen ist als
+  erledigt umgeschrieben — der Reboot hat das Namensregister des Docker-Daemons neu
+  aufgebaut, der Dienst heißt wieder `stirling-pdf`. Die Merkregel für den nächsten
+  abgebrochenen `compose up` bleibt stehen.
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Nachprüfung des Neustarts mit
+  Messwerten ergänzt, der offene Punkt zum Containernamen gestrichen.
+- **`stacks/stirling-pdf/docker-compose.yml`** und
+  **`stacks/homepage/config/services.yaml`:** Containername zurückgedreht.
+
+---
+
 ## [2.22.0] — 2026-09-14
 
 Zwei Werkzeugdienste eingerichtet und dokumentiert. SnapOtter läuft, Stirling PDF ist
