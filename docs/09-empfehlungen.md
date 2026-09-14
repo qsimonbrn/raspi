@@ -194,6 +194,52 @@ alle Geräte. Zusätzlicher Nutzen: Alle Container-Ports können anschließend a
 `127.0.0.1` gebunden werden — dann ist der Reverse Proxy der einzige Weg hinein, und die
 `ufw`-Problematik aus 2.5 entschärft sich von selbst.
 
+#### Stand 14.09.2026 — Entscheidung gefallen, Domain noch nicht registriert
+
+Anlass: SnapOtter soll auch von Simons Vater benutzt werden, und dafür ist
+`192.168.178.80:1349` keine Adresse, die man jemandem gibt.
+
+| | |
+|---|---|
+| **Domain** | **`braunwerk.de`** — noch **NICHT registriert**, das ist der nächste Schritt |
+| Zweck | **nur Heimnetz.** Ein späteres Gewerbe bekommt eine eigene Domain |
+| Schema | `tools.braunwerk.de` → SnapOtter · `pdf.` → Stirling · `home.` → Dashboard |
+| Verfügbarkeit | am 14.09.2026 geprüft: **keine Nameserver eingetragen**. Für `.de` ein starkes Signal, **kein Beweis** — verbindlich ist erst der Registrar |
+
+**Verworfen: `brauns.de`.** Die Domain ist tatsächlich registriert (Nameserver
+`b.ns14.net`, A-Eintrag 128.127.67.118, am 14.09.2026 gemessen). Ein lokaler Eintrag
+darauf hätte für **jedes** Gerät im Haus eine fremde Domain überschrieben.
+
+**Ebenfalls verworfen: `.home.arpa`.** Wäre konfliktfrei und kostenlos (RFC 8375), aber
+ein echtes Zertifikat ist damit dauerhaft unmöglich.
+
+**Der eigentliche Aufwand steckt nicht im Proxy, sondern in Pi-hole.** Seit Version 6
+bedient `pihole-FTL` seinen Webserver **selbst auf 80 und 443** (am 14.09.2026 mit
+`ss -tlnp` nachgemessen). Ein Reverse Proxy braucht diese Ports. Die Einstellung dafür
+steht in `/etc/pihole/pihole.toml` Zeile 932 (`port = "80o,443os,…"`) und ist **getrennt**
+von der DNS-Einstellung in Zeile 232 (`port = 53`) — das Umziehen der Oberfläche lässt
+den DNS-Dienst also unberührt, abgesehen von wenigen Sekunden beim Neustart von
+`pihole-FTL`.
+
+| Schritt | Aufwand |
+|---|---|
+| `braunwerk.de` registrieren, **Registrar mit DNS-API wählen** (INWX, Hetzner, deSEC, Netcup) | 15 Min, rund 5–15 € im Jahr |
+| Pi-hole-Oberfläche von 80/443 auf z. B. 8081/8443 | 10 Min, DNS-Pause von Sekunden |
+| Caddy als Container auf 80, Weiterleitung nach Hostnamen | 20 Min, rund 30 MiB |
+| Lokale A-Einträge in Pi-hole für alle Namen → `192.168.178.80` | 10 Min |
+| Optional später: Let's Encrypt über DNS-01, dann echtes `https` im LAN | eigener Termin |
+
+> **Warum ein Registrar mit DNS-API, obwohl es „nur" fürs Heimnetz ist:** Ohne API gibt
+> es später kein Zertifikat für Dienste, die nie aus dem Internet erreichbar sind —
+> DNS-01 ist der einzige Weg dorthin. Die Wahl kostet nichts extra, das Nachrüsten
+> dagegen einen Registrarwechsel.
+
+> **Preis, der benannt gehört:** Nach dem Umzug ist die Pi-hole-Oberfläche nicht mehr
+> unter `192.168.178.80/admin` erreichbar. Lesezeichen, die Homepage-Kachel und alles,
+> was die alte Adresse fest eingetragen hat, müssen mit. Und sobald Caddy steht, hängen
+> **alle** Weboberflächen an ihm: ein Fehler in seiner Konfiguration nimmt sie gemeinsam
+> aus dem Verkehr, nicht einzeln.
+
 ### 3.3 Uptime Kuma
 
 Meldet den Ausfall eines Dienstes, **bevor** er auffällt. Besonders relevant, weil
@@ -301,6 +347,13 @@ stimmen überein"). Sie wertet die Ergebniszeile von `pi-abgleich.sh check` aus:
 
 ### 3.10 Gruppenzugehörigkeit von `system/backup/pi-backup.sh` klären — 🟡 offen, klein
 
+> **Am 14.09.2026 erweitert: Es sind nicht nur `pi-backup.sh`.** Gemessen tragen
+> **13** Dateien und Verzeichnisse im Repository die Gruppe `simon` statt `pi-admin`,
+> darunter `stacks/homepage/config/services.yaml`. Die Reparatur vom 13.09.2026 hat sie
+> nicht erfasst, weil sie nur Objekte der Gruppe `pi-admin` anfasste. `claude` kann dort
+> ausschließlich über `sudo -u simon` schreiben. Zum Vergleich: 814 Objekte tragen
+> `pi-admin`. Fünf Minuten Arbeit plus die Entscheidung, ob es Absicht war.
+
 Die Datei gehört `simon:simon` mit Modus 755, während die Nachbardateien im selben
 Verzeichnis `simon:pi-admin` mit 664 gehören und das Verzeichnis das setgid-Bit trägt.
 Folge: Das Konto `claude` kann die Repo-Kopie **nicht** schreiben und muss den Umweg über
@@ -380,6 +433,26 @@ in einem Jahr neu vorschlägt:
 `_geholt/<video_id>/`. Diese Verzeichnisse legt `yt-werk` mit 0750 ohne
 Gruppenschreibrecht an; das zu ändern hieße, `yt-werk` beim Anlegen zu ändern, und
 lohnt für einen Griff nicht.
+
+### 3.13 Stirling PDF: entscheiden, wo der Platz herkommt — 🟡 offen
+
+Der Dienst ist seit dem 14.09.2026 eingerichtet, läuft aber **nicht**. Mit ihm bleiben
+604 MiB verfügbar, ohne ihn 1.390 MiB; zusammen mit SnapOtter und dem nächtlichen
+`restic`-Lauf war der Swap zu 100 % belegt und SSH zeitweise nicht erreichbar.
+Möglichkeiten und Aufwand stehen in `docs/21-stirling-pdf.md`, Abschnitt „Warum
+angehalten". Starten mit `cd stacks/stirling-pdf && sudo docker compose start`.
+
+### 3.14 Telemetrie von SnapOtter klären — 🟡 offen, ungeklärt
+
+Das Image ist mit `SNAPOTTER_ANALYTICS=on` gebaut, eine Laufzeitvariable dagegen gibt es
+nicht. Am 14.09.2026 sind **drei** Messmethoden an ihrer eigenen Negativkontrolle
+gescheitert (`ss` im Namensraum, Pi-hole-Protokoll, `/proc/net/nf_conntrack`); Einzelheiten
+in `docs/22-snapotter.md`. **Der Befund lautet „unbekannt", nicht „funkt nicht".**
+
+Weg beim nächsten Anlauf: `tcpdump` nachinstallieren und zehn Minuten auf der Brücke des
+SnapOtter-Netzes mitschneiden, gegen eine erzwungene Verbindung als Kontrolle. Alternativ
+eine zählende `nftables`-Regel für ausgehenden Verkehr an öffentliche Adressen. Rund
+20 Minuten.
 
 ### 3.4 Aufräumen
 

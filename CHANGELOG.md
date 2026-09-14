@@ -9,6 +9,27 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.23.0] — 2026-09-14
+
+Offene Punkte aus der Nacht nachgetragen, dazu die Domain-Entscheidung.
+
+### Geändert
+
+- **Kapitel [09](docs/09-empfehlungen.md), Punkt 3.2:** Die Entscheidung für
+  **`braunwerk.de`** ist festgehalten — noch nicht registriert. Dazu das Namensschema,
+  warum `brauns.de` (registriert, gemessen) und `.home.arpa` verworfen wurden, und der
+  gemessene Befund, dass `pihole-FTL` seit Version 6 selbst auf 80 und 443 sitzt und
+  seine Webserver-Einstellung von der DNS-Einstellung getrennt ist.
+- **Kapitel [09](docs/09-empfehlungen.md), Punkt 3.10:** erweitert — es sind nicht nur
+  `pi-backup.sh`, sondern **13** Objekte mit Gruppe `simon` statt `pi-admin`.
+
+### Hinzugefügt
+
+- **Punkt 3.13:** Stirling PDF — entscheiden, wo der Speicher herkommt.
+- **Punkt 3.14:** Telemetrie von SnapOtter klären. Befund ausdrücklich „unbekannt".
+
+---
+
 ## [2.22.1] — 2026-09-14
 
 Nachtrag nach dem Neustart um 05:54.
