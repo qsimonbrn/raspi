@@ -40,3 +40,6 @@ system/pihole/pi-gravity.service	/etc/systemd/system/pi-gravity.service	root:roo
 system/pihole/pi-gravity.timer	/etc/systemd/system/pi-gravity.timer	root:root	644	systemd
 system/pihole/cron.d-pihole	/etc/cron.d/pihole	root:root	644	keiner
 system/journald/10-limits.conf	/etc/systemd/journald.conf.d/10-limits.conf	root:root	644	systemd
+system/benachrichtigungen/pi-probealarm.sh	/usr/local/sbin/pi-probealarm.sh	root:root	750	keiner
+system/benachrichtigungen/pi-probealarm.service	/etc/systemd/system/pi-probealarm.service	root:root	644	systemd
+system/benachrichtigungen/pi-probealarm.timer	/etc/systemd/system/pi-probealarm.timer	root:root	644	systemd

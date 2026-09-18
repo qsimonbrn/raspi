@@ -1,6 +1,6 @@
 # 02 — Betriebssystem
 
-*Erfasst: 18.08.2026 · Paketstand nachgemessen: 20.08.2026*
+*Erfasst: 18.08.2026 · Paketstand nachgemessen: 20.08.2026 · Timer-Tabelle ergänzt: 18.09.2026*
 
 ## Basisdaten
 
@@ -127,6 +127,8 @@ Konten.
 | `pi-reboot-check.timer` | täglich 08:30 | meldet über ntfy, wenn ein Neustart fällig ist |
 | `pi-backup.timer` | täglich 03:17 | restic-Backup nach OneDrive |
 | `pi-gravity.timer` | täglich 03:02 | Pi-hole-Blocklisten aktualisieren (seit 20.08.2026) |
+| `pi-abgleich.timer` | täglich 09:15 | Repository gegen installierte Fassung prüfen (in dieser Tabelle bis 18.09.2026 vergessen) |
+| `pi-probealarm.timer` | Mo und Do 10:05 | Probealarm auf allen drei ntfy-Wegen (seit 18.09.2026) |
 
 `fstrim.timer` ist aktiv — das ist für die SSD wichtig und richtig so.
 

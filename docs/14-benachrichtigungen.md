@@ -463,11 +463,76 @@ erfordert, und der Themenname war nie öffentlich, sondern nur lokal lesbar.
 
 ---
 
-## 10. Was noch zu tun ist
+---
+
+## 10. Probealarm: der Weg wird regelmäßig benutzt
+
+*Eingerichtet am 18.09.2026.*
+
+**Anlass.** Vom **11. bis 18.09.2026** kam auf dem iPhone keine einzige Meldung an —
+Tailscale lief dort seit sieben Tagen nicht (`tailscale status`: *offline, last seen 7d
+ago*). Der Server nahm die ganze Zeit an, das Backup meldete jede Nacht Erfolg, und
+niemand las es. Aufgefallen ist es erst nebenbei, beim Einrichten eines anderen Abos.
+
+**Das ist der Bruch im eigentlichen Sicherungsgedanken.** Der Erfolgsfall wird
+absichtlich gemeldet, damit sein *Ausbleiben* auffällt (siehe Abschnitt 8). Genau das hat
+nicht funktioniert: Eine Woche ohne Lebenszeichen fiel nicht auf. **Ein Lebenszeichen,
+dessen Fehlen niemand bemerkt, ist keins.**
+
+### Was der Probealarm tut
+
+| | |
+|---|---|
+| Skript | `/usr/local/sbin/pi-probealarm.sh` (root:root, 750) |
+| Timer | `pi-probealarm.timer` — **Montag und Donnerstag 10:05**, `Persistent=true` |
+| Wege | eigener Server `raspberrypi` · eigener Server `workbench` · **Notruf über ntfy.sh** |
+| Zähler | `/var/lib/pi-probealarm.zaehler`, fortlaufende Nummer in jeder Meldung |
+| Protokoll | `journalctl -t pi-probealarm` |
+
+**Feste Wochentage statt „alle drei Tage"**, weil ein wiederkehrender Termin beim
+Ausbleiben eher auffällt als ein wandernder. `Persistent=true`, damit nach einem Ausfall
+nachgeholt wird — sonst fällt ausgerechnet der Alarm aus, der auf ein Problem
+hingewiesen hätte.
+
+**Die fortlaufende Nummer ist der eigentliche Mechanismus.** Das Skript kann die
+Zustellung **nicht** prüfen — das kann kein Skript, die Anzeige auf dem Gerät sieht nur
+ein Mensch. Es sorgt nur dafür, dass eine Lücke sichtbar wird: Fehlt eine Nummer, oder ist
+die letzte älter als vier Tage, kommt nichts mehr an.
+
+**Der dritte Weg ist der wichtige.** Er läuft über ntfy.sh und braucht **kein** Tailscale
+— er war im September 2026 der einzige, der durchkam. Bewusst mit Priorität `default`
+statt `high`: Ein Probealarm soll ankommen, nicht wecken.
+
+**Der Preis, benannt:** Zweimal pro Woche erfährt ntfy.sh, dass dieser Haushalt einen
+Rechner betreibt, der lebt. Das ist ein Anwesenheitssignal — ohne Hostnamen, ohne
+Dienstnamen, ohne Fehlermeldung, aber es ist eins. Die Alternative wäre ein Notrufweg, der
+monatelang ungeprüft bleibt; dann ist er im Ernstfall genauso gut wie keiner.
+
+### Nachweis vom 18.09.2026
+
+| Messung | Ergebnis |
+|---|---|
+| Lauf über `systemctl start pi-probealarm.service` | `Result=success`, alle drei Wege **200** |
+| **Negativkontrolle:** dasselbe Skript mit `NTFY_NOTRUF_CONF=/gibtsnicht` | „Notruf: uebersprungen", **Exitcode 1**, zwei von drei Wegen ok |
+| Abgleich Repository ↔ System nach dem Installieren | 28 von 28 Paaren identisch |
+| **Anzeige auf dem iPhone, alle drei Wege** | **angekommen — von Simon am 18.09.2026 um 22:15 bestätigt** |
+
+Die Negativkontrolle ist hier der Punkt: Ein fehlender Weg wird **gemeldet und färbt den
+Exitcode**, statt still übersprungen zu werden. Genau das hat die alte `notify()` nicht
+getan — sie kehrt bei fehlender Konfigurationsdatei wortlos zurück, weil eine kaputte
+Benachrichtigung kein Backup verhindern darf. Für einen Probealarm gilt das Gegenteil.
+
+---
+
+## 11. Was noch zu tun ist
 
 - [x] ntfy-App auf dem Handy installieren
 - [x] Konto und Abo auf `https://raspberrypi.tailf372ec.ts.net:8444` umgestellt (06.09.2026)
 - [x] Thema `raspberrypi` abonniert, Meldung mit Text nachgewiesen
-- [ ] Notruf-Thema auf **ntfy.sh** abonnieren — Adresse aus `/etc/pi-notruf.url`
+- [x] Notruf-Thema auf **ntfy.sh** abonniert (18.09.2026 im Abo-Bestand bestätigt)
+- [x] Thema `workbench` abonnieren
+- [ ] **Tailscale auf dem iPhone im Blick behalten** — war vom 11. bis 18.09.2026 aus, und
+      damit der eigene Meldeweg tot. Der Probealarm (Abschnitt 10) macht das künftig
+      sichtbar
 - [ ] Am nächsten Morgen nachsehen, ob die stille Erfolgsmeldung des nächtlichen
       Backups im Verlauf steht

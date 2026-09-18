@@ -19,6 +19,38 @@ Backup.
 
 ---
 
+## 18.09.2026, spätabends — Probealarm eingerichtet, nachdem eine Woche Meldungen fehlte
+
+**Anlass, und er ist der eigentliche Befund des Tages.** Beim Einrichten des Abos für das
+Thema `workbench` scheiterte die ntfy-App mit „The request timed out". Gemessen:
+
+```
+100.94.181.68   iphone-sibr   iOS   offline, last seen 7d ago
+```
+
+**Tailscale lief auf dem iPhone seit sieben Tagen nicht.** Damit war der eigene Meldeweg
+tot — die letzte Nachricht auf dem Gerät stammte vom 11.09.2026, während der Server
+weiterhin annahm und das Backup jede Nacht Erfolg meldete. Der Notruf über ntfy.sh kam
+durch; er war in dieser Woche der einzige funktionierende Weg.
+
+**Neuer Dienst: `pi-probealarm`.** Skript `/usr/local/sbin/pi-probealarm.sh`, Timer
+montags und donnerstags 10:05 mit `Persistent=true`, sendet auf allen drei Wegen mit
+fortlaufender Nummer. Die Nummer ist der Mechanismus: Zustellung kann kein Skript prüfen,
+aber eine Lücke in der Nummernfolge sieht man.
+
+**Nachgemessen:** Lauf über systemd `Result=success`, drei von drei Wegen 200.
+Negativkontrolle mit `NTFY_NOTRUF_CONF=/gibtsnicht` meldet „uebersprungen" und endet mit
+**Exitcode 1** — ein fehlender Weg wird nicht stillschweigend übergangen. Drei Zeilen im
+Manifest ergänzt, Abgleich danach **28 von 28**.
+
+**Nebenbei richtiggestellt:** `pi-abgleich.timer` fehlte seit jeher in der Timer-Tabelle
+von [02](02-betriebssystem.md), obwohl er täglich läuft.
+
+**Offen geblieben:** Der ntfy-Cache hält 24 Stunden. Die Meldungen vom 12. bis 17.09.2026
+sind endgültig verloren.
+
+---
+
 ## 18.09.2026, abends — Gruppenrechte aufgelöst, restic-Timeout gesetzt
 
 **Zwei Punkte aus der offenen Liste, beide nach ausdrücklicher Freigabe.**

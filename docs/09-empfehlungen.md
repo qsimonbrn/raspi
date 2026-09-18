@@ -526,6 +526,21 @@ eine zählende `nftables`-Regel für ausgehenden Verkehr an öffentliche Adresse
 
 ---
 
+### 3.18 Probealarm einrichten — ✅ erledigt am 18.09.2026
+
+> **Der Anlass war ein echter Ausfall, kein theoretischer.** Vom 11. bis 18.09.2026 kam
+> auf dem iPhone nichts an, weil Tailscale dort nicht lief; das Backup meldete derweil
+> jede Nacht Erfolg. Seit dem 18.09.2026 sendet `pi-probealarm.timer` montags und
+> donnerstags um 10:05 auf allen drei Wegen, mit fortlaufender Nummer. Einzelheiten in
+> [14](14-benachrichtigungen.md), Abschnitt 10.
+>
+> **Was damit NICHT gelöst ist:** Der Cache von ntfy hält nur **24 Stunden** vor. Wer
+> länger als einen Tag nicht hinsieht, verliert die Meldungen endgültig — am 18.09.2026
+> waren sechs Tage unwiederbringlich weg. `cache-duration: "168h"` wäre ein
+> Fünf-Minuten-Eingriff und kostet nur Platz auf der SSD. **Noch nicht umgesetzt.**
+
+---
+
 ### 3.4 Aufräumen
 
 | Maßnahme | Aufwand | Nutzen |

@@ -1,0 +1,14 @@
+[Unit]
+Description=Probealarm zweimal die Woche (Montag und Donnerstag)
+
+[Timer]
+# Feste Wochentage statt "alle drei Tage": ein wiederkehrender Termin faellt
+# beim Ausbleiben eher auf als ein wandernder.
+OnCalendar=Mon,Thu 10:05
+# Nach einem Ausfall oder Neustart nachholen -- sonst faellt genau der Alarm
+# aus, der auf ein Problem hingewiesen haette.
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

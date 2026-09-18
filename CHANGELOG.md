@@ -9,6 +9,32 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.27.0] — 2026-09-18
+
+Neuer Dienst `pi-probealarm`, eingerichtet nach einem Ausfall, der eine Woche lang
+niemandem auffiel.
+
+### Hinzugefügt
+
+- **Kapitel [14](docs/14-benachrichtigungen.md), Abschnitt 10 (neu):** Probealarm auf
+  allen drei Meldewegen, montags und donnerstags 10:05, mit fortlaufender Nummer.
+  Einschließlich der Begründung, warum feste Wochentage und warum der Notrufweg mit
+  Priorität `default` statt `high` läuft — und des Preises: zweimal pro Woche ein
+  Anwesenheitssignal bei einem fremden Server.
+- **Kapitel [09](docs/09-empfehlungen.md), 3.18:** erledigt, mit dem offenen Rest —
+  `cache-duration` steht auf 24 h, sechs Tage Meldungen waren am 18.09.2026 endgültig weg.
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Betriebstagebuch-Eintrag mit dem Befund
+  `iphone-sibr … offline, last seen 7d ago`.
+- **`system/benachrichtigungen/`:** Skript, Service und Timer im Repository, drei Zeilen
+  im Manifest. Abgleich danach **28 von 28**.
+
+### Richtiggestellt
+
+- **Kapitel [02](docs/02-betriebssystem.md):** `pi-abgleich.timer` fehlte in der
+  Timer-Tabelle, obwohl er täglich um 09:15 läuft.
+
+---
+
 ## [2.26.1] — 2026-09-18
 
 ### Behoben
