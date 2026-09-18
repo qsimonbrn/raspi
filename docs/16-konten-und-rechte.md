@@ -1,6 +1,6 @@
 # 16 — Konten, Rechte und Überwachung
 
-*Erfasst: 18.08.2026 · Rechte und `umask` nachgemessen: 14.09.2026*
+*Erfasst: 18.08.2026 · Rechte und `umask` nachgemessen: 14.09.2026 · Gruppenbefund aufgelöst: 18.09.2026*
 
 Wer darf auf diesem Pi was, und wie ist nachvollziehbar, wer was getan hat. Dieses
 Kapitel ist der Einstiegspunkt, wenn ein Zugang eingerichtet, geprüft oder entzogen
@@ -119,7 +119,7 @@ Repositories ist die Gruppe `pi-admin`, und genau das ist gewollt.
 
 | Was | Warum |
 |---|---|
-| `stacks/homepage/config/logs/` (`2755 simon:simon`) | Wird vom Homepage-Container geschrieben, nicht von einem der beiden Konten. Über `.gitignore` ausgeschlossen. Gruppe `pi-admin` bringt hier nichts |
+| `stacks/homepage/config/logs/` (seit 18.09.2026 `2775 simon:pi-admin`) | Wird vom Homepage-Container geschrieben. Über `.gitignore` ausgeschlossen |
 | `system/backup/pi-backup.sh` (`755 simon:simon`) | Ungeklärte Ausnahme, siehe [09 — Empfehlungen](09-empfehlungen.md), 3.10 |
 
 > **Richtigstellung vom 14.09.2026: Es sind nicht zwei Ausnahmen, es sind dreizehn.**
@@ -138,6 +138,27 @@ Repositories ist die Gruppe `pi-admin`, und genau das ist gewollt.
 > danach maß Schreibrechte, nicht Gruppenzugehörigkeit, und konnte den Rest deshalb nicht
 > finden. **Eine Reparatur, die nach ihrem eigenen Kriterium auswählt, prüft sich selbst
 > nicht.**
+
+> ### ✅ Aufgelöst am 18.09.2026 — und die Ursache war keine Nachlässigkeit
+>
+> Nach dem Angleichen von `services.yaml` blieben 12 Objekte übrig, **alle unter
+> `stacks/homepage/config/`**. Gemessen: Der Homepage-Container läuft mit `PUID=1000` und
+> `PGID=1000`, also als `simon:simon`, und schreibt diese Dateien selbst. Das setgid-Bit
+> des Verzeichnisses vererbte die Gruppe `simon` an alles, was dort entstand.
+>
+> **Damit war die Suche nach einem menschlichen Fehler von Anfang an aussichtslos.** Wer
+> zählt, wie viele Objekte eine abweichende Gruppe tragen, misst nicht, wer sie angelegt
+> hat. Die Frage „war das Absicht?" hatte hier gar keinen Adressaten.
+>
+> Angeglichen mit `chgrp -R pi-admin stacks/homepage/config`, dazu `g+w` und setgid auf
+> `config/` und `config/logs/`. Danach gemessen: **0** Objekte mit Gruppe `simon`, 191 mit
+> `pi-admin`, alle neun Konfigurationsdateien für `claude` schreibbar, Negativkontrolle
+> `/etc/pi-backup.env` weiterhin nicht schreibbar. Homepage blieb `healthy` und schreibt
+> weiter in sein Log.
+>
+> **Der Fix hängt am setgid-Bit.** Geht es verloren, legt der Container wieder
+> `simon:simon` an. Die saubere Alternative wäre `PGID=1003` im Compose — bewusst nicht
+> gemacht, weil sie ein Neuerzeugen des Containers verlangt.
 >
 > Behelf bis zur Entscheidung: `sudo -u simon` — dabei bleibt der Eigentümer erhalten.
 > Der Punkt steht in [09](09-empfehlungen.md), 3.10.

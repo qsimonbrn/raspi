@@ -94,7 +94,7 @@ w() {
 # /etc/pi-backup.env gehoert root und enthaelt Repo-Adresse und Passwortdatei,
 # deshalb der Umweg ueber sudo bash -c.
 restic_() {
-  sudo -n bash -c 'set -a; . /etc/pi-backup.env 2>/dev/null; set +a; exec restic "$@"' _ "$@"
+  sudo -n bash -c 'set -a; . /etc/pi-backup.env 2>/dev/null; set +a; exec restic -o rclone.timeout=5m "$@"' _ "$@"
 }
 
 # git verweigert den Dienst, wenn der Aufrufer nicht der Eigentuemer des Repositories

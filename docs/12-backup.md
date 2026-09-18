@@ -109,6 +109,28 @@ sind also reproduzierbar.
 
 ---
 
+### Zwei Timeouts, die leicht verwechselt werden
+
+*Ergänzt am 18.09.2026, nach dem Abbruch vom 14.09.2026.*
+
+| Einstellung | Wo | Vorgabe | Gilt für |
+|---|---|---|---|
+| `RCLONE_TIMEOUT` | `/etc/pi-backup.env` | hier `5m` | rclone ↔ OneDrive |
+| `restic -o rclone.timeout` | Aufruf in `pi-backup.sh` | **1m** | restic ↔ eigener rclone-Unterprozess |
+
+Am 14.09.2026 brach ein Lauf unter Last mit
+`Fatal: unable to open repository … Get "http://localhost/file-…": context deadline
+exceeded` ab. Die Adresse `http://localhost/file-…` ist der Hinweis: Das ist **nicht**
+OneDrive, sondern der lokale Draht zum rclone-Prozess, den restic selbst startet. Unter
+Swap-Thrashing antwortete der nicht binnen einer Minute.
+
+Seit dem 18.09.2026 steht im Skript `RESTIC_OPT="-o rclone.timeout=5m"`, eingesetzt in
+allen vier restic-Aufrufen; `inventar/collect.sh` erbt es über den Helfer `restic_()`.
+**Die Option verdeckt keinen echten Fehler** — ein wirklich hängender rclone scheitert
+weiterhin, nur vier Minuten später.
+
+---
+
 ## 4. Was gesichert wird
 
 ### Ablauf eines Laufs

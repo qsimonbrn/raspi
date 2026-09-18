@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 25.08.2026 · ergänzt und fortgeschrieben 13.09.2026 · 3.15 und 3.16 ergänzt 18.09.2026*
+*Stand: 25.08.2026 · ergänzt und fortgeschrieben 13.09.2026 · 3.15 bis 3.17 ergänzt, 3.10 erledigt 18.09.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -345,7 +345,31 @@ stimmen überein"). Sie wertet die Ergebniszeile von `pi-abgleich.sh check` aus:
 > drei Zweige sind einzeln gemessen: unverändert → `ok` · eine Repo-Kopie künstlich
 > geändert → `ACHTUNG` · Skriptpfad ungültig → `?`.
 
-### 3.10 Gruppenzugehörigkeit von `system/backup/pi-backup.sh` klären — 🟡 offen, klein
+### 3.10 Gruppenzugehörigkeit klären — ✅ erledigt am 18.09.2026
+
+> **Erledigt, und die Ursache ist eine andere als vermutet.** Nach dem Angleichen von
+> `services.yaml` (18.09., vormittags) blieben **12** Objekte mit Gruppe `simon` übrig —
+> **alle zwölf unter `stacks/homepage/config/`**. Es war keine menschliche Nachlässigkeit:
+> Der Homepage-Container läuft mit `PUID=1000` und `PGID=1000`, also als `simon:simon`,
+> und schreibt seine Konfigurationsdateien selbst. Das setgid-Bit des Verzeichnisses
+> vererbte folgerichtig die Gruppe `simon` weiter.
+>
+> **Angeglichen:** `chgrp -R pi-admin stacks/homepage/config`, dazu Gruppenschreibrecht
+> und setgid auf `config/` und `config/logs/`. Damit erben auch neu vom Container
+> angelegte Dateien die Gruppe `pi-admin`. Gemessen danach: **0** Objekte mit Gruppe
+> `simon`, 191 mit `pi-admin`; alle neun Konfigurationsdateien für `claude` schreibbar,
+> Negativkontrolle `/etc/pi-backup.env` weiterhin nicht. Homepage blieb `healthy`,
+> `/api/services` antwortet mit 200, der Container schreibt weiter in sein Log.
+>
+> **Die saubere Alternative wäre `PGID=1003` im Compose** — dann schriebe der Container
+> von sich aus mit Gruppe `pi-admin`, ohne auf setgid angewiesen zu sein. Bewusst nicht
+> gemacht: Das braucht ein Neuerzeugen des Containers, und setgid erledigt es hier
+> zuverlässig. **Wenn das setgid-Bit je verlorengeht, kommt der Befund zurück.**
+
+<details>
+<summary>Ursprüngliche Empfehlung</summary>
+
+### 3.10 Gruppenzugehörigkeit von `system/backup/pi-backup.sh` klären
 
 > **Am 14.09.2026 erweitert: Es sind nicht nur `pi-backup.sh`.** Gemessen tragen
 > **13** Dateien und Verzeichnisse im Repository die Gruppe `simon` statt `pi-admin`,
@@ -364,6 +388,27 @@ Ob die abweichende Gruppe Absicht ist (das Skript enthält keine Geheimnisse, wo
 Pfade), ist ungeklärt. **Zu tun:** entscheiden und entweder angleichen
 (`sudo chgrp pi-admin && chmod 664`) oder die Ausnahme in
 [07 — Sicherheit](07-sicherheit.md) begründen. Fünf Minuten plus die Entscheidung.
+
+</details>
+
+---
+
+### 3.17 `restic -o rclone.timeout=5m` setzen — ✅ erledigt am 18.09.2026
+
+> Der Timeout vom 14.09.2026 kam **nicht** von `RCLONE_TIMEOUT` (steht auf `5m` und gilt
+> für rclone ↔ OneDrive), sondern von `restic -o rclone.timeout`, **Vorgabe eine
+> Minute** — dem Draht zum eigenen rclone-Unterprozess, der unter Swap-Thrashing nicht
+> rechtzeitig antwortet. Gesetzt in `pi-backup.sh` (Variable `RESTIC_OPT`, vier Aufrufe)
+> und in `inventar/collect.sh` (Helfer `restic_()`, eine Stelle, damit alle Prüfungen sie
+> erben).
+>
+> **Es verdeckt nichts:** Ein echter Hänger scheitert weiterhin, nur vier Minuten später.
+> Nachgemessen — `restic -o rclone.timeout=5m snapshots` liefert die Snapshot-Liste,
+> Negativkontrolle `-o rclone.gibtsnicht=5m` scheitert mit
+> `Fatal: option rclone.gibtsnicht is not known`. Danach ein vollständiger Backup-Lauf
+> über systemd, 3 min 41 s, fehlerfrei.
+
+---
 
 ### 3.11 `umask` der beiden Konten auf `002` setzen — ✅ **erledigt am 13.09.2026**
 

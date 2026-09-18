@@ -19,6 +19,31 @@ Backup.
 
 ---
 
+## 18.09.2026, abends — Gruppenrechte aufgelöst, restic-Timeout gesetzt
+
+**Zwei Punkte aus der offenen Liste, beide nach ausdrücklicher Freigabe.**
+
+**Gruppenzugehörigkeit (Empfehlung 3.10).** Die verbliebenen 12 Objekte mit Gruppe
+`simon` lagen **alle** unter `stacks/homepage/config/`. Ursache gemessen: Der
+Homepage-Container läuft mit `PUID=1000`/`PGID=1000` und schreibt diese Dateien selbst;
+das setgid-Bit vererbte die Gruppe weiter. Angeglichen mit `chgrp -R pi-admin`, dazu `g+w`
+und setgid auf `config/` und `config/logs/`. Danach **0** Objekte mit Gruppe `simon`
+(191 mit `pi-admin`), alle neun Konfigurationsdateien für `claude` schreibbar,
+Negativkontrolle `/etc/pi-backup.env` weiterhin nicht. Homepage blieb `healthy`.
+
+**restic-Timeout (Empfehlung 3.17).** `RESTIC_OPT="-o rclone.timeout=5m"` in
+`pi-backup.sh` (vier Aufrufe) und im Helfer `restic_()` von `inventar/collect.sh`.
+Positivprobe: Snapshot-Liste kommt. Negativkontrolle: `-o rclone.gibtsnicht=5m` scheitert
+mit `Fatal: option … is not known`. Anschließend vollständiger Backup-Lauf über systemd,
+**3 min 41 s, fehlerfrei**.
+
+**Nicht erledigt, obwohl es so schien:** Der ausstehende Neustart ist **nicht** ausgeführt.
+Gemessen um 21:35 — Systemstart **14.09.2026 05:54**, Laufzeit 4 Tage 15 Stunden,
+laufender Kernel `6.12.96+rpt-rpi-v8`, während `/var/run/reboot-required.pkgs` seit dem
+16.09. `linux-image-6.12.109+rpt-rpi-v8` nennt. **Das Kennzeichen ist echt.**
+
+---
+
 ## 18.09.2026 — Geheimnisse aus der Prozessliste, Token rotiert, Homepage ergänzt
 
 **Anlass:** Simon fiel der ntfy-Token am 14.09.2026 beim Hinsehen in die Prozessliste

@@ -17,6 +17,12 @@ CONFIG=/etc/pi-backup.env
 [ -r "$CONFIG" ] || { echo "FEHLER: $CONFIG nicht lesbar"; exit 1; }
 set -a; . "$CONFIG"; set +a
 
+# Draht zum eigenen rclone-Unterprozess. Vorgabe ist 1 Minute -- unter Last
+# (Swap-Thrashing, 14.09.2026) antwortet rclone nicht rechtzeitig, und restic
+# bricht mit "context deadline exceeded" ab. NICHT zu verwechseln mit
+# RCLONE_TIMEOUT in /etc/pi-backup.env; das gilt fuer rclone <-> OneDrive.
+RESTIC_OPT="-o rclone.timeout=5m"
+
 STAGE="${STAGE_DIR:-/mnt/usb-hdd/backup-stage}"
 FEHLER=0
 
@@ -279,7 +285,7 @@ systemctl list-unit-files --state=enabled --no-pager --no-legend \
 
 # --- 6. Sicherung ------------------------------------------------------------
 log "restic: Sicherung laeuft"
-restic backup \
+restic $RESTIC_OPT backup \
   --tag automatisch \
   --host raspberrypi \
   --exclude-caches \
@@ -323,7 +329,7 @@ fi
 # 7 taegliche, 4 woechentliche, 6 monatliche Staende. Aeltere werden entfernt
 # und der freiwerdende Platz wird zurueckgegeben (--prune).
 log "restic: alte Staende aufraeumen"
-restic forget \
+restic $RESTIC_OPT forget \
   --tag automatisch \
   --keep-daily 7 --keep-weekly 4 --keep-monthly 6 \
   --prune > >(tail -3) 2> >(tail -5 >&2) || warn "Aufraeumen fehlgeschlagen -- Grund siehe Zeilen darueber (haeufig: verwaiste Sperre, dann 'restic unlock')"
@@ -332,9 +338,9 @@ restic forget \
 rm -rf "$STAGE"
 
 log "Belegung im Repository:"
-restic stats --mode raw-data 2>/dev/null | sed 's/^/    /'
+restic $RESTIC_OPT stats --mode raw-data 2>/dev/null | sed 's/^/    /'
 
-GROESSE=$(restic stats --mode raw-data 2>/dev/null | awk '/Total Size/{print $3" "$4}')
+GROESSE=$(restic $RESTIC_OPT stats --mode raw-data 2>/dev/null | awk '/Total Size/{print $3" "$4}')
 
 if [ "$FEHLER" -gt 0 ]; then
   echo "=== Backup abgeschlossen, aber mit $FEHLER Warnung(en) ==="

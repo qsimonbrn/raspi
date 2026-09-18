@@ -9,6 +9,34 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.26.0] — 2026-09-18
+
+Zwei offene Punkte geschlossen, beide mit Messung und Gegenprobe.
+
+### Behoben
+
+- **Kapitel [09](docs/09-empfehlungen.md), 3.10:** Gruppenzugehörigkeit erledigt — die
+  verbliebenen 12 Objekte lagen alle unter `stacks/homepage/config/`, und die Ursache war
+  der Homepage-Container selbst (`PUID=1000`/`PGID=1000`), nicht menschliche
+  Nachlässigkeit. Nach dem Angleichen **0** Objekte mit Gruppe `simon`.
+- **Kapitel [09](docs/09-empfehlungen.md), 3.17 (neu):** `restic -o rclone.timeout=5m` in
+  `pi-backup.sh` und `inventar/collect.sh`. Beseitigt die Timeout-Klasse vom 14.09.2026,
+  ohne einen echten Hänger zu verdecken.
+
+### Hinzugefügt
+
+- **Kapitel [12](docs/12-backup.md):** neuer Abschnitt „Zwei Timeouts, die leicht
+  verwechselt werden" — `RCLONE_TIMEOUT` gilt für rclone ↔ OneDrive,
+  `restic -o rclone.timeout` für restic ↔ rclone-Unterprozess. Die Adresse
+  `http://localhost/file-…` in der Fehlermeldung ist das Unterscheidungsmerkmal.
+- **Kapitel [16](docs/16-konten-und-rechte.md):** Auflösung der Richtigstellung vom
+  14.09.2026, mit der Lehre: **Wer zählt, wie viele Objekte eine abweichende Gruppe
+  tragen, misst nicht, wer sie angelegt hat.**
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Betriebstagebuch-Eintrag, einschließlich
+  des Befunds, dass der ausstehende Neustart entgegen der Annahme **nicht** ausgeführt ist.
+
+---
+
 ## [2.25.0] — 2026-09-18
 
 Zwei Systemänderungen dokumentiert: Geheimnisse stehen nicht mehr in der Prozessliste,
