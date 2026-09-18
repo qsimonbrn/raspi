@@ -9,6 +9,27 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.26.1] — 2026-09-18
+
+### Behoben
+
+- **Kapitel [14](docs/14-benachrichtigungen.md), Abschnitt 9:** Der ntfy-Token wurde am
+  selben Abend ein zweites Mal rotiert. Bei der Fehlersuche am `workbench`-Abo gab
+  `GET /v1/account` die Tokenliste im Klartext aus — der Filter, der seit der ersten
+  Rotation vor jeder `ps`-Ausgabe steht, greift bei einer JSON-Antwort nicht.
+  **Regel: nicht die Ausgabeart filtern, sondern jede Ausgabe, die ein Geheimnis
+  enthalten kann.**
+
+### Geprüft, nicht geändert
+
+- **Thema `workbench`:** Server-seitig in Ordnung. Auf dem Weg, den die App nimmt
+  (`https://raspberrypi.tailf372ec.ts.net:8444`), liefert `/workbench/json?poll=1` mit
+  Anmeldung **200**, anonym **403**, Negativkontrolle auf Port 8445 wird abgelehnt.
+  `tailscale serve` veröffentlicht 8443 und 8444, sonst nichts. **Ohne `:8444` landet die
+  App auf 443, und dort sitzt `pihole-FTL`** — gemessen: sofortiger Abbruch.
+
+---
+
 ## [2.26.0] — 2026-09-18
 
 Zwei offene Punkte geschlossen, beide mit Messung und Gegenprobe.

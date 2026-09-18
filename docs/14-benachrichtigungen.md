@@ -446,6 +446,16 @@ Er wurde deshalb widerrufen (`ntfy token remove`) und durch einen neuen ersetzt
 (Bezeichnung `pi-skripte (rotiert 18.09.2026)`). Gegenprobe: der alte Token
 antwortet seitdem mit `401`, der neue mit `200`.
 
+> **Am selben Abend ein zweites Mal rotiert, aus demselben Grund in neuer Gestalt.**
+> Bei der Fehlersuche am Abo gab `GET /v1/account` die vollständige Tokenliste im
+> Klartext aus — nicht als Kommandozeile, sondern als API-Antwort. **Der Filter, der seit
+> der ersten Rotation vor jeder `ps`-Ausgabe steht, greift bei JSON nicht.** Der Token
+> wurde erneut gewechselt (`pi-skripte (rotiert 18.09.2026, 22:00)`), der vorherige
+> widerrufen, Gegenprobe alt `401` / neu `200`, danach die `notify()`-Funktion aus
+> `pi-backup.sh` gegengeprüft. **Regel daraus: Nicht die Ausgabeart filtern, sondern
+> jede Ausgabe, die ein Geheimnis enthalten kann** — `/v1/account`, `ntfy token list`,
+> `docker inspect`, `env`.
+
 **Das Abo auf dem Handy war davon nicht betroffen** — die App meldet sich mit
 Benutzername und Passwort an, nicht mit diesem Token. Der Notruf-Themenname wurde
 aus demselben Grund **nicht** gewechselt: Das hätte ein neues Abo auf dem Handy
