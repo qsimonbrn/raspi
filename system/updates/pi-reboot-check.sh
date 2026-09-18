@@ -32,9 +32,9 @@ Laufzeit bisher: ${LAUFZEIT}
 Neustart von Hand:  sudo reboot
 Waehrend des Neustarts faellt der DNS fuers ganze Haus kurz aus."
 
-if [ -n "${NTFY_URL:-}" ] && [ -r "${NTFY_TOKEN_FILE:-/nonexistent}" ]; then
+if [ -n "${NTFY_URL:-}" ] && [ -r "${NTFY_CURL_CONF:-/nonexistent}" ]; then
   curl -s -m 20 -o /dev/null \
-    -H "Authorization: Bearer $(cat "$NTFY_TOKEN_FILE")" \
+    --config "$NTFY_CURL_CONF" \
     -H "Title: Raspberry Pi: Neustart faellig" \
     -H "Priority: default" \
     -H "Tags: arrows_counterclockwise,package" \

@@ -1,6 +1,6 @@
 # 20 — yt-werk: Beschaffungsdienst für die Workbench
 
-Stand: 12.09.2026
+Stand: 12.09.2026 · Homepage-Kachel ergänzt: 18.09.2026
 
 ## Wozu
 
@@ -111,6 +111,18 @@ das kostet rund 100 MB.
 - Keine Einsortierung in den Vault. Der Dienst schreibt ausschließlich nach
   `eingang/`; das Verteilen auf `10_Projekte/`, `40_Quellen/` und `_anhaenge/`
   macht der Mac beim abendlichen Sync anhand der `ablage.json`.
+
+## Auf der Homepage
+
+Seit dem 18.09.2026 steht die Workbench als Kachel in der Gruppe „Automatisierung" —
+**bewusst ohne Erreichbarkeitsprüfung**. `yt-werk` hört auf 8722, aber nur im
+Docker-Netz `werkbank`; der Port ist nicht auf den Host veröffentlicht, der
+`homepage`-Container käme nicht heran, und die Kachel stünde dauerhaft auf Rot. Ein
+Punkt, der immer rot ist, sagt nichts mehr. Den Zustand liefert stattdessen die
+Docker-Anbindung (läuft / läuft nicht, CPU, RAM). Der Verweis zeigt auf das
+Ablagefach im Netzlaufwerk, das ist der Ort, den man tatsächlich öffnen will.
+
+---
 
 ## Verwandt
 

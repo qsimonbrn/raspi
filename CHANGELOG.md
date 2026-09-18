@@ -9,6 +9,46 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.25.0] — 2026-09-18
+
+Zwei Systemänderungen dokumentiert: Geheimnisse stehen nicht mehr in der Prozessliste,
+und die Homepage kennt n8n und die Workbench.
+
+### Behoben
+
+- **Kapitel [14](docs/14-benachrichtigungen.md):** neuer Abschnitt 9 — der ntfy-Token
+  und die Notruf-Adresse von ntfy.sh standen über `$(cat …)` als Argument im
+  `curl`-Aufruf und waren damit für jeden lokalen Benutzer in `ps -o args` lesbar.
+  Betroffen waren **vier** Skripte plus `inventar/collect.sh`, nicht nur
+  `pi-backup.sh`. Jetzt `curl --config` mit Dateien unter `/root` (Modus 600).
+  Token rotiert, alter Token widerrufen. Alle Beispielaufrufe im Kapitel angepasst,
+  Abschnitt „Was noch zu tun ist" auf 10 verschoben.
+- **Kapitel [07](docs/07-sicherheit.md):** Befund samt Begründung, warum ein
+  Schreibrecht-Token in dieser Einrichtung zählt — ein gefälschtes „Backup
+  erfolgreich" ist genau der Zustand, gegen den die Alarmkette gebaut wurde.
+
+### Hinzugefügt
+
+- **Kapitel [09](docs/09-empfehlungen.md):** Punkte **3.15** (erledigt, mit dem
+  offenen Rest: dieselbe Prüfung ist für Container und Compose nie gefahren worden)
+  und **3.16** (Homepage-Kacheln, erledigt).
+- **Kapitel [19](docs/19-n8n.md)** und **[20](docs/20-yt-werk.md):** je ein Abschnitt
+  zur neuen Homepage-Kachel, mit der Begründung, warum n8n eine
+  Erreichbarkeitsprüfung bekommt und die Workbench keine.
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Betriebstagebuch-Eintrag vom
+  18.09.2026, einschließlich des eigenen Fehlgriffs mit `/var/run/reboot-required`.
+
+### Geändert
+
+- **`stacks/homepage/config/services.yaml`:** neue Gruppe „Automatisierung" mit n8n
+  und Workbench. Eigentümer von `simon:simon` auf `simon:pi-admin`, Modus 664 —
+  eines der 13 Objekte aus Punkt 3.10, die übrigen 12 bleiben offen.
+- **`inventar/collect.sh`:** die ntfy-Prüfung benutzt die neue Konfigurationsdatei;
+  ihr Fehlertext nennt jetzt `NTFY_CURL_CONF` statt der Tokendatei.
+- **`system/`:** vier Skriptkopien nachgezogen, Abgleich wieder 25 von 25.
+
+---
+
 ## [2.24.0] — 2026-09-14
 
 Die Querverweis-Kapitel kennen jetzt SnapOtter und Stirling PDF. Vorher standen beide

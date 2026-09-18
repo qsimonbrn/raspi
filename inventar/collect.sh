@@ -561,9 +561,9 @@ fi
 NT="$(sudo -n bash -c '
   set -a; . /etc/pi-backup.env 2>/dev/null; set +a
   [ -n "${NTFY_URL:-}" ] || { echo "KEINEURL"; exit 0; }
-  [ -r "${NTFY_TOKEN_FILE:-/nonexistent}" ] || { echo "KEINTOKEN"; exit 0; }
+  [ -r "${NTFY_CURL_CONF:-/nonexistent}" ] || { echo "KEINTOKEN"; exit 0; }
   curl -s -m 20 -o /dev/null -w "%{http_code}" \
-    -H "Authorization: Bearer $(cat "$NTFY_TOKEN_FILE")" \
+    --config "$NTFY_CURL_CONF" \
     -H "Title: Bestandsaufnahme" -H "Priority: min" -H "Tags: mag" \
     -d "Testversand aus collect.sh -- keine Aktion noetig." \
     "$NTFY_URL/${NTFY_TOPIC:-raspberrypi}"
@@ -571,7 +571,7 @@ NT="$(sudo -n bash -c '
 case "$NT" in
   200) pruef "ntfy nimmt Meldungen an" "ok" "HTTP 200 vom ntfy-Server (Zustellung ans Geraet kann ein Skript nicht pruefen)" ;;
   KEINEURL)   pruef "ntfy nimmt Meldungen an" "ACHTUNG" "NTFY_URL ist in /etc/pi-backup.env nicht gesetzt -- alle Alarme laufen ins Leere" ;;
-  KEINTOKEN)  pruef "ntfy nimmt Meldungen an" "ACHTUNG" "Token-Datei nicht lesbar -- alle Alarme laufen ins Leere" ;;
+  KEINTOKEN)  pruef "ntfy nimmt Meldungen an" "ACHTUNG" "curl-Konfigurationsdatei NTFY_CURL_CONF nicht lesbar -- alle Alarme laufen ins Leere" ;;
   "")  pruef "ntfy nimmt Meldungen an" "?" "Testversand lieferte keine Antwort" ;;
   *)   pruef "ntfy nimmt Meldungen an" "ACHTUNG" "ntfy antwortete mit HTTP $NT" ;;
 esac

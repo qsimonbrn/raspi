@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 14.09.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 18.09.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,46 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 18.09.2026 — Geheimnisse aus der Prozessliste, Token rotiert, Homepage ergänzt
+
+**Anlass:** Simon fiel der ntfy-Token am 14.09.2026 beim Hinsehen in die Prozessliste
+auf, ungewollt.
+
+**Was geändert wurde.** `pi-backup.sh`, `pi-abgleich.sh`, `pi-gravity.sh`,
+`pi-reboot-check.sh` und `inventar/collect.sh` übergeben den Token nicht mehr als
+`-H`-Argument, sondern lesen ihn über `curl --config /root/.ntfy-curl.conf`. Der
+Notrufweg liest die ntfy.sh-Adresse entsprechend aus `/root/.ntfy-notruf.conf`.
+Beide Dateien gehören root und haben Modus 600. In `/etc/pi-backup.env` heißen die
+Pfade `NTFY_CURL_CONF` und `NTFY_NOTRUF_CONF`; `NTFY_TOKEN_FILE` entfällt,
+`/root/.ntfy-token` wurde gelöscht.
+
+**Der Token wurde rotiert.** Der alte lief seit dem 23.08.2026 und stand seither bei
+jedem Lauf in der Prozessliste. Widerrufen mit `ntfy token remove`, Gegenprobe: alter
+Token `401`, neuer `200`. Das Abo auf dem Handy war nicht betroffen — die App meldet
+sich mit Benutzername und Passwort an. Der Notruf-Themenname wurde **nicht**
+gewechselt: Das hätte ein neues Abo auf dem Handy erfordert, und er war nie
+öffentlich.
+
+**Nachweis:** Prozessliste als unprivilegiertes Konto vor und nach der Änderung
+gelesen, jeweils mit Positivkontrolle, dass der Testaufruf überhaupt lief. Dazu ein
+vollständiger Backup-Lauf über `systemctl start pi-backup.service` (4 min 31 s,
+Meldung angekommen) und `pi-reboot-check.sh` mit vorgetäuschtem Neustartbedarf.
+Einzelheiten in [14](14-benachrichtigungen.md), Abschnitt 9.
+
+**Zweite Änderung: Homepage.** Neue Gruppe „Automatisierung" mit Kacheln für n8n und
+die Workbench. Die Datei `stacks/homepage/config/services.yaml` gehörte `simon:simon`
+und war für das Konto `claude` nicht schreibbar; sie steht jetzt auf `simon:pi-admin`
+mit Modus 664 — eines der 13 Objekte aus Empfehlung 3.10, die übrigen 12 bleiben
+offen.
+
+**Eigener Fehlgriff, benannt statt überspielt:** Beim Test von `pi-reboot-check.sh`
+wurde `/var/run/reboot-required` angelegt und anschließend wieder entfernt — die
+Datei existierte aber schon seit dem 16.09.2026, es steht tatsächlich ein Neustart
+an. Sie wurde mit Eigentümer, Rechten und ursprünglichem Zeitstempel wiederhergestellt,
+die Begleitdatei `.pkgs` war nie betroffen.
 
 ---
 

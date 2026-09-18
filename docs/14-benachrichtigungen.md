@@ -1,7 +1,8 @@
 # 14 — Benachrichtigungen (ntfy)
 
 *Eingerichtet: 13.08.2026 · Zugangsdaten ausgelagert: 23.08.2026 ·
-Zustellung auf die Tailnet-Adresse umgestellt und zweiter Alarmweg ergänzt: 06.09.2026*
+Zustellung auf die Tailnet-Adresse umgestellt und zweiter Alarmweg ergänzt: 06.09.2026 ·
+Zugangsdaten aus der Kommandozeile entfernt und Token rotiert: 18.09.2026*
 
 Push-Nachrichten aufs Handy, ohne Umweg über einen fremden Dienst.
 
@@ -34,8 +35,10 @@ Arbeitsspeicher), der Nachrichten entgegennimmt und an Apps ausliefert.
 > `stacks/ntfy/.env`.** Der Container hat kein `env_file` und liest die Datei gar
 > nicht — die Benutzer liegen in `/mnt/usb-hdd/ntfy/lib/user.db`. Die Zeilen waren
 > eine Zweitschrift, die niemand pflegt: Beim Passwortwechsel am 23.08.2026 wurde
-> sie noch am selben Tag still falsch. Der Token liegt weiterhin in
-> `/root/.ntfy-token`, weil die Skripte ihn von dort lesen.
+> sie noch am selben Tag still falsch. Seit dem 18.09.2026 liegt der Token nicht
+> mehr als nackter Wert in `/root/.ntfy-token`, sondern als fertige
+> curl-Konfigurationsdatei in `/root/.ntfy-curl.conf` (root, Modus 600) —
+> siehe Abschnitt 9.
 
 ---
 
@@ -67,8 +70,7 @@ Anmeldung liefert er nichts aus und nimmt nichts an.
 ### Testen
 
 ```bash
-TOKEN=$(sudo cat /root/.ntfy-token)
-curl -H "Authorization: Bearer $TOKEN" -H "Title: Test" \
+sudo curl --config /root/.ntfy-curl.conf -H "Title: Test" \
      -d "Wenn das ankommt, ist alles richtig eingerichtet." \
      http://192.168.178.80:2586/raspberrypi
 ```
@@ -192,7 +194,9 @@ Abgleich; den Schlüssel kennt nur Simon.
 
 **Der Themenname ist das Geheimnis.** Wer ihn kennt, liest die Alarme mit und kann
 welche einschleusen. Er steht in `/etc/pi-notruf.url` (Modus 600, root) und
-**nicht im Git**. Auslesen: `sudo cat /etc/pi-notruf.url`. Ersetzen: Datei neu
+**nicht im Git**; seit dem 18.09.2026 lesen die Skripte ihn nicht mehr von dort,
+sondern aus der curl-Konfigurationsdatei `/root/.ntfy-notruf.conf` (Abschnitt 9).
+Auslesen: `sudo cat /etc/pi-notruf.url`. Ersetzen: Datei neu
 schreiben und das Abo auf dem Handy neu anlegen — sonst nichts.
 
 | Messung vom 06.09.2026 | Ergebnis |
@@ -249,7 +253,7 @@ Recht.
 |---|---|---|
 | Rolle | `admin` | `user` |
 | Rechte | alles | **nur schreiben**, nur auf `raspberrypi` |
-| Token | `/root/.ntfy-token` | `/etc/diun/ntfy-token` |
+| Token | `/root/.ntfy-curl.conf` (fertige curl-Konfiguration) | `/etc/diun/ntfy-token` |
 | Wer benutzt ihn | `pi-backup.sh`, `pi-abgleich.sh`, Handbetrieb | ausschließlich der Diun-Container |
 
 Am 25.08.2026 gegen alle drei Fälle gemessen: schreiben auf `raspberrypi` → `200`,
@@ -290,8 +294,7 @@ kaputte Benachrichtigung darf keine Sicherung verhindern.
 Von jedem Skript auf dem Pi:
 
 ```bash
-TOKEN=$(sudo cat /root/.ntfy-token)
-curl -H "Authorization: Bearer $TOKEN" \
+sudo curl --config /root/.ntfy-curl.conf \
      -H "Title: Titel der Nachricht" \
      -H "Priority: default" \
      -H "Tags: warning" \
@@ -320,8 +323,8 @@ Nachrichten einschleusen.
 | Zugangsdaten | Ablage |
 |---|---|
 | Passwort für Handy und Browser | `stacks/ntfy/.env` (Modus 600, nicht im Git) |
-| Token für das Backup-Skript | `/root/.ntfy-token` (Modus 600) |
-| Adresse des Notruf-Themas | `/etc/pi-notruf.url` (Modus 600, root) |
+| Zugang für die Systemskripte | `/root/.ntfy-curl.conf` (Modus 600, root) |
+| Adresse des Notruf-Themas | `/etc/pi-notruf.url` und `/root/.ntfy-notruf.conf` (beide Modus 600, root) |
 
 Das Token steht bewusst **nicht** in `/etc/pi-backup.env`, sondern in einer eigenen
 Datei — dieselbe Systematik wie beim restic-Repository-Passwort. So bleibt die
@@ -341,8 +344,7 @@ sudo docker ps --filter name=ntfy
 curl http://192.168.178.80:2586/v1/health
 
 # Letzte Nachrichten ansehen
-TOKEN=$(sudo cat /root/.ntfy-token)
-curl -H "Authorization: Bearer $TOKEN" \
+sudo curl --config /root/.ntfy-curl.conf \
      "http://192.168.178.80:2586/raspberrypi/json?poll=1"
 
 # Benutzer und Token verwalten
@@ -366,9 +368,92 @@ Der Nachrichten-Zwischenspeicher wird **nicht** gesichert — er enthält nur
 Meldungen der letzten 24 Stunden. Die Benutzerdatenbank ist ebenfalls schnell neu
 angelegt; wichtiger ist, dass `server.yml` und die Compose-Datei im Git liegen.
 
+
 ---
 
-## 9. Was noch zu tun ist
+## 9. Zugangsdaten stehen nicht mehr in der Kommandozeile
+
+*Befund vom 14.09.2026, behoben am 18.09.2026.*
+
+Simon fiel der Token beim Hinsehen in die Prozessliste auf, ungewollt. Die Skripte
+bauten den Kopfzeilenwert im Aufruf zusammen:
+
+```bash
+curl -s -m 20 -o /dev/null -H "Authorization: Bearer $(cat "$NTFY_TOKEN_FILE")" ...
+```
+
+Die Datei war korrekt geschützt (root, Modus 600) — aber die Ersetzung geschieht in
+der Shell, **bevor** `curl` startet. Der Klartext landet damit in den Argumenten des
+Prozesses, und die liest unter Linux jeder lokale Benutzer mit. `/proc` ist ohne
+`hidepid` eingehängt, und es gibt fünf Konten mit Anmeldeshell.
+
+**Betroffen waren vier Skripte, nicht eins:** `pi-backup.sh`, `pi-abgleich.sh`,
+`pi-gravity.sh` und `pi-reboot-check.sh` — dazu `inventar/collect.sh`. Dieselbe
+Schwäche hatte der zweite Alarmweg: die Notruf-Adresse stand als
+`"$(cat /etc/pi-notruf.url)"` im Aufruf, und bei ntfy.sh **ist der Themenname das
+Geheimnis**.
+
+### Was jetzt geschieht
+
+`curl` liest Kopfzeile und Adresse aus Konfigurationsdateien, die es selbst öffnet.
+Damit steht im Aufruf nur noch ein Dateiname.
+
+| Datei | Inhalt | Rechte |
+|---|---|---|
+| `/root/.ntfy-curl.conf` | `header = "Authorization: Bearer …"` | root:root, 600 |
+| `/root/.ntfy-notruf.conf` | `url = "https://ntfy.sh/…"` | root:root, 600 |
+
+Die Pfade stehen als `NTFY_CURL_CONF` und `NTFY_NOTRUF_CONF` in
+`/etc/pi-backup.env`. `NTFY_TOKEN_FILE` gibt es nicht mehr, `/root/.ntfy-token`
+wurde gelöscht.
+
+> **Warum keine Umgebungsvariable.** `/proc/<pid>/environ` liest nur der Eigentümer,
+> das klingt zunächst besser. Ein `-H "Authorization: Bearer $VAR"` würde die
+> Variable aber genauso in die Argumente expandieren — der Gewinn wäre nur
+> scheinbar. Der Unterschied liegt nicht am Speicherort, sondern daran, wer die
+> Zeichenkette zusammensetzt: die Shell oder `curl`.
+
+### Messung vom 18.09.2026
+
+Gemessen am ausgelieferten `/usr/local/bin/pi-backup.sh`: die `notify()`-Funktion
+wurde herausgeschnitten und unverändert aufgerufen, gegen eine tote Adresse, damit
+`curl` in sein `-m 20` läuft und lange genug in der Prozessliste steht. Gelesen
+wurde als Konto `claude`, **ohne** `sudo`.
+
+| Fassung | Prozessliste enthält den Token | Positivkontrolle: curl läuft |
+|---|---|---|
+| vorher (aus der Sicherung) | **ja** | ja |
+| nachher (`curl --config`) | **nein** | ja |
+
+Die Positivkontrolle ist der Punkt: Ohne sie hätte „kein Treffer" auch bedeuten
+können, dass der Testaufruf gar nicht lief.
+
+| Weitere Prüfung | Ergebnis |
+|---|---|
+| Versand mit der neuen Konfigurationsdatei | `200` |
+| Negativkontrolle: verfälschter Token in derselben Datei | `401` |
+| Negativkontrolle: gar keine Anmeldung | `403` |
+| Notruf über `/root/.ntfy-notruf.conf` | `200` |
+| `notify()` aus allen drei Skripten mit Funktion, Meldung bei ntfy nachgezählt | **3 von 3 angekommen** |
+| `pi-reboot-check.sh` vollständig ausgeführt (Neustartbedarf vorgetäuscht) | Meldung angekommen |
+| Vollständiger Backup-Lauf über `systemctl start pi-backup.service` | 4 min 31 s, `Backup erfolgreich` angekommen |
+
+### Der Token wurde dabei rotiert
+
+Der alte Token war seit dem 23.08.2026 in Betrieb und stand in dieser Zeit bei jedem
+Lauf in der Prozessliste; wer ihn gesehen hat, lässt sich nicht mehr feststellen.
+Er wurde deshalb widerrufen (`ntfy token remove`) und durch einen neuen ersetzt
+(Bezeichnung `pi-skripte (rotiert 18.09.2026)`). Gegenprobe: der alte Token
+antwortet seitdem mit `401`, der neue mit `200`.
+
+**Das Abo auf dem Handy war davon nicht betroffen** — die App meldet sich mit
+Benutzername und Passwort an, nicht mit diesem Token. Der Notruf-Themenname wurde
+aus demselben Grund **nicht** gewechselt: Das hätte ein neues Abo auf dem Handy
+erfordert, und der Themenname war nie öffentlich, sondern nur lokal lesbar.
+
+---
+
+## 10. Was noch zu tun ist
 
 - [x] ntfy-App auf dem Handy installieren
 - [x] Konto und Abo auf `https://raspberrypi.tailf372ec.ts.net:8444` umgestellt (06.09.2026)

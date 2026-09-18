@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 25.08.2026 · ergänzt und fortgeschrieben 13.09.2026*
+*Stand: 25.08.2026 · ergänzt und fortgeschrieben 13.09.2026 · 3.15 und 3.16 ergänzt 18.09.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -453,6 +453,33 @@ Weg beim nächsten Anlauf: `tcpdump` nachinstallieren und zehn Minuten auf der B
 SnapOtter-Netzes mitschneiden, gegen eine erzwungene Verbindung als Kontrolle. Alternativ
 eine zählende `nftables`-Regel für ausgehenden Verkehr an öffentliche Adressen. Rund
 20 Minuten.
+
+### 3.15 Geheimnisse aus der Kommandozeile nehmen — ✅ erledigt am 18.09.2026
+
+> Vier Skripte plus `inventar/collect.sh` benutzen jetzt `curl --config` statt
+> `-H "Authorization: Bearer $(cat …)"`. Der Token wurde dabei rotiert und der alte
+> widerrufen. Nachweis in [07](07-sicherheit.md) und
+> [14](14-benachrichtigungen.md), Abschnitt 9.
+>
+> **Was daraus folgt und offen ist:** Dieselbe Prüfung ist für Container und
+> Compose-Dateien nie gefahren worden. Eine Zeile in `inventar/collect.sh`, die die
+> Prozessliste nach bekannten Geheimnispräfixen absucht, wäre der billige Weg, diese
+> Klasse dauerhaft abzudecken — geschätzt 20 Minuten. **Noch nicht umgesetzt.**
+
+---
+
+### 3.16 Homepage: n8n und Workbench eintragen — ✅ erledigt am 18.09.2026
+
+> Neue Gruppe „Automatisierung" in `stacks/homepage/config/services.yaml` mit zwei
+> Kacheln. n8n mit Erreichbarkeitsprüfung auf `/healthz` über die Tailnet-Adresse,
+> die Workbench bewusst ohne — `yt-werk` hört nur im Docker-Netz `werkbank`, eine
+> Prüfung stünde dauerhaft auf Rot. Den Zustand liefert die Docker-Anbindung.
+>
+> Dabei mit erledigt: Die Datei gehörte `simon:simon` und war für das Konto `claude`
+> nicht schreibbar — eines der 13 Objekte aus Punkt 3.10. Sie steht jetzt auf
+> `simon:pi-admin`, Modus 664. **Die übrigen 12 sind unverändert offen.**
+
+---
 
 ### 3.4 Aufräumen
 

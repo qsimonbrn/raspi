@@ -40,9 +40,9 @@ notify() {  # $1=Titel  $2=Text  $3=Prioritaet  $4=Tags
   [ -r "$cfg" ] || return 0
   set -a; . "$cfg"; set +a
   [ -n "${NTFY_URL:-}" ] || return 0
-  [ -r "${NTFY_TOKEN_FILE:-/nonexistent}" ] || return 0
+  [ -r "${NTFY_CURL_CONF:-/nonexistent}" ] || return 0
   curl -s -m 20 -o /dev/null \
-    -H "Authorization: Bearer $(cat "$NTFY_TOKEN_FILE")" \
+    --config "$NTFY_CURL_CONF" \
     -H "Title: $1" -H "Priority: ${3:-default}" -H "Tags: ${4:-open_file_folder}" \
     -d "$2" "$NTFY_URL/${NTFY_TOPIC:-raspberrypi}" || true
   # Zweiter, unabhaengiger Weg: inhaltsleerer Notruf ueber ntfy.sh, nur bei
@@ -52,11 +52,11 @@ notify() {  # $1=Titel  $2=Text  $3=Prioritaet  $4=Tags
   # B = Backup, A = Abgleich.
   case "${3:-default}" in
     high|urgent)
-      [ -r /etc/pi-notruf.url ] && curl -s -m 20 -o /dev/null \
+      [ -r "${NTFY_NOTRUF_CONF:-/nonexistent}" ] && curl -s -m 20 -o /dev/null \
         -H "Title: Alarm ${NOTRUF_CODE:-?}" \
         -H "Priority: urgent" -H "Tags: rotating_light" \
         -d "Auf dem Server ist eine Aufgabe fehlgeschlagen." \
-        "$(cat /etc/pi-notruf.url)" || true ;;
+        --config "$NTFY_NOTRUF_CONF" || true ;;
   esac
 }
 

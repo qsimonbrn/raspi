@@ -81,6 +81,34 @@
         server: pi
         container: snapotter
 
+- Automatisierung:
+    - n8n:
+        # Port 5678 ist ueber pi-guard aus dem LAN gesperrt; erreichbar nur
+        # ueber Tailscale. Deshalb die Tailnet-Adresse, wie bei Paperless,
+        # Bichon und Portainer.
+        href: http://100.108.219.87:5678
+        # /healthz antwortet OHNE Anmeldung mit 200. Vom homepage-Container aus
+        # am 18.09.2026 nachgemessen, Negativkontrolle gegen eine tote Tailnet-
+        # Adresse lief in den Timeout.
+        siteMonitor: http://100.108.219.87:5678/healthz
+        description: Workflow-Automatisierung, nur ueber Tailscale
+        icon: n8n.png
+        server: pi
+        container: n8n
+
+    - Workbench:
+        # Bewusst OHNE siteMonitor. yt-werk hoert auf 8722, aber nur im Netz
+        # "werkbank" -- der Port ist nicht auf den Host veroeffentlicht, der
+        # homepage-Container kaeme nicht heran und die Kachel stuende dauerhaft
+        # auf Rot. Den Zustand liefert stattdessen die Docker-Anbindung unten.
+        # Der Verweis zeigt auf das Ablagefach, das ist der Ort, den man
+        # tatsaechlich oeffnen will (Gruppe pi-admin).
+        href: smb://192.168.178.80/usb-share/workbench-eingang
+        description: Beschaffungsdienst yt-werk, Ablagefach im Netzlaufwerk
+        icon: mdi-robot-industrial
+        server: pi
+        container: yt-werk
+
 - Verwaltung:
     - Portainer:
         href: http://100.108.219.87:9000

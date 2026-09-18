@@ -1,6 +1,6 @@
 # 07 — Sicherheit
 
-*Erfasst: 18.08.2026 · nachgemessen: 20.08.2026*
+*Erfasst: 18.08.2026 · nachgemessen: 20.08.2026 · Befund Prozessliste behoben: 18.09.2026*
 
 ## Zusammenfassung
 
@@ -305,6 +305,31 @@ einer echten Compose-Datei wird gemeldet.
 **Das Muster ist dasselbe wie am 18.08.2026 sechsmal:** Etwas galt als geprüft und war es
 nur zur Hälfte. Eine Prüfung, die still einen Teil ihres Suchraums ausblendet, ist
 gefährlicher als keine — sie erzeugt Vertrauen, das sie nicht deckt.
+
+---
+
+## ✅ Geheimnisse standen in der Prozessliste — behoben am 18.09.2026
+
+**Befund vom 14.09.2026.** Vier Systemskripte übergaben den ntfy-Token als
+Kommandozeilenargument an `curl`, der zweite Alarmweg zusätzlich die Notruf-Adresse
+von ntfy.sh, bei der der Themenname das Geheimnis ist. Die Dateien selbst waren
+korrekt geschützt (root, Modus 600) — die Ersetzung `$(cat …)` geschieht aber in der
+Shell, bevor `curl` startet, und die Argumente eines Prozesses liest unter Linux
+jeder lokale Benutzer. `/proc` ist ohne `hidepid` eingehängt, es gibt fünf Konten mit
+Anmeldeshell.
+
+**Warum das zählt.** Der Token darf nur auf das Thema `raspberrypi` schreiben. Wer
+ihn hat, kann keine Daten lesen — aber er kann Alarme fälschen, und ein gefälschtes
+„Backup erfolgreich" ist in dieser Einrichtung genau der Zustand, gegen den die
+ganze Benachrichtigungskette gebaut wurde.
+
+**Behoben:** `curl --config <Datei 600>` statt `-H`, Token rotiert, alter Token
+widerrufen. Nachgemessen mit Positivkontrolle in beide Richtungen. Vollständig in
+[14 — Benachrichtigungen](14-benachrichtigungen.md), Abschnitt 9.
+
+**Offen bleibt die Klasse, nicht der Fall.** Geprüft wurden die Skripte unter
+`/usr/local`. Ob anderswo — in Containern, in `cron.d`, in Compose-Dateien —
+Geheimnisse als Argument übergeben werden, ist **nicht** gemessen worden.
 
 ---
 

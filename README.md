@@ -2,7 +2,7 @@
 
 Vollständige Dokumentation des Heimservers `raspberrypi` (`192.168.178.80`).
 
-> **Stand:** 13.09.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
+> **Stand:** 18.09.2026 · **Erfasst durch:** automatisierte Bestandsaufnahme via SSH
 > **Nächste Prüfung empfohlen:** bei jeder Änderung am Setup, mindestens quartalsweise
 
 ---
