@@ -88,7 +88,9 @@ Einstiegsseite. Vierzehn Docker-Container in zehn Stacks; die Compose-Dateien li
 
 1. **222 GB unter `SSD_Müll` sind ungesichert** — darunter 2.971 Bilddateien und ein
    vollständiges Windows-Benutzerprofil. In die 5 GB der OneDrive-Freeversion passt das
-   nicht. → [Kapitel 12](docs/12-backup.md)
+   nicht. Seit 19.09.2026 vorbereitet: eine Hetzner Storage Box (5 TB) ist eingerichtet,
+   die Anbindung ans Backup steht noch aus. → [Kapitel 12](docs/12-backup.md),
+   [Empfehlung 1.5](docs/09-empfehlungen.md)
 2. **Wurzeldateisystem liegt auf einer SD-Karte von 02/2023.** Ausfallrisiko nach
    3,5 Jahren Dauerbetrieb, während eine SSD zu 64 % leer danebenliegt. → [Kapitel 01](docs/01-hardware.md)
 3. **SSH-Passwortanmeldung ist weiterhin möglich.** Am 18.08.2026 vorbereitet,

@@ -1,6 +1,6 @@
 # 10 — Zugriff
 
-*Erfasst: 18.08.2026 · ergänzt 23.08.2026 · nachgemessen: 14.09.2026*
+*Erfasst: 18.08.2026 · ergänzt 23.08.2026 · nachgemessen: 14.09.2026 · Hetzner Storage Box ergänzt: 19.09.2026*
 
 Alle Zugangswege zum System auf einen Blick.
 
@@ -38,6 +38,21 @@ Alle Zugangswege zum System auf einen Blick.
 | **Samba (Windows)** | `\\192.168.178.80\usb-share` | |
 | **Home-Verzeichnis** | `smb://192.168.178.80/simon` | nicht in der Netzwerkumgebung sichtbar |
 | Benutzer | `simon` | einziger berechtigter Samba-Benutzer |
+
+## Hetzner Storage Box
+
+*Ergänzt am 19.09.2026.*
+
+Externes Ziel für Backups und allgemeine Datenablage, siehe [12 — Backup](12-backup.md).
+Noch nicht ans automatisierte Backup angebunden — Details dort.
+
+| | |
+|---|---|
+| Adresse | `u672490.your-storagebox.de` |
+| SSH/SFTP-Port | 23 |
+| Samba/CIFS | `//u672490.your-storagebox.de/backup` — Protokoll zeitweise an, siehe [12](12-backup.md) |
+| Authentifizierung SSH/SFTP | Schlüssel — je ein eigener für Pi (`simon`) und Mac |
+| Authentifizierung SMB | Storage-Box-Passwort, **nicht** der SSH-Schlüssel |
 
 ## Kommandozeile
 
@@ -192,3 +207,4 @@ Checkliste dessen, was im Passwortmanager hinterlegt sein sollte:
 - [ ] Samba-Passwort für `simon`
 - [ ] GitHub-Konto `qsimonbrn` — ⚠️ **Schlüssel zum Heimnetz**, seit der Tailscale-Anmeldung. Zwei-Faktor-Anmeldung zwingend
 - [ ] PostgreSQL-Zugangsdaten für Paperless
+- [ ] Hetzner Storage Box — Passwort (für SMB), Kundennummer

@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 25.08.2026 · ergänzt und fortgeschrieben 13.09.2026 · 3.15 bis 3.17 ergänzt, 3.10 erledigt 18.09.2026*
+*Stand: 25.08.2026 · ergänzt und fortgeschrieben 13.09.2026 · 3.15 bis 3.17 ergänzt, 3.10 erledigt 18.09.2026 · 1.5 ergänzt 19.09.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -83,6 +83,20 @@ SSD, damit im Ausfall wenigstens ein Klon existiert.
 
 Ohne SMART-Daten gibt es keine Vorwarnung, bevor die SSD ausfällt.
 **Aufwand:** 10 Minuten. Bei USB-Anbindung ist `-d sat` als Parameter nötig.
+
+### 1.5 Backup-Ziel auf Hetzner Storage Box erweitern — 🟡 vorbereitet, noch nicht umgesetzt
+
+*Ergänzt am 19.09.2026.*
+
+Löst die Lücke aus [Kapitel 12, Abschnitt 8](12-backup.md#8-was-dieses-backup-nicht-abdeckt):
+5 TB statt 5 GiB — genug für die 222 GB unter `SSD_Müll` und die 86 GB unter `rclone_bak`.
+
+| | |
+|---|---|
+| Vorbereitet (19.09.2026) | Box eingerichtet (BX21, `u672490.your-storagebox.de`), SSH-Schlüssel für Pi (`simon`) und Mac hinterlegt — je Gerät ein eigener, zweckgebundener Schlüssel. SSH-Support und Äußere Erreichbarkeit an, WebDAV aus |
+| Noch offen | `pi-backup.sh` läuft als `root` (siehe [12](12-backup.md)) — braucht einen eigenen `root`-Schlüssel, getrennt vom `simon`-Schlüssel für manuellen Zugriff. Danach: zweites restic-Repository oder rclone-Remote einrichten und in `pi-backup.sh` aufnehmen |
+| Aufwand | geschätzt 1–2 Stunden (Schlüssel, Remote, Testlauf, Doku) |
+| Wert | schließt offenen Punkt 1 aus der Übersicht (`SSD_Müll` ungesichert) |
 
 ---
 

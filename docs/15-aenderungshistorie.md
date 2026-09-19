@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 18.09.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 19.09.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,23 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 19.09.2026 — Hetzner Storage Box vorbereitet: eigene SSH-Schlüssel für Pi und Mac
+
+**Anlass:** Die Lücke aus [12 — Backup, Abschnitt 8](12-backup.md#8-was-dieses-backup-nicht-abdeckt)
+— 222 GB unter `SSD_Müll` passen nicht in 5 GiB OneDrive. Eine Hetzner Storage Box
+(BX21, 5 TB, `u672490.your-storagebox.de`) wurde dafür eingerichtet.
+
+**Am Pi:** neuer, zweckgebundener SSH-Schlüssel `/home/simon/.ssh/hetzner_storagebox`
+(ed25519, ohne Passphrase) angelegt und bei Hetzner hinterlegt — nicht der
+GitHub-Deploy-Key und nicht der persönliche `id_ed25519` von `simon`. Auf dem Mac
+dasselbe Schema, ein eigener Schlüssel.
+
+**Bewusst noch nicht gemacht:** Die Box ist nicht an `pi-backup.sh` angebunden. Der
+Dienst läuft als `root`, der neue Schlüssel gehört `simon` — für die Automatisierung
+braucht `root` einen eigenen. Offener Punkt: [09 — Empfehlungen, 1.5](09-empfehlungen.md).
 
 ---
 

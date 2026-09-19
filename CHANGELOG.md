@@ -9,6 +9,24 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.28.0] — 2026-09-19
+
+Hetzner Storage Box als künftiges Backup-Ziel vorbereitet: eigene SSH-Schlüssel für
+Pi und Mac, noch nicht an `pi-backup.sh` angebunden.
+
+### Hinzugefügt
+
+- **Kapitel [12](docs/12-backup.md), Abschnitt 8:** Neuer Unterabschnitt zur Hetzner
+  Storage Box (Stand, Schlüssel, offener Punkt Automatisierung).
+- **Kapitel [09](docs/09-empfehlungen.md), Punkt 1.5 (neu):** Backup-Ziel auf die
+  Storage Box erweitern — vorbereitet, noch nicht umgesetzt.
+- **Kapitel [10](docs/10-zugriff.md):** Abschnitt Hetzner Storage Box, Zugangsdaten-
+  Checkliste ergänzt.
+- **Kapitel [15](docs/15-aenderungshistorie.md):** Eintrag vom 19.09.2026.
+- **README:** offener Punkt 1 ergänzt.
+
+---
+
 ## [2.27.0] — 2026-09-18
 
 Neuer Dienst `pi-probealarm`, eingerichtet nach einem Ausfall, der eine Woche lang

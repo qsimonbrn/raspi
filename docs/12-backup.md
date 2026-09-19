@@ -1,7 +1,8 @@
 # 12 — Backup
 
 *Eingerichtet: 13.08.2026 · Prüfung erweitert: 20.08.2026 · Vaultwarden ergänzt: 23.08.2026 ·
-Second Brain ergänzt: 03.09.2026 · SnapOtter und Stirling PDF ergänzt: 14.09.2026*
+Second Brain ergänzt: 03.09.2026 · SnapOtter und Stirling PDF ergänzt: 14.09.2026 ·
+Hetzner Storage Box ergänzt: 19.09.2026*
 
 Vollständige Beschreibung der Sicherungsstrategie: was gesichert wird, was
 bewusst nicht, wie wiederhergestellt wird — und wo die Lücken bleiben.
@@ -449,6 +450,32 @@ Das ist keine Sicherung, sondern eine Kopie.
 
 Fotos gehören idealerweise an **zwei** Orte — die externe Platte allein schützt nicht
 gegen Feuer oder Diebstahl.
+
+### Hetzner Storage Box — vorbereitet, noch nicht angebunden
+
+*Ergänzt am 19.09.2026.*
+
+Am 19.09.2026 wurde eine Hetzner Storage Box eingerichtet: **BX21, 5 TB,
+`storage-box-1`, `u672490.your-storagebox.de`, Falkenstein (`FSN1-BX2278`),
+12,97 €/Monat.** Sie ist als Ziel für genau die Lücke aus diesem Abschnitt gedacht —
+5 TB decken die 222 GB unter `SSD_Müll` und die 86 GB unter `rclone_bak` ab, anders als
+die 5 GiB der OneDrive-Free-Version.
+
+**Bisher eingerichtet, gemessen am 19.09.2026:**
+
+| Was | Zustand |
+|---|---|
+| SSH-Schlüssel Pi | `/home/simon/.ssh/hetzner_storagebox` (ed25519, ohne Passphrase) unter dem Konto `simon` — eigens für diese Box angelegt, kein wiederverwendeter Schlüssel |
+| SSH-Schlüssel Mac | eigener Schlüssel, gleiches Schema, vom Nutzer selbst erzeugt |
+| Protokolle der Box | SSH-Support an (Port 23), Äußere Erreichbarkeit an, WebDAV aus, SMB zeitweise an für manuellen Finder-Zugriff — wird danach wieder deaktiviert |
+| Zugriff bisher | ausschließlich manuell (SFTP, Finder). **Nicht** in `pi-backup.sh` eingebunden |
+
+**Warum noch keine Anbindung ans automatisierte Backup:** `pi-backup.sh` läuft als
+`root` (siehe Abschnitt 3), der vorhandene Schlüssel gehört aber `simon`. Root bräuchte
+einen eigenen, ebenfalls zweckgebundenen Schlüssel, getrennt vom manuellen Zugang —
+sonst hinge die Automatisierung am persönlichen Zugang eines einzelnen Benutzerkontos.
+Diese Umstellung ist als offener Punkt in [09 — Empfehlungen, Punkt 1.5](09-empfehlungen.md)
+festgehalten.
 
 ---
 
