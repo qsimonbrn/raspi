@@ -40,7 +40,7 @@ services:
     # Fest gepinnt. Ein Update ist eine bewusste Entscheidung mit vorherigem
     # Backup, kein Pull auf :latest. 2.37.10 ist der Stand vom 04.09.2026;
     # das Manifest fuehrt linux/arm64.
-    image: docker.n8n.io/n8nio/n8n:2.37.10
+    image: docker.n8n.io/n8nio/n8n:2.42.6
     container_name: n8n
     logging: *logging
     security_opt:

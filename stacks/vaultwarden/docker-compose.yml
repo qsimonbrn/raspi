@@ -32,7 +32,7 @@ services:
   vaultwarden:
     # Fest gepinnt. Ein Update ist eine bewusste Entscheidung mit vorherigem
     # Backup, kein Pull auf :latest. 1.37.2 ist ab Clients 2026.8.0 zwingend.
-    image: vaultwarden/server:1.37.2
+    image: vaultwarden/server:1.37.4
     container_name: vaultwarden
     logging: *logging
     security_opt:

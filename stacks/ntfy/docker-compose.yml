@@ -36,7 +36,7 @@ x-logging: &logging
 
 services:
   ntfy:
-    image: binwiederhier/ntfy:v2.27.0
+    image: binwiederhier/ntfy:v2.29.0
     container_name: ntfy
     logging: *logging
     security_opt:

@@ -42,7 +42,7 @@ x-logging: &logging
 services:
 
   paperless:
-    image: ghcr.io/paperless-ngx/paperless-ngx:3.0.5
+    image: ghcr.io/paperless-ngx/paperless-ngx:3.3.0
     container_name: paperless
     logging: *logging
     security_opt:
