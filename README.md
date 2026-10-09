@@ -59,24 +59,24 @@ Einstiegsseite. Vierzehn Docker-Container in zehn Stacks; die Compose-Dateien li
 
 | | |
 |---|---|
-| Uptime | 10 Stunden (14.09.2026, Neustart um 05:56) |
-| Load (1/5/15 min) | 1,25 / 0,52 / 0,36 bei 4 Kernen (14.09.2026) |
-| Temperatur | 47,7 °C — nie gedrosselt (`throttled=0x0`, 14.09.2026) |
-| RAM verfügbar | 1,1 von 3,7 GiB (14.09.2026) |
-| Systemdatenträger | **9 % belegt (19 G von 235 G, 14.09.2026)** — von 11 G am 13.09. Die Images wuchsen von 5,9 auf 14,2 GB: SnapOtter 5,44 G und Stirling PDF 2,20 G kamen dazu |
-| Datenspeicher SSD | 36 % belegt (311 G von 916 G, 13.09.2026) |
-| Ausstehende OS-Updates | **3** (13.09.2026) — `tailscale` wird von `unattended-upgrades` nie erfasst (Fremd-Repository), zuletzt am 20.08.2026 von Hand auf 1.102.3 gezogen |
+| Uptime | 8 Tage (09.10.2026, Neustart am 01.10.2026 um 15:42, Kernel 6.12.109) |
+| Load (1/5/15 min) | 1,77 / 0,68 / 0,37 bei 4 Kernen (09.10.2026, vor den Updates) |
+| Temperatur | 44,3 °C (09.10.2026) |
+| RAM verfügbar | 1,3 von 3,7 GiB (09.10.2026); **Swap 511/511 acht Tage nach dem Neustart** — si/so = 0, also Rückstand, kein Auslagern |
+| Systemdatenträger | **11 % belegt (24 G von 235 G, 09.10.2026, alte Images noch vorhanden)** — 9 % (19 G) am 14.09.2026 — von 11 G am 13.09. Die Images wuchsen von 5,9 auf 14,2 GB: SnapOtter 5,44 G und Stirling PDF 2,20 G kamen dazu |
+| Datenspeicher SSD | 36 % belegt (311 G von 916 G, 09.10.2026) |
+| Ausstehende OS-Updates | **7** (09.10.2026: Docker-Pakete und `tailscale`) — `tailscale` wird von `unattended-upgrades` nie erfasst (Fremd-Repository), zuletzt am 20.08.2026 von Hand auf 1.102.3 gezogen |
 | Fehlgeschlagene Dienste | 0 |
-| Backup | täglich, 33 Snapshots (13.09.2026); zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
+| Backup | täglich, 45 Snapshots (09.10.2026); zuletzt am 23.08.2026 als **wiederherstellbar nachgewiesen** (Tresor-Datenbank zurückgeholt und gelesen) |
 | Container-Images | **alle auf feste Versionen oder Digests gepinnt** — vollständig seit 18.08.2026 |
 | Container | **14**, alle mit Logrotation und `no-new-privileges` (13.09.2026) |
 | Fernzugriff | **Tailscale**, nachweislich in Betrieb (18.08.2026) |
 | Verwaltungsoberflächen | **nicht aus dem Heimnetz erreichbar** — nur über Tailscale (`pi-guard`, 18.08.2026) |
 | Automatisierung | eigenes Konto `claude` mit vollständiger Sitzungsaufzeichnung (18.08.2026) |
 | Speicher-Limits | **für alle 18 Container gesetzt** (17 laufen, Stirling PDF ist angehalten), Summe 7.824 von 3.796 MiB — **bewusst überbucht** ([05](docs/05-docker.md)) |
-| Passwort-Tresor | **Vaultwarden 1.37.2** seit 23.08.2026, nur über Tailscale auf Port 8443 ([18](docs/18-vaultwarden.md)) |
+| Passwort-Tresor | **Vaultwarden 1.37.4** (seit 09.10.2026; in Betrieb seit 23.08.2026), nur über Tailscale auf Port 8443 ([18](docs/18-vaultwarden.md)) |
 | Benachrichtigungen | **ntfy stellt seit 25.08.2026 nachweislich aufs iPhone zu** — Alarmkette erstmals geschlossen ([14](docs/14-benachrichtigungen.md)) |
-| Automatisierung | **n8n 2.37.10** seit 07.09.2026, nur über Tailscale auf Port 5678 ([19](docs/19-n8n.md)) |
+| Automatisierung | **n8n 2.42.6** (seit 09.10.2026; in Betrieb seit 07.09.2026), nur über Tailscale auf Port 5678 ([19](docs/19-n8n.md)) |
 | Workbench | **yt-werk 1.0.0** seit 12.09.2026 — **kein Port auf dem Host**, nur für n8n im Docker-Netz `werkbank` erreichbar ([20](docs/20-yt-werk.md)) |
 | Dateiwerkzeuge | **SnapOtter 2.2.0** seit 14.09.2026 auf Port 1349 — **aus dem Heimnetz erreichbar**, drei Container ([22](docs/22-snapotter.md)) |
 | PDF-Werkzeuge | **Stirling PDF 2.14.3** eingerichtet, aber **angehalten** — beide zusammen passen nicht in den Speicher ([21](docs/21-stirling-pdf.md)) |

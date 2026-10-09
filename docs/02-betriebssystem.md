@@ -8,7 +8,7 @@
 |---|---|
 | Distribution | Debian GNU/Linux 12 (bookworm) |
 | Architektur | 64-bit (`aarch64`) |
-| Kernel | `6.12.96+rpt-rpi-v8` |
+| Kernel | `6.12.109+rpt-rpi-v8` (seit dem Neustart am 01.10.2026, 15:42; gemessen 09.10.2026) |
 | Hostname | `raspberrypi` |
 | Zeitzone | Europe/Berlin (CEST) |
 | Zeitsynchronisation | `systemd-timesyncd` |

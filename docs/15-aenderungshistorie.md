@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 19.09.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 09.10.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,45 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 09.10.2026 — Fünf Container aktualisiert: Vaultwarden, Portainer, ntfy, Paperless, n8n
+
+**Anlass:** Bestandsaufnahme am selben Tag. Vaultwarden 1.37.4 schließt sieben Advisories
+(eines High, 8,1), Portainer 2.39.7 einen kritischen Bypass der Docker-Proxy-Autorisierung,
+Paperless 3.1.2 eine Sicherheitslücke (GHSA-2jhj-xqrq-rmrq).
+
+| Dienst | vorher | jetzt |
+|---|---|---|
+| Vaultwarden | 1.37.2 | 1.37.4 |
+| Portainer CE | 2.39.6 LTS | 2.39.8 LTS |
+| ntfy | v2.27.0 | v2.29.0 |
+| Paperless-ngx | 3.0.5 | 3.3.0 (10 Migrationen) |
+| n8n | 2.37.10 | 2.42.6 |
+
+**Vorher:** Backup unter `/mnt/usb-hdd/backup/2026-10-09-vor-update/`, verifiziert
+(Dump-Objekte, Tabellen, Dokumentzahl, `integrity_check` der SQLite-Abzüge, mit
+Negativkontrolle gegen eine leere Datenbank). Release Notes jedes Sprungs gelesen; keine
+Compose-Variable musste sich ändern. Geändert wurde je Stack nur der Image-Tag.
+
+**Nachher je Dienst geprüft:** Health, Fehlerzeilen im Log, HTTP mit Negativkontrolle
+auf einen unbenutzten Port, Datenbestand gegen den Stand im Backup. Details in
+[05 — Docker](05-docker.md). `pi-guard` danach unverändert mit vier Sperrregeln.
+
+**Nebenbei richtiggestellt:** Der Neustart, der seit dem 16.09.2026 als ausstehend
+geführt wurde, ist am **01.10.2026 um 15:42** erfolgt (`who -b`); Kernel
+`6.12.109+rpt-rpi-v8`, kein `reboot-required` mehr. Der Swap stand acht Tage später
+wieder auf 511/511, bei si/so = 0.
+
+**Zwischenfall beim Backup:** Der erste Lauf des Backup-Skripts als `root` legte das
+Exportverzeichnis als `root:root` an; der Paperless-Container durfte nicht hineinschreiben
+und brach ab. Halbes Ergebnis entfernt, Verzeichnis per `chown --reference` auf den
+Eigentümer des Exportordners gesetzt, zweiter Lauf fehlerfrei.
+
+**Bewusst nicht gemacht:** homepage v2, Stirling PDF 3.x, Bichon 2.x (alle Major), die
+alten Images (Rückfallebene, [09, 3.19](09-empfehlungen.md)), die sieben OS-Updates
+(Docker-Engine startet alle Container neu).
 
 ---
 

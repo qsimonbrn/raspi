@@ -1,6 +1,6 @@
 # 13 — Paperless-ngx
 
-*Eingerichtet: 13.08.2026 · Aktualisiert: 16.08.2026 · **Version 3.0.5***
+*Eingerichtet: 13.08.2026 · Aktualisiert: 16.08.2026 · **Version 3.3.0** (seit 09.10.2026)*
 
 Dokumentenarchiv mit Texterkennung. Dieses Kapitel beschreibt, wie die Einrichtung
 funktioniert, wie Dokumente hineinkommen und was bewusst so und nicht anders

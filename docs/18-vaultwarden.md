@@ -16,7 +16,7 @@ Er läuft seit dem 23.08.2026 und ist **ausschließlich über das Tailnet erreic
 | | |
 |---|---|
 | Adresse | `https://raspberrypi.tailf372ec.ts.net:8443` |
-| Image | `vaultwarden/server:1.37.2` (fest gepinnt) |
+| Image | `vaultwarden/server:1.37.4` (fest gepinnt, seit 09.10.2026) |
 | Stack | `stacks/vaultwarden/` |
 | Datenverzeichnis | `/mnt/usb-hdd/vaultwarden` (Modus 700, `root`) |
 | Portbindung | `127.0.0.1:8222` — **nicht** auf allen Schnittstellen |

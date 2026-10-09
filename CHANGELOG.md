@@ -9,6 +9,24 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.29.0] — 2026-10-09
+
+### Geändert
+- `05`, `13`, `18`, `19`, `README`: Versionen nach dem Update-Lauf vom 09.10.2026
+  (Vaultwarden 1.37.4, Portainer 2.39.8, ntfy v2.29.0, Paperless 3.3.0, n8n 2.42.6),
+  neuer Abschnitt „Update-Lauf am 09.10.2026" in `05`.
+- `README`: „Zustand auf einen Blick" mit Messwerten vom 09.10.2026.
+- `15`: Eintrag zum Update-Lauf.
+- Bestandsaufnahmen vom 09.10.2026, 17:57 (vor) und 18:27 (nach den Updates).
+
+### Richtiggestellt
+- `02`, `README`: Der als ausstehend geführte Neustart ist am 01.10.2026 erfolgt, Kernel
+  6.12.109 (gemessen mit `who -b` und `uname -r`, 09.10.2026).
+
+### Neu
+- `09`: 3.19 alte Images entfernen · 3.20 Pi-hole aktiviert seine eigene Gravity-Zeile
+  wieder · 3.21 Bichon hat jetzt Versions-Tags.
+
 ## [2.28.0] — 2026-09-19
 
 Hetzner Storage Box als künftiges Backup-Ziel vorbereitet: eigene SSH-Schlüssel für

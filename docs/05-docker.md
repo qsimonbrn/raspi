@@ -1,6 +1,6 @@
 # 05 — Docker
 
-*Erfasst: 18.08.2026 · Verbrauchswerte nachgemessen: 20.08.2026 · Bestand nachgemessen: 14.09.2026*
+*Erfasst: 18.08.2026 · Verbrauchswerte nachgemessen: 20.08.2026 · Bestand nachgemessen: 14.09.2026 · Versionen: 09.10.2026*
 
 ## Überblick
 
@@ -18,18 +18,18 @@
 
 | Container | Image | Port (Host) | Zweck | Restart-Policy |
 |---|---|---|---|---|
-| **paperless** | `…/paperless-ngx:3.0.5` | 8000 🔒 | Dokumentenarchiv mit OCR | `always` |
+| **paperless** | `…/paperless-ngx:3.3.0` | 8000 🔒 | Dokumentenarchiv mit OCR | `always` |
 | paperless-paperless-db-1 | `postgres:15.19` | — (intern) | Datenbank für Paperless | `always` |
 | paperless-paperless-redis-1 | `redis:7.4` | — (intern) | Task-Queue für Paperless | `always` |
 | **bichon** | `rustmailer/bichon@sha256:5766707…` | 15630 🔒 | E-Mail-Archivierung | `unless-stopped` |
-| **portainer** | `portainer/portainer-ce:2.39.6` | 9000, 9443 🔒 | Docker-Verwaltung | `always` |
+| **portainer** | `portainer/portainer-ce:2.39.8` | 9000, 9443 🔒 | Docker-Verwaltung | `always` |
 | **homepage** | `…/gethomepage/homepage:v1.13.2` | 3000 | Dashboard mit Live-Status | `unless-stopped` |
-| **ntfy** | `binwiederhier/ntfy:v2.27.0` | 2586 | Push-Benachrichtigungen | `unless-stopped` |
+| **ntfy** | `binwiederhier/ntfy:v2.29.0` | 2586 | Push-Benachrichtigungen | `unless-stopped` |
 | homepage-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Homepage | `unless-stopped` |
-| **vaultwarden** | `vaultwarden/server:1.37.2` | 8222 nur auf `127.0.0.1` 🔒 | Passwort-Tresor, siehe [18](18-vaultwarden.md) | `unless-stopped` |
+| **vaultwarden** | `vaultwarden/server:1.37.4` | 8222 nur auf `127.0.0.1` 🔒 | Passwort-Tresor, siehe [18](18-vaultwarden.md) | `unless-stopped` |
 | **diun** | `crazymax/diun:4.33.0` | — (keiner) | Meldet neue Image-Versionen, aktualisiert nicht | `unless-stopped` |
 | diun-dockerproxy | `…/docker-socket-proxy:v0.5.0` | — (intern) | Gefilterter, nur lesender Docker-Zugriff für Diun | `unless-stopped` |
-| **n8n** | `docker.n8n.io/n8nio/n8n:2.37.10` | 5678 🔒 | Automatisierungsserver (Workflows), siehe [19](19-n8n.md) | `unless-stopped` |
+| **n8n** | `docker.n8n.io/n8nio/n8n:2.42.6` | 5678 🔒 | Automatisierungsserver (Workflows), siehe [19](19-n8n.md) | `unless-stopped` |
 | **insta-triage** | `insta-triage:1.0.0` (lokal gebaut, Basis `python:3.12.8-slim-bookworm`) | 8080 🔒 | Instagram-Abos sichten und sortieren, siehe [Stack-README](../stacks/insta-triage/README.md) | `unless-stopped` |
 | **yt-werk** | `yt-werk:1.0.0` (lokal gebaut, Basis `python:3.12.8-slim-bookworm`, `yt-dlp` gepinnt) | **— keiner** | Holt Playlists, Metadaten und Transkripte von YouTube für die Workbench, siehe [20](20-yt-werk.md) | `unless-stopped` |
 | **snapotter** | `snapotter/snapotter:2.2.0` | **1349 — offen im Heimnetz** | Dateiwerkzeuge für Bild, Video, Audio, PDF, siehe [22](22-snapotter.md) | `unless-stopped` |
@@ -347,6 +347,32 @@ Stand aller Images am 18.08.2026 gegen die jeweils neueste Veröffentlichung gep
 Paperless 3.0.5, Portainer 2.39.6 LTS, ntfy v2.27.0, Postgres 15.19, Redis 7.4 und
 docker-socket-proxy v0.5.0 sind **jeweils die aktuelle Fassung**. Ein Update-Lauf war
 nicht nötig.
+
+### Update-Lauf am 09.10.2026
+
+Über den Skill `docker-updates`, vorher verifiziertes Backup unter
+`/mnt/usb-hdd/backup/2026-10-09-vor-update/` (Paperless: Custom-Dump mit 744 Objekten,
+SQL-Dump mit 74 Tabellen, Export mit 26 von 26 Dokumenten; SQLite-Abzüge von n8n,
+Vaultwarden und ntfy mit `integrity_check = ok`; Portainer-Volume als Tar). Release
+Notes je Sprung gelesen; keiner enthält einen Breaking Change, der dieses Setup trifft.
+
+| Image | vorher | jetzt | Nachweis nach dem Update |
+|---|---|---|---|
+| `vaultwarden/server` | 1.37.2 | **1.37.4** | `healthy`, `/alive` 200 lokal und über Tailnet, 1 Konto und 23 Einträge wie vorher. Schließt u. a. GHSA-69q9-v8p6-xvx3 (High, 8,1) |
+| `portainer-ce` | 2.39.6 LTS | **2.39.8 LTS** | läuft, `/api/system/status` meldet 2.39.8. 2.39.7 schloss einen kritischen Bypass der Docker-Proxy-Autorisierung |
+| `ntfy` | v2.27.0 | **v2.29.0** | `healthy`, mit Token 200, ohne 403, `upstream-base-url` im laufenden Container vorhanden, über Tailnet 200 |
+| `paperless-ngx` | 3.0.5 | **3.3.0** | `healthy` nach 270 s, 10 Migrationen fehlerfrei, keine offene Migration, 26 Dokumente, 10 Tags, 11 Korrespondenten wie im Export vorher |
+| `n8n` | 2.37.10 | **2.42.6** | `healthy` nach 45 s, `/healthz` 200, 2 Workflows (beide aktiv), 1 Credential, Eigentümerkonto mit E-Mail wie vorher; `yt-werk` aus n8n erreichbar |
+
+**Bewusst nicht aktualisiert:** `homepage` (v2 mit Breaking Change bei der Anmeldung),
+`stirling-pdf` (3.x, Major, Container angehalten), `bichon` (2.x, Major, nicht änderbares
+Verschlüsselungspasswort). `postgres:15.19` ist die neueste 15er-Fassung (Docker Hub,
+09.10.2026). Die gleitenden Tags `redis:7.4`, `postgres:17-alpine` und `redis:8-alpine`
+wurden nicht neu gezogen.
+
+**Die alten Images bleiben vorerst liegen** — sie sind die schnellste Rückfallebene.
+Die Behauptungsprüfung meldet deshalb Wachstum (Images +28 %, Root 19 → 24 GB). Aufräumen
+nach einigen unauffälligen Tagen, siehe [09, 3.19](09-empfehlungen.md).
 
 ### Der Update-Pfad von Paperless-ngx
 

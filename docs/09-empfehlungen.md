@@ -555,6 +555,33 @@ eine zählende `nftables`-Regel für ausgehenden Verkehr an öffentliche Adresse
 
 ---
 
+### 3.19 Alte Images nach dem Update vom 09.10.2026 entfernen — 🟡 Aufräumen
+
+Nach dem Update-Lauf liegen die Vorgänger von Paperless (3.0.5), n8n (2.37.10),
+Vaultwarden, Portainer und ntfy noch lokal. Sie sind die schnellste Rückfallebene und
+bleiben deshalb einige Tage. Danach `sudo docker image prune -a`. Es entfernt nur
+Images, die kein Container benutzt; auch ein angehaltener oder nur erzeugter Container
+wie Stirling PDF schützt sein Image. Vorher mit `--filter` oder einer Probeliste prüfen.
+**Aufwand: 5 Minuten, ab etwa dem 16.10.2026.**
+
+### 3.20 `cron.d-pihole`: Pi-hole schaltet seinen eigenen Gravity-Lauf wieder ein — 🟡 offen
+
+Gemessen am 09.10.2026: Das Pi-hole-Update vom 01.10.2026 hat `/etc/cron.d/pihole` neu
+geschrieben und dabei die Gravity-Zeile **wieder aktiviert** (sonntags 04:43), die seit
+dem 20.08.2026 bewusst auskommentiert ist, weil `pi-gravity.timer` das täglich mit
+Meldung erledigt. Seitdem läuft Gravity zusätzlich wöchentlich, unüberwacht, und
+`pi-abgleich` endet täglich mit Code 1. **Entscheidung steht aus:** Neufassung ins
+Repository übernehmen oder Zeile wieder auskommentieren. Langfristig gehört die Datei im
+Abgleich gesondert behandelt, damit jedes Pi-hole-Update keinen täglichen Fehlalarm
+erzeugt.
+
+### 3.21 Bichon auf einen Versions-Tag pinnen — 🟡 offen
+
+Bis August 2026 vergab das Projekt keine Versions-Tags, deshalb steht ein Digest in der
+Compose-Datei. Am 09.10.2026 gemessen: Es gibt jetzt Releases (2.0.2 bis 2.1.1). Das
+laufende Image stammt von 12/2025. Vor einem Update den Pfad lesen — das
+Verschlüsselungspasswort ist nicht änderbar, ohne das Archiv unlesbar zu machen.
+
 ### 3.4 Aufräumen
 
 | Maßnahme | Aufwand | Nutzen |
