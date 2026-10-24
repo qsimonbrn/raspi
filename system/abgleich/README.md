@@ -48,5 +48,12 @@ Zeile ans `manifest.tsv` anhaengen (Spalten durch **Tabulator** getrennt):
 repo/pfad	/system/pfad	root:root	644	systemd
 ```
 
-Letzte Spalte: `systemd` (loest `daemon-reload` aus), `sudoers` (prueft mit
+Fuenfte Spalte: `systemd` (loest `daemon-reload` aus), `sudoers` (prueft mit
 `visudo -c`) oder `keiner`.
+
+Optionale sechste Spalte (seit 25.10.2026): `exakt` (Vorgabe, wenn leer) oder
+`ohne-aktiv:<Muster>`. Mit `ohne-aktiv` wird der Inhalt nicht verglichen, sondern
+nur geprueft, dass keine **nicht auskommentierte** Zeile das Muster (`grep -E`)
+enthaelt. Gedacht fuer Dateien, die einem Paket gehoeren und bei jedem Update neu
+geschrieben werden -- derzeit nur `/etc/cron.d/pihole`. `install` und `pull`
+ueberspringen solche Paare; sie werden von Hand bearbeitet.

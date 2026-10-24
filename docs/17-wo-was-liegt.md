@@ -1,6 +1,6 @@
 # 17 — Wo was liegt
 
-*Erfasst: 18.08.2026 · Rechte nachgemessen und bereinigt: 14.09.2026*
+*Erfasst: 18.08.2026 · Rechte nachgemessen und bereinigt: 14.09.2026 · Sonderregel `cron.d-pihole` 25.10.2026*
 
 Dieses Kapitel beantwortet eine Frage, die sich sonst über ein halbes Dutzend Kapitel
 verteilt: **Welche Datei ist das Original, welche nur eine Kopie?** Wer das verwechselt,
@@ -140,6 +140,11 @@ ausschließlich `/etc/sudoers.d`.
    Anpassung überschrieben hat. Bei allen anderen Zeilen der Tabelle ist eine
    Abweichung ein Versehen — bei dieser ist sie der erwartete Normalfall nach einem
    Pi-hole-Update. Was dann zu tun ist, steht in `system/pihole/README.md`.
+   **Seit 25.10.2026 wird sie deshalb nicht mehr exakt verglichen**, sondern nur
+   noch darauf geprüft, dass keine aktive `updateGravity`-Zeile drinsteht
+   (Manifest-Spalte 6, `ohne-aktiv:updateGravity`). Der exakte Vergleich hatte vom
+   02. bis 24.10.2026 täglich angeschlagen, weil Pi-hole bei jedem Update auch die
+   Uhrzeit des `updatechecker` neu setzt.
 
 ---
 

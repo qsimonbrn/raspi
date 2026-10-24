@@ -22,13 +22,21 @@ die Zeile im Cronjob ist auskommentiert.
 ## Zwei Sicherungen gegen den stillen Rueckfall
 
 **1. Der Abgleich meldet es.** `/etc/cron.d/pihole` steht im `manifest.tsv` des
-Abgleichs. Schreibt ein Core-Update die Datei neu, weicht sie von der Fassung hier
-ab, und `pi-abgleich` meldet das am naechsten Morgen um 09:15 ueber ntfy. Dann:
+Abgleichs, seit 25.10.2026 mit der Sonderregel `ohne-aktiv:updateGravity`: Gemeldet
+wird nur, wenn eine **aktive** `updateGravity`-Zeile in der Datei steht. Bis dahin
+wurde exakt verglichen -- und weil Pi-hole bei jedem Update auch die Uhrzeit des
+`updatechecker` neu wuerfelt, schlug der Abgleich vom 02. bis 24.10.2026 taeglich an,
+samt Notruf ueber ntfy.sh. Ein Alarm, der drei Wochen lang jeden Tag kommt, liest
+niemand mehr. Wenn er jetzt kommt, dann:
 
 ```bash
-sudo pi-abgleich.sh diff system/pihole/cron.d-pihole   # ansehen
-sudo pi-abgleich.sh install system/pihole/cron.d-pihole  # zurueckschreiben
+sudo pi-abgleich.sh diff cron.d-pihole        # zeigt die aktive Zeile
+sudo sed -i -E 's|^([^#].*updateGravity.*)$|#\1|' /etc/cron.d/pihole   # auskommentieren
+sudo cp /etc/cron.d/pihole /home/simon/raspi/system/pihole/cron.d-pihole  # Stand festhalten
 ```
+
+`install` ist fuer dieses Paar bewusst gesperrt: Es wuerde Pi-holes neue Fassung mit
+einer alten ueberschreiben.
 
 Ein doppelter Lauf waere uebrigens harmlos: Kaeme die Cron-Zeile zurueck, liefe
 `updateGravity` sonntags zweimal. Das kostet 15 Sekunden, nichts weiter. Gefaehrlich

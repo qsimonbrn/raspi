@@ -61,18 +61,34 @@ notify() {  # $1=Titel  $2=Text  $3=Prioritaet  $4=Tags
 }
 
 # --- Manifest einlesen -------------------------------------------------------
-# Liefert Zeilen:  repo_pfad \t system_pfad \t besitzer \t modus \t nachlauf
+# Liefert Zeilen:  repo_pfad \t system_pfad \t besitzer \t modus \t nachlauf \t vergleich
 zeilen() {
-  grep -vE '^\s*(#|$)' "$MANIFEST" | while IFS=$'\t' read -r r s o m n; do
+  grep -vE '^\s*(#|$)' "$MANIFEST" | while IFS=$'\t' read -r r s o m n v; do
     [ -n "${1:-}" ] && [[ "$r" != *"$1"* ]] && continue
-    printf '%s\t%s\t%s\t%s\t%s\n' "$r" "$s" "$o" "$m" "$n"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$r" "$s" "$o" "$m" "$n" "${v:-exakt}"
   done
 }
 
+# Sonderregel "ohne-aktiv:<Muster>" (seit 25.10.2026, fuer /etc/cron.d/pihole):
+# Die Datei gehoert Pi-hole und wird bei jedem Update neu geschrieben, mit
+# zufaelliger Uhrzeit fuer den updatechecker. Ein exakter Vergleich schlaegt
+# deshalb nach jedem Update an -- 23 Tage lang taeglich, bis niemand mehr
+# hinsah. Geprueft wird nur noch, worauf es ankommt: dass keine AKTIVE
+# (nicht auskommentierte) Zeile das Muster enthaelt.
+regel_muster() { case "$1" in ohne-aktiv:*) echo "${1#ohne-aktiv:}";; *) echo "";; esac; }
+aktive_treffer() {  # $1=datei $2=muster
+  grep -nE "$2" "$1" 2>/dev/null | grep -vE '^[0-9]+:[[:space:]]*#'
+}
+
 # Zustand eines Paares: identisch | abweichend | repo-fehlt | system-fehlt
-zustand() {  # $1=repo_pfad $2=system_pfad
+zustand() {  # $1=repo_pfad $2=system_pfad $3=vergleich
   [ -e "$REPO/$1" ] || { echo "repo-fehlt"; return; }
   [ -e "$2" ]       || { echo "system-fehlt"; return; }
+  local mu; mu="$(regel_muster "${3:-exakt}")"
+  if [ -n "$mu" ]; then
+    if aktive_treffer "$2" "$mu" >/dev/null; then echo "regel-verletzt"; else echo "identisch"; fi
+    return
+  fi
   if diff -q "$REPO/$1" "$2" >/dev/null 2>&1; then echo "identisch"; else echo "abweichend"; fi
 }
 
@@ -101,9 +117,9 @@ bestaetigen() {  # $1=Frage
 cmd_list() {
   printf '%-40s %-48s %-13s %s\n' "REPOSITORY" "INSTALLIERT" "INHALT" "RECHTE"
   printf -- '-%.0s' {1..120}; echo
-  zeilen "${1:-}" | while IFS=$'\t' read -r r s o m n; do
+  zeilen "${1:-}" | while IFS=$'\t' read -r r s o m n v; do
     local z rr
-    z="$(zustand "$r" "$s")"
+    z="$(zustand "$r" "$s" "$v")"
     rechte_ok "$s" "$o" "$m" && rr="ok" || rr="abweichend ($(stat -c '%U:%G %a' "$s" 2>/dev/null || echo 'nicht da'))"
     printf '%-40s %-48s %-13s %s\n' "$r" "$s" "$z" "$rr"
   done
@@ -112,8 +128,8 @@ cmd_list() {
 cmd_check() {
   local melden=0 abw=0 liste=""
   [ "${1:-}" = "--melden" ] && melden=1
-  while IFS=$'\t' read -r r s o m n; do
-    local z; z="$(zustand "$r" "$s")"
+  while IFS=$'\t' read -r r s o m n v; do
+    local z; z="$(zustand "$r" "$s" "$v")"
     if [ "$z" != "identisch" ]; then
       abw=$((abw+1)); liste="${liste}${r} (${z})\n"
     elif ! rechte_ok "$s" "$o" "$m"; then
@@ -133,8 +149,13 @@ cmd_check() {
 }
 
 cmd_diff() {
-  zeilen "${1:-}" | while IFS=$'\t' read -r r s o m n; do
-    [ "$(zustand "$r" "$s")" = "abweichend" ] || continue
+  zeilen "${1:-}" | while IFS=$'\t' read -r r s o m n v; do
+    local z; z="$(zustand "$r" "$s" "$v")"
+    if [ "$z" = "regel-verletzt" ]; then
+      echo "===== $s  (Regel $v verletzt, aktive Zeilen:)"
+      aktive_treffer "$s" "$(regel_muster "$v")" | sed 's/^/      /'; echo; continue
+    fi
+    [ "$z" = "abweichend" ] || continue
     echo "===== $r  <->  $s"
     echo "      < Repository   > installiert"
     diff "$REPO/$r" "$s" | sed 's/^/      /'
@@ -144,9 +165,12 @@ cmd_diff() {
 
 cmd_kopieren() {  # $1=install|pull  $2=Muster
   local richtung="$1" muster="${2:-}" n=0
-  zeilen "$muster" | while IFS=$'\t' read -r r s o m nl; do
-    local z; z="$(zustand "$r" "$s")"
+  zeilen "$muster" | while IFS=$'\t' read -r r s o m nl v; do
+    local z; z="$(zustand "$r" "$s" "$v")"
     [ "$z" = "identisch" ] && rechte_ok "$s" "$o" "$m" && continue
+    if [ -n "$(regel_muster "$v")" ]; then
+      echo "===== $r: Sonderregel $v -- nicht automatisch kopierbar, von Hand bearbeiten"; continue
+    fi
     echo "===== $r  <->  $s   ($z)"
     if [ "$z" = "abweichend" ]; then diff "$REPO/$r" "$s" | sed 's/^/      /'; fi
     if [ "$richtung" = "install" ]; then

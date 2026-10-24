@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 09.10.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 25.10.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -16,6 +16,31 @@ geänderte Ports und Zugriffswege, Sicherheitsentscheidungen, Umbauten an Speich
 Backup.
 
 **Was nicht:** Tests, Fehlersuche ohne Ergebnis, reine Abfragen, Container-Neustarts.
+
+---
+
+## 25.10.2026 — Pi-holes Gravity-Cron wieder aus, Abgleich ohne Dauer-Fehlalarm
+
+**Anlass:** `pi-abgleich` meldete seit dem 02.10.2026 täglich eine Abweichung in
+`/etc/cron.d/pihole`, mit Priorität `high` und damit jeden Tag auch über den Notruf auf
+ntfy.sh. Das Pi-hole-Update vom 01.10. hatte den wöchentlichen Gravity-Lauf (So 04:43)
+wieder eingeschaltet; zusätzlich würfelt Pi-hole bei jedem Update die Uhrzeit des
+`updatechecker` neu, sodass ein exakter Vergleich nach jedem Update anschlägt.
+
+| | |
+|---|---|
+| `/etc/cron.d/pihole` | Gravity-Zeile auskommentiert; `pi-gravity.timer` bleibt der einzige Lauf |
+| Repository | Pi-holes Neufassung (mit auskommentierter Zeile) übernommen |
+| `pi-abgleich.sh` | neue Manifest-Spalte 6 `vergleich`; für dieses Paar `ohne-aktiv:updateGravity` |
+| Sicherungen | `/mnt/usb-hdd/backups-manuell/cron.d-pihole.bak-20261025`, `/usr/local/sbin/pi-abgleich.sh.bak-20261025` |
+
+**Nachgewiesen:** Abgleich über systemd 28/28, Exit 0. Negativkontrolle mit einer Kopie,
+in der die Zeile aktiv ist: `regel-verletzt`, `diff` zeigt die Zeile, `install` verweigert.
+Gegenprobe, dass der exakte Vergleich für alle anderen Paare unverändert greift:
+`abweichend`.
+
+**Entscheidung:** Simon, 25.10.2026 (Option A von dreien; verworfen: Neufassung samt
+aktiver Zeile übernehmen, oder nur auskommentieren ohne Abgleich-Änderung).
 
 ---
 

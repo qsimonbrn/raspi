@@ -9,6 +9,19 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.30.0] — 2026-10-25
+
+### Behoben
+- `09` 3.20 erledigt: Pi-holes Gravity-Cron wieder auskommentiert; der Abgleich hatte
+  23 Tage lang täglich mit Priorität `high` gemeldet.
+
+### Geändert
+- `17`, `15`, `system/abgleich/README.md`, `system/pihole/README.md`: neue
+  Manifest-Spalte 6 (`ohne-aktiv:<Muster>`) und das geänderte Vorgehen nach einem
+  Pi-hole-Update.
+
+---
+
 ## [2.29.0] — 2026-10-09
 
 ### Geändert

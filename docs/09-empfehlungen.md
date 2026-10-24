@@ -564,7 +564,18 @@ Images, die kein Container benutzt; auch ein angehaltener oder nur erzeugter Con
 wie Stirling PDF schützt sein Image. Vorher mit `--filter` oder einer Probeliste prüfen.
 **Aufwand: 5 Minuten, ab etwa dem 16.10.2026.**
 
-### 3.20 `cron.d-pihole`: Pi-hole schaltet seinen eigenen Gravity-Lauf wieder ein — 🟡 offen
+### 3.20 `cron.d-pihole`: Pi-hole schaltet seinen eigenen Gravity-Lauf wieder ein — ✅ erledigt am 25.10.2026
+
+> **Umgesetzt:** Gravity-Zeile wieder auskommentiert, Pi-holes Neufassung ins Repository
+> übernommen, und der Abgleich prüft die Datei seither nur noch auf eine **aktive**
+> `updateGravity`-Zeile (Sonderregel `ohne-aktiv`, siehe [17](17-wo-was-liegt.md)).
+> Nachgewiesen: 28/28 über systemd, Exit 0; Negativkontrolle mit aktiver Zeile meldet
+> `regel-verletzt`, ein exakt verglichenes Paar mit anderem Inhalt weiterhin
+> `abweichend`. Bis dahin hatte der Abgleich 23 Tage lang täglich mit Priorität `high`
+> gemeldet — und damit auch täglich den Notruf über ntfy.sh ausgelöst.
+
+*Ursprünglicher Befund:*
+
 
 Gemessen am 09.10.2026: Das Pi-hole-Update vom 01.10.2026 hat `/etc/cron.d/pihole` neu
 geschrieben und dabei die Gravity-Zeile **wieder aktiviert** (sonntags 04:43), die seit
