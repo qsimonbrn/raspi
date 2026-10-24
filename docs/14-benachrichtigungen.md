@@ -363,9 +363,18 @@ sudo docker logs ntfy
 | Port | 2586 → 80 im Container |
 | Konfiguration | `stacks/ntfy/server.yml` |
 | Daten | `/mnt/usb-hdd/ntfy/` (Nachrichten-Zwischenspeicher, Benutzerdatenbank) |
+| Vorhaltezeit | `cache-duration: "168h"` — sieben Tage (seit 25.10.2026, vorher 24 h) |
+
+**Warum sieben Tage:** Mit 24 Stunden waren am 18.09.2026 sechs Tage Meldungen
+endgültig verloren, weil das iPhone eine Woche lang nicht im Tailnet war. Eine Meldung,
+die nicht zugestellt werden kann, muss mindestens so lange abrufbar bleiben, wie ein
+Ausfall unbemerkt dauern kann — der Probealarm (Abschnitt 10) deckt höchstens vier Tage
+ab. Die Cache-Datenbank wog am 25.10.2026 69 KB; das Siebenfache ist bedeutungslos.
+Die Änderung ist an Ort und Stelle geschrieben (Inode unverändert), weil `server.yml`
+als einzelne Datei im Bind-Mount hängt.
 
 Der Nachrichten-Zwischenspeicher wird **nicht** gesichert — er enthält nur
-Meldungen der letzten 24 Stunden. Die Benutzerdatenbank ist ebenfalls schnell neu
+Meldungen der letzten sieben Tage. Die Benutzerdatenbank ist ebenfalls schnell neu
 angelegt; wichtiger ist, dass `server.yml` und die Compose-Datei im Git liegen.
 
 

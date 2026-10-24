@@ -19,6 +19,17 @@ Backup.
 
 ---
 
+## 25.10.2026 — ntfy hält Meldungen sieben Tage statt 24 Stunden vor
+
+`stacks/ntfy/server.yml`: `cache-duration` von `"24h"` auf `"168h"`, an Ort und Stelle
+geschrieben (Inode 258321 unverändert), danach `compose restart`. **Nachgewiesen:** Wert im
+laufenden Container gelesen, `healthy` nach 6 s, die Meldungen vom 24.10. überstanden den
+Neustart, anonym weiterhin 403, `pi-guard` unverändert. **Noch offen:** Dass die längere
+Haltedauer greift, zeigt sich erst nach 24 Stunden — die Backup-Meldung vom 24.10.2026
+03:25 muss am 25.10. nach 03:25 noch abrufbar sein. **Entscheidung:** Simon, 25.10.2026.
+
+---
+
 ## 25.10.2026 — System-logrotate auf 00:30 verschoben
 
 **Anlass:** `logrotate.service` stand auf `failed` (16.10. und 25.10.2026, Fehler in

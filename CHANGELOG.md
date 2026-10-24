@@ -12,6 +12,8 @@ Datumsformat: JJJJ-MM-TT
 ## [2.30.0] — 2026-10-25
 
 ### Behoben
+- `14`, `09` 3.18: ntfy-Cache von 24 h auf 168 h — sechs verlorene Tage im September
+  sollen sich nicht wiederholen.
 - `logrotate.service` endete `failed`: System-Lauf auf 00:30 verschoben, weg von
   Pi-holes `flush once` um 00:00 (`15`, `17`, `system/pihole/README.md`).
 - `09` 3.20 erledigt: Pi-holes Gravity-Cron wieder auskommentiert; der Abgleich hatte

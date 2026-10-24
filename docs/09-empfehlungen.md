@@ -551,7 +551,8 @@ eine zählende `nftables`-Regel für ausgehenden Verkehr an öffentliche Adresse
 > **Was damit NICHT gelöst ist:** Der Cache von ntfy hält nur **24 Stunden** vor. Wer
 > länger als einen Tag nicht hinsieht, verliert die Meldungen endgültig — am 18.09.2026
 > waren sechs Tage unwiederbringlich weg. `cache-duration: "168h"` wäre ein
-> Fünf-Minuten-Eingriff und kostet nur Platz auf der SSD. **Noch nicht umgesetzt.**
+> Fünf-Minuten-Eingriff und kostet nur Platz auf der SSD. ~~Noch nicht umgesetzt.~~
+> **✅ Umgesetzt am 25.10.2026**, siehe [14](14-benachrichtigungen.md), Abschnitt 8.
 
 ---
 
