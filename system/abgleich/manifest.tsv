@@ -46,3 +46,4 @@ system/journald/10-limits.conf	/etc/systemd/journald.conf.d/10-limits.conf	root:
 system/benachrichtigungen/pi-probealarm.sh	/usr/local/sbin/pi-probealarm.sh	root:root	750	keiner
 system/benachrichtigungen/pi-probealarm.service	/etc/systemd/system/pi-probealarm.service	root:root	644	systemd
 system/benachrichtigungen/pi-probealarm.timer	/etc/systemd/system/pi-probealarm.timer	root:root	644	systemd
+system/pihole/logrotate.timer-override.conf	/etc/systemd/system/logrotate.timer.d/override.conf	root:root	644	systemd

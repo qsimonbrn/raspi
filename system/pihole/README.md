@@ -7,6 +7,22 @@ Zwei Dinge, die Pi-hole sonst bei jedem Core-Update ueberschreibt.
 | `pi-gravity.sh` | `/usr/local/sbin/pi-gravity.sh` | Aktualisiert die Blocklisten, meldet Fehlschlaege und Einbrueche ueber ntfy |
 | `pi-gravity.service` / `.timer` | `/etc/systemd/system/` | Taeglich 03:02 |
 | `cron.d-pihole` | `/etc/cron.d/pihole` | Pi-holes eigener Cronjob, `updateGravity`-Zeile auskommentiert |
+| `logrotate.timer-override.conf` | `/etc/systemd/system/logrotate.timer.d/override.conf` | Verschiebt den System-logrotate auf 00:30, weg von Pi-holes `flush once` um 00:00 |
+
+## Warum logrotate um 00:30 laeuft
+
+Pi-holes Cronjob `pihole flush once` (taeglich 00:00) ruft `logrotate --force` mit
+eigener State-Datei auf `/etc/logrotate.d/pihole` auf. Dieselbe Datei bearbeitet der
+System-`logrotate.timer`, der ebenfalls um 00:00 lief. Beide starteten in derselben
+Sekunde und benannten sich gegenseitig die Dateien weg: seit 15.09.2026 sieben Naechte
+mit Fehlern, zweimal endete `logrotate.service` als `failed` -- was auch echte Fehler
+bei apt-, Samba- oder unattended-upgrades-Logs verdeckt haette.
+
+Seit 25.10.2026 laeuft der System-Lauf um 00:30 (`AccuracySec=1min`, sonst schiebt
+systemd ihn bis zu einer Stunde). **Bewusst gewaehlter Preis:** Die Pi-hole-Logs
+werden doppelt rotiert, von `pihole.log` bleiben effektiv etwa 2,5 statt 5 Tage.
+Verworfen: die `flush once`-Zeile auskommentieren (sauberer, aber wieder ein Eingriff
+in Pi-holes Datei).
 
 ## Warum ein eigener Timer
 

@@ -19,6 +19,28 @@ Backup.
 
 ---
 
+## 25.10.2026 — System-logrotate auf 00:30 verschoben
+
+**Anlass:** `logrotate.service` stand auf `failed` (16.10. und 25.10.2026, Fehler in
+sieben Nächten seit 15.09.). Gemessen: Um 00:00:01 starteten Pi-holes `pihole flush once`
+(`logrotate --force`, eigene State-Datei `/var/lib/logrotate/pihole`) und der
+System-`logrotate.timer` gleichzeitig auf `/etc/logrotate.d/pihole`.
+
+| | |
+|---|---|
+| Neu | `/etc/systemd/system/logrotate.timer.d/override.conf`: `OnCalendar=*-*-* 00:30:00`, `AccuracySec=1min` |
+| Repository | `system/pihole/logrotate.timer-override.conf`, Manifest-Zeile (29 Paare) |
+| Preis | Pi-hole-Logs werden doppelt rotiert, `pihole.log` hält effektiv ~2,5 Tage |
+
+**Nachgewiesen:** Timer zeigt 00:30, Handlauf `Result=success`, keine `failed`-Units,
+Abgleich 29/29. **Noch offen:** Der eigentliche Nachweis ist die erste Nacht, in der beide
+laufen (Mo 26.10., 00:00 und 00:30) — erst dann ist das Rennen nachweislich weg.
+
+**Entscheidung:** Simon, 25.10.2026 (Option B; verworfen: `flush once` auskommentieren,
+nichts tun).
+
+---
+
 ## 25.10.2026 — Pi-holes Gravity-Cron wieder aus, Abgleich ohne Dauer-Fehlalarm
 
 **Anlass:** `pi-abgleich` meldete seit dem 02.10.2026 täglich eine Abweichung in

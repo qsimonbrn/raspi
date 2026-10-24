@@ -126,6 +126,7 @@ ausschließlich `/etc/sudoers.d`.
 | `pihole/pi-gravity.service` | `/etc/systemd/system/` | identisch |
 | `pihole/pi-gravity.timer` | `/etc/systemd/system/` | identisch |
 | `pihole/cron.d-pihole` | `/etc/cron.d/pihole` | identisch |
+| `pihole/logrotate.timer-override.conf` | `/etc/systemd/system/logrotate.timer.d/override.conf` | identisch |
 
 **Drei Fallen stecken allein in dieser Tabelle:**
 
