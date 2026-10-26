@@ -189,6 +189,8 @@ Wiederaufbau.
                                       (cache und heap_dumps ausgeschlossen)
 /mnt/usb-hdd/snapotter/data/files     SnapOtter: Nutzdateien
                                       (data/ai und pgdata NICHT gesichert)
+/mnt/usb-hdd/insta-triage             insta-triage: Bilder, Import, Altstand
+                                      (triage.db* ausgeschlossen, eigener Abzug)
 ```
 
 **Richtiggestellt am 04.09.2026.** Die Liste nannte `/home/simon/raspi` zweimal — ein
@@ -247,9 +249,16 @@ sie ohnehin vollständig — oder gar nicht, weil der Holvorgang abgebrochen ist
 > bleibt stehen.
 
 Ausgeschlossen sind, gemessen am Skript (13.09.2026): `*/tmp/*`, `*/logs/*`, `*.lock`,
-Cache-Verzeichnisse (`--exclude-caches`), die laufenden Datenbankdateien von Vaultwarden
-und n8n (beide haben einen eigenen, konsistenten Abzug), `/mnt/usb-hdd/n8n/*.log` und
-`/mnt/usb-hdd/workbench-eingang/.tmp-*`.
+Cache-Verzeichnisse (`--exclude-caches`), die laufenden Datenbankdateien von Vaultwarden,
+n8n und — seit 26.10.2026 — insta-triage (alle drei mit eigenem, konsistentem Abzug),
+`/mnt/usb-hdd/n8n/*.log` und `/mnt/usb-hdd/workbench-eingang/.tmp-*`.
+
+**insta-triage (seit 26.10.2026):** `triage.db` läuft im WAL-Modus und wird wie bei
+Vaultwarden und n8n per `sqlite3 .backup` abgezogen. Geprüft werden `integrity_check`
+und, gegen einen leeren Abzug, dass die Tabelle `accounts` mehr als null Zeilen hat.
+Nachgewiesen am 26.10.2026: Abzug aus dem Box-Snapshot per `restic dump` zurückgeholt,
+`integrity_check` ok, 1.955 Konten wie im Original; die Live-Datei steht nicht im
+Snapshot; Negativkontrolle (`dump` auf eine nicht vorhandene Datei) endet mit Exit 2.
 
 **Schritt 6 — Aufräumen.** Alte Stände werden nach den Regeln aus Abschnitt 5 entfernt
 und der Speicher freigegeben (`--prune`).

@@ -9,6 +9,15 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.32.0] — 2026-10-26
+
+### Geändert
+- `12`, `11`, `15`: insta-triage wird täglich gesichert (SQLite-Abzug, Live-Datei
+  ausgeschlossen); `11` Zeile 18 nennt nicht mehr OneDrive als Grund für die
+  ungesicherte SSD.
+
+---
+
 ## [2.31.0] — 2026-10-26
 
 ### Geändert

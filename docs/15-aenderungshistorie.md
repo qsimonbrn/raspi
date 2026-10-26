@@ -19,6 +19,24 @@ Backup.
 
 ---
 
+## 26.10.2026 — insta-triage im täglichen Backup
+
+| | |
+|---|---|
+| Geändert | `/usr/local/bin/pi-backup.sh`: neuer Abschnitt 2d, Pfad `/mnt/usb-hdd/insta-triage`, Ausschluss `triage.db*` |
+| Rückweg | `/usr/local/bin/pi-backup.sh.bak-20261026` |
+| Nachweis | Lauf von Hand über systemd, 10:25–10:29, Exit 0 · Snapshot `b7ffa2a0` (Box), `83845781` (OneDrive) · Abzug per `dump` zurückgeholt: `integrity_check` ok, 1.955 Konten · Live-Datei nicht im Snapshot · alle 1.882 Bilder enthalten · Abgleich 29/29 |
+
+**Warum:** insta-triage ist ein laufender Dienst, dessen Entscheidungen Handarbeit sind
+und in keinem Backup lagen (Frage offen seit 03.09.2026). 19 MB, passt auch in die
+OneDrive-Kopie.
+
+**Mitentschieden (Simon, 26.10.2026):** OneDrive (5 GiB, 1,6 GiB belegt) bekommt nur das
+Nötigste; was darüber hinausgeht, nur auf die Storage Box. Die Großbestände der SSD
+regelt Simon separat.
+
+---
+
 ## 26.10.2026 — Backup-Hauptziel: Hetzner Storage Box, OneDrive als Kopie
 
 | | |

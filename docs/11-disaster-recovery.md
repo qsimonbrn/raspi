@@ -26,7 +26,8 @@ Was passiert, wenn der Pi morgen nicht mehr startet?
 | 14 | **yt-werk** (Image, Dockerfile, Anwendung) | ✅ **ja** | GitHub: `qsimonbrn/raspi`, `stacks/yt-werk/`. Das **Image** liegt nirgends gesichert — es wird aus dem Dockerfile neu gebaut, und `yt-dlp` ist darin gepinnt, siehe [20](20-yt-werk.md) |
 | 15 | **SnapOtter** (Datenbank, Nutzdateien) | ✅ **ja** | restic-Backup, seit 14.09.2026 — **`pg_dump`**, nicht das laufende Postgres-Verzeichnis. `data/files` direkt. **`data/ai` bewusst nicht** (nachladbare KI-Modelle, bis 35 GB), siehe [22](22-snapotter.md) |
 | 16 | **Stirling PDF** (Einstellungen, Benutzerkonten) | 🟡 **teilweise** | restic-Backup von `configs/`, seit 14.09.2026. **Die H2-Datenbank wird als laufende Datei kopiert, nicht als Abzug** — anders als bei Vaultwarden und n8n. Bei einem einzelnen Konto ist der Schaden gering, sauber ist es nicht, siehe [21](21-stirling-pdf.md) |
-| 17 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | passt nicht in 5 GB OneDrive |
+| 17 | **insta-triage** (Entscheidungen in `triage.db`, Bilder, Import) | ✅ **ja** | restic-Backup, seit 26.10.2026 — konsistenter SQLite-Abzug wie bei Vaultwarden und n8n, Live-Datei ausgeschlossen |
+| 18 | **Nutzdaten auf der SSD** (311 GB) | ❌ nein | bewusst nicht im täglichen Backup; Simon regelt die Großbestände separat (Stand 26.10.2026) |
 
 **Zu 11 — Diun nach einem Totalverlust wiederherstellen.** Das ntfy-Konto `diun`
 selbst ist gesichert (es liegt in `user.db` unter `/mnt/usb-hdd/ntfy`), nur sein

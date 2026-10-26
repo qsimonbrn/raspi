@@ -240,6 +240,43 @@ else
   warn "SnapOtter-Datenbank laeuft nicht -- uebersprungen"
 fi
 
+# --- 2d. insta-triage: Datenbankabzug (seit 26.10.2026) ----------------------
+# Gleiche Begruendung wie bei Vaultwarden und n8n: triage.db laeuft im
+# WAL-Modus, ein bytweises Kopieren kann Hauptdatei und -wal zu verschiedenen
+# Zeitpunkten erwischen. Gesichert wird der ".backup"-Abzug, die Live-Datei
+# ist ausgeschlossen. Bilder (pics/), Import und der Altstand
+# triage-vor-blockA.db werden direkt aus dem Verzeichnis gesichert.
+# Gegenprobe gegen einen leeren Abzug: Die Tabelle accounts ist im Betrieb
+# nie leer -- 0 Zeilen heisst, der Abzug taugt nichts.
+IT_DB=/mnt/usb-hdd/insta-triage/triage.db
+if docker ps --format '{{.Names}}' | grep -qx insta-triage; then
+  if [ -r "$IT_DB" ]; then
+    log "insta-triage: Datenbankabzug"
+    mkdir -p "$STAGE/insta-triage"
+    if sqlite3 "$IT_DB" ".backup '$STAGE/insta-triage/triage.db'" 2>/dev/null \
+         && [ -s "$STAGE/insta-triage/triage.db" ]; then
+      PRUEF_IT=$(sqlite3 "$STAGE/insta-triage/triage.db" 'PRAGMA integrity_check;' 2>&1 | head -1)
+      if [ "$PRUEF_IT" = "ok" ]; then
+        ANZ_IT=$(sqlite3 "$STAGE/insta-triage/triage.db" 'SELECT count(*) FROM accounts;' 2>/dev/null)
+        case "${ANZ_IT:-leer}" in
+          *[!0-9]*|leer|0)
+            warn "insta-triage: Abzug ohne lesbare Kontentabelle -- kein brauchbares Backup" ;;
+          *)
+            log "insta-triage: Datenbank gesichert ($(du -h "$STAGE/insta-triage/triage.db" | cut -f1), $ANZ_IT Konten)" ;;
+        esac
+      else
+        warn "insta-triage: Abzug beschaedigt -- integrity_check meldet: ${PRUEF_IT:-keine Ausgabe}"
+      fi
+    else
+      warn "insta-triage: sqlite3 .backup fehlgeschlagen"
+    fi
+  else
+    warn "insta-triage: $IT_DB nicht lesbar"
+  fi
+else
+  warn "insta-triage-Container laeuft nicht -- uebersprungen"
+fi
+
 # --- 3. Pi-hole: Teleporter-Export -------------------------------------------
 # Enthaelt Einstellungen, lokale DNS-Eintraege und Blocklisten-Quellen --
 # wenige hundert Kilobyte statt 424 MB Query-Datenbank.
@@ -303,6 +340,7 @@ restic $RESTIC_OPT backup \
   --exclude '/mnt/usb-hdd/n8n/database.sqlite*' \
   --exclude '/mnt/usb-hdd/n8n/*.log' \
   --exclude '/mnt/usb-hdd/workbench-eingang/.tmp-*' \
+  --exclude '/mnt/usb-hdd/insta-triage/triage.db*' \
   --exclude '/mnt/usb-hdd/stirling-pdf/configs/cache' \
   --exclude '/mnt/usb-hdd/stirling-pdf/configs/heap_dumps' \
   "$STAGE" \
@@ -319,7 +357,8 @@ restic $RESTIC_OPT backup \
   /mnt/usb-hdd/second-brain/vault.git \
   /mnt/usb-hdd/workbench-eingang \
   /mnt/usb-hdd/stirling-pdf/configs \
-  /mnt/usb-hdd/snapotter/data/files
+  /mnt/usb-hdd/snapotter/data/files \
+  /mnt/usb-hdd/insta-triage
 RC=$?
 
 if [ $RC -ne 0 ]; then
