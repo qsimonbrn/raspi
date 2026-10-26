@@ -2,7 +2,7 @@
 
 *Eingerichtet: 13.08.2026 · Prüfung erweitert: 20.08.2026 · Vaultwarden ergänzt: 23.08.2026 ·
 Second Brain ergänzt: 03.09.2026 · SnapOtter und Stirling PDF ergänzt: 14.09.2026 ·
-Hetzner Storage Box ergänzt: 19.09.2026*
+Hetzner Storage Box ergänzt: 19.09.2026 · **Hauptziel auf Hetzner umgestellt: 25./26.10.2026***
 
 Vollständige Beschreibung der Sicherungsstrategie: was gesichert wird, was
 bewusst nicht, wie wiederhergestellt wird — und wo die Lücken bleiben.
@@ -70,8 +70,10 @@ Die Free-Version reicht also. Für den Teil, für den sie *nicht* reicht, siehe
 | Baustein | Wahl |
 |---|---|
 | Sicherungswerkzeug | **restic 0.14** (Debian-Paket) |
-| Transport | **rclone** über das vorhandene OneDrive-Remote |
-| Repository | `rclone:onedrive:Backups/raspberrypi-restic` |
+| Hauptziel | **Hetzner Storage Box**, restic über SFTP: `sftp:storagebox-pi:restic` (seit 26.10.2026) |
+| Zweitziel | **OneDrive**, `rclone:onedrive:Backups/raspberrypi-restic` — wird nach jeder Sicherung per `restic copy` nachgezogen |
+| Zugang zur Box | Sub-Account `u672490-sub1`, auf das Verzeichnis `pi-backup` eingesperrt; eigener Schlüssel `/root/.ssh/storagebox-backup`, Host-Alias `storagebox-pi` in `/root/.ssh/config`, Host-Schlüssel fest in `/root/.ssh/known_hosts` |
+| Schutz gegen Löschen | **Automatische Snapshots der Box** (von Simon eingeschaltet). Über SFTP gibt es kein Append-only: `root` auf dem Pi kann das Repository löschen — die Snapshots der Box liegen außerhalb seiner Reichweite |
 | Repository-Format | Version 2 — mit Kompression |
 | Auslöser | systemd-Timer, täglich 03:17 Uhr |
 | Ausführung als | `root` (nötig für `/var/lib/tailscale`, `passdb.tdb`, Docker-Socket) |
@@ -101,7 +103,10 @@ und damit auch die bestehende OneDrive-Anmeldung.
 | `/etc/systemd/system/pi-backup.service` | Dienstdefinition |
 | `/etc/systemd/system/pi-backup.timer` | Zeitplan |
 | `/etc/pi-backup.env` | Konfiguration (enthält **keine** Geheimnisse) |
-| `/root/.restic-password` | Repository-Passwort, Modus 600 |
+| `/root/.restic-password` | Repository-Passwort, Modus 600 — gilt für **beide** Repositories |
+| `/root/.ssh/storagebox-backup` | SSH-Schlüssel nur für die Storage Box (ed25519, ohne Passphrase, 600) |
+| `/root/.ssh/config` | Host-Alias `storagebox-pi` (Port 23, Sub-Account, `IdentitiesOnly`, `StrictHostKeyChecking yes`) |
+| `/root/.ssh/known_hosts` | nur der ED25519-Host-Schlüssel der Box, `SHA256:XqONwb1S0zuj5A1CDxpOSuD2hnAArV1A3wKY7Z3sdgM` |
 | `/mnt/usb-hdd/backup-stage` | Temporäre Ablage, wird nach jedem Lauf gelöscht |
 
 Skript und Unit-Dateien liegen versioniert unter `system/backup/` und werden von
@@ -283,6 +288,25 @@ Nur ein Lauf gleichzeitig — abgesichert über `flock`.
 
 ## 6a. Wie geprüft wird, dass das Backup taugt
 
+### Umstellung auf die Storage Box — Nachweise vom 25./26.10.2026
+
+| Prüfung | Ergebnis |
+|---|---|
+| Anmeldung `root` → Sub-Account | gelingt; **Gegenproben:** `simon`-Schlüssel am Sub-Account und `root`-Schlüssel am Hauptkonto werden beide abgewiesen |
+| Einsperrung | Sub-Account sieht nur sein eigenes Verzeichnis |
+| Repository angelegt | mit `--copy-chunker-params` vom OneDrive-Repository, sonst teilen die beiden keine Daten und `copy` überträgt alles doppelt |
+| Historie übernommen | `restic copy`, 45 Snapshots, 1,5 GiB in 15 Minuten; neuester Snapshot auf beiden Zielen **gleiche tree-ID** |
+| Nutzdaten | `check --read-data-subset=100M`: 7/7 Packs, keine Fehler |
+| Rückholpfad | Datei per `dump` geholt, `cmp` gegen das Original identisch |
+| Erster echter Lauf über systemd (26.10. 01:02) | `Result=success`, 5 min 55 s; neuer Snapshot auf beiden Zielen mit gleicher tree-ID; ntfy-Meldung „Hetzner: 1.511 GiB · OneDrive: 1.511 GiB“ |
+| **Nicht geprüft** | Der Warnpfad, wenn nur OneDrive ausfällt — er ist im Skript, aber noch nie durchlaufen |
+
+> **`rclone.*`-Optionen sind beim SFTP-Backend wirkungslos, aber unschädlich.** restic
+> prüft sie dort gar nicht — auch eine erfundene Option endete mit Exit 0. Deshalb läuft
+> `collect.sh` mit seinem festen `-o rclone.timeout=5m` gegen die Box weiter, und deshalb
+> taugt eine solche Option auch nicht als Negativkontrolle für dieses Backend.
+
+
 *Erweitert am 20.08.2026.*
 
 Die Bestandsaufnahme (`inventar/collect.sh`) prüft das Backup bei jedem Lauf auf **zwei
@@ -451,7 +475,13 @@ Das ist keine Sicherung, sondern eine Kopie.
 Fotos gehören idealerweise an **zwei** Orte — die externe Platte allein schützt nicht
 gegen Feuer oder Diebstahl.
 
-### Hetzner Storage Box — vorbereitet, noch nicht angebunden
+### Hetzner Storage Box — seit 26.10.2026 Hauptziel, Großbestände noch offen
+
+> **Stand 26.10.2026:** Das tägliche Backup läuft auf die Box (Abschnitt 3); die beiden
+> Großbestände unten sind **weiterhin ungesichert**. Entschieden: Sie bekommen später ein
+> **eigenes** Repository mit eigenem Zeitplan, damit ein Erst-Upload von rund 300 GB das
+> nächtliche Backup nicht blockiert — und `SSD_Müll` soll vorher gesichtet werden.
+> Der Text darunter beschreibt den Stand vom 19.09.2026.
 
 *Ergänzt am 19.09.2026.*
 
@@ -551,10 +581,10 @@ wirkungslos.
 |---|---|
 | Was ist geschützt? | E-Mail-Archiv, Paperless, alle Systemkonfigurationen, Compose-Dateien, Doku |
 | Wovor? | Ausfall der SD-Karte oder SSD, versehentliches Löschen, misslungene Updates, Ransomware |
-| Wovor nicht? | Verlust der 222 GB unter `SSD_Müll` — dafür fehlt der Speicherplatz |
+| Wovor nicht? | Verlust der 222 GB unter `SSD_Müll` und 86 GB unter `rclone_bak` — Platz ist seit der Storage Box da, das eigene Repository dafür steht noch aus |
 | Wie oft? | täglich, 03:17 Uhr |
 | Wie weit zurück? | 7 Tage, 4 Wochen, 6 Monate |
-| Wo? | OneDrive, verschlüsselt vor dem Upload |
+| Wo? | Hetzner Storage Box (Hauptziel) und OneDrive (Kopie), beide verschlüsselt vor dem Upload |
 | Was ist zu tun? | Repository-Passwort in den Passwortmanager übertragen |
 
 ---

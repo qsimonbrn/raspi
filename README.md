@@ -161,7 +161,7 @@ raspi/
 │   └── _archiviert/       abgeschaltete Dienste, Konfiguration bleibt nachvollziehbar
 └── system/                Systemkonfiguration — läuft NICHT von hier, siehe docs/17
     ├── abgleich/          prüft täglich, ob Repository und System übereinstimmen
-    ├── backup/            restic nach OneDrive
+    ├── backup/            restic auf die Storage Box, Kopie nach OneDrive
     ├── firewall/          pi-guard
     ├── messung/           befristete Speichermessung
     ├── sudoers/           Regeln für das Konto claude

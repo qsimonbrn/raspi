@@ -1,6 +1,6 @@
 # 09 — Empfehlungen
 
-*Stand: 25.08.2026 · ergänzt und fortgeschrieben 13.09.2026 · 3.15 bis 3.17 ergänzt, 3.10 erledigt 18.09.2026 · 1.5 ergänzt 19.09.2026*
+*Stand: 25.08.2026 · ergänzt und fortgeschrieben 13.09.2026 · 3.15 bis 3.17 ergänzt, 3.10 erledigt 18.09.2026 · 1.5 ergänzt 19.09.2026, Hauptbackup umgestellt 26.10.2026*
 
 Priorisiert nach Schadenshöhe, nicht nach Aufwand. Jede Maßnahme mit Begründung — auch
 die, von denen abgeraten wird.
@@ -84,7 +84,12 @@ SSD, damit im Ausfall wenigstens ein Klon existiert.
 Ohne SMART-Daten gibt es keine Vorwarnung, bevor die SSD ausfällt.
 **Aufwand:** 10 Minuten. Bei USB-Anbindung ist `-d sat` als Parameter nötig.
 
-### 1.5 Backup-Ziel auf Hetzner Storage Box erweitern — 🟡 vorbereitet, noch nicht umgesetzt
+### 1.5 Backup-Ziel auf Hetzner Storage Box erweitern — ✅ Hauptbackup umgestellt 26.10.2026 · 🟡 Großbestände offen
+
+> **Umgesetzt:** Tägliches Backup läuft auf die Box (Sub-Account, eigener `root`-Schlüssel,
+> Box-Snapshots an), OneDrive bekommt jede Nacht eine Kopie. Einzelheiten und Nachweise in
+> [12](12-backup.md), Abschnitte 3 und 6a. **Noch offen:** `SSD_Müll` und `rclone_bak` in
+> ein eigenes Repository mit eigenem Zeitplan — vorher `SSD_Müll` sichten.
 
 *Ergänzt am 19.09.2026.*
 

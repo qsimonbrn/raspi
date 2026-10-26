@@ -127,7 +127,8 @@ vorwert() { awk -F'\t' -v k="$1" '$1==k{print $2; f=1} END{if(!f) print ""}' "$V
 # ---------------------------------------------------------------------------
 #  Vorab: die teuren Abfragen genau einmal
 # ---------------------------------------------------------------------------
-# restic spricht ueber rclone mit OneDrive. Ein Aufruf dauert 20 bis 40
+# restic spricht seit 26.10.2026 per SFTP mit der Hetzner Storage Box (vorher
+# ueber rclone mit OneDrive). Ein Aufruf dauert einige Sekunden bis 40
 # Sekunden; die Antwort wird deshalb hier einmal geholt und mehrfach benutzt.
 
 SNAP_ZEIT="";  SNAP_ID="";  SNAP_ANZAHL="";  SNAP_PFADE="";  SNAP_EPOCH=0

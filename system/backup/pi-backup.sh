@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  Backup des Raspberry Pi nach OneDrive (restic ueber rclone)
+#  Backup des Raspberry Pi: Hauptziel Hetzner Storage Box (restic ueber SFTP),
+#  danach Kopie nach OneDrive (restic copy ueber rclone). Seit 25.10.2026.
 #
 #  Aufruf ueber systemd: pi-backup.service / pi-backup.timer
 #  Manuell:              sudo /usr/local/bin/pi-backup.sh
@@ -17,11 +18,16 @@ CONFIG=/etc/pi-backup.env
 [ -r "$CONFIG" ] || { echo "FEHLER: $CONFIG nicht lesbar"; exit 1; }
 set -a; . "$CONFIG"; set +a
 
-# Draht zum eigenen rclone-Unterprozess. Vorgabe ist 1 Minute -- unter Last
+# Hauptziel ist RESTIC_REPOSITORY (sftp:storagebox-pi:restic, Zugang ueber
+# /root/.ssh/config). Optionen fuer das Hauptziel: keine.
+RESTIC_OPT=""
+
+# Zweitziel OneDrive (RESTIC_REPOSITORY_ZWEIT). Der Timeout gilt dem Draht zum
+# eigenen rclone-Unterprozess. Vorgabe ist 1 Minute -- unter Last
 # (Swap-Thrashing, 14.09.2026) antwortet rclone nicht rechtzeitig, und restic
 # bricht mit "context deadline exceeded" ab. NICHT zu verwechseln mit
 # RCLONE_TIMEOUT in /etc/pi-backup.env; das gilt fuer rclone <-> OneDrive.
-RESTIC_OPT="-o rclone.timeout=5m"
+RESTIC_OPT_ZWEIT="-o rclone.timeout=5m"
 
 STAGE="${STAGE_DIR:-/mnt/usb-hdd/backup-stage}"
 FEHLER=0
@@ -334,6 +340,29 @@ restic $RESTIC_OPT forget \
   --keep-daily 7 --keep-weekly 4 --keep-monthly 6 \
   --prune > >(tail -3) 2> >(tail -5 >&2) || warn "Aufraeumen fehlgeschlagen -- Grund siehe Zeilen darueber (haeufig: verwaiste Sperre, dann 'restic unlock')"
 
+# --- 7b. Zweitziel OneDrive -------------------------------------------------
+# Die Sicherung entsteht EINMAL auf der Storage Box und wird danach kopiert.
+# So stehen auf beiden Zielen dieselben Snapshots. Faellt OneDrive aus, ist das
+# eine Warnung, kein Fehlschlag -- die Sicherung selbst liegt dann schon sicher.
+GROESSE_ZWEIT=""
+if [ -z "${RESTIC_REPOSITORY_ZWEIT:-}" ]; then
+  warn "Kein Zweitziel konfiguriert (RESTIC_REPOSITORY_ZWEIT fehlt in $CONFIG)"
+else
+  log "restic: Kopie nach OneDrive"
+  if restic -r "$RESTIC_REPOSITORY_ZWEIT" $RESTIC_OPT_ZWEIT copy \
+       --from-repo "$RESTIC_REPOSITORY" --from-password-file "$RESTIC_PASSWORD_FILE" \
+       --tag automatisch > >(tail -3) 2> >(tail -5 >&2); then
+    log "restic: alte Staende auf OneDrive aufraeumen"
+    restic -r "$RESTIC_REPOSITORY_ZWEIT" $RESTIC_OPT_ZWEIT forget \
+      --tag automatisch \
+      --keep-daily 7 --keep-weekly 4 --keep-monthly 6 \
+      --prune > >(tail -3) 2> >(tail -5 >&2) || warn "OneDrive: Aufraeumen fehlgeschlagen"
+    GROESSE_ZWEIT=$(restic -r "$RESTIC_REPOSITORY_ZWEIT" $RESTIC_OPT_ZWEIT stats --mode raw-data 2>/dev/null | awk '/Total Size/{print $3" "$4}')
+  else
+    warn "Kopie nach OneDrive fehlgeschlagen -- Hauptziel ist aktuell, Zweitziel nicht"
+  fi
+fi
+
 # --- 8. Aufraeumen und Bericht ------------------------------------------------
 rm -rf "$STAGE"
 
@@ -345,7 +374,7 @@ GROESSE=$(restic $RESTIC_OPT stats --mode raw-data 2>/dev/null | awk '/Total Siz
 if [ "$FEHLER" -gt 0 ]; then
   echo "=== Backup abgeschlossen, aber mit $FEHLER Warnung(en) ==="
   notify "Backup mit Warnungen" \
-         "$FEHLER Warnung(en). Repository: ${GROESSE:-unbekannt}. Details: journalctl -u pi-backup.service" \
+         "$FEHLER Warnung(en). Hetzner: ${GROESSE:-unbekannt} · OneDrive: ${GROESSE_ZWEIT:-unbekannt}. Details: journalctl -u pi-backup.service" \
          "high" "warning"
   exit 1
 fi
@@ -353,7 +382,7 @@ fi
 # Erfolg wird mit niedrigster Prioritaet gemeldet: keine Toene, kein Vibrieren,
 # aber ein sichtbarer Eintrag im Verlauf. So faellt auf, wenn er ausbleibt.
 notify "Backup erfolgreich" \
-       "Repository: ${GROESSE:-unbekannt}" \
+       "Hetzner: ${GROESSE:-unbekannt} · OneDrive: ${GROESSE_ZWEIT:-unbekannt}" \
        "min" "white_check_mark"
 
 log "=== Backup erfolgreich abgeschlossen ==="

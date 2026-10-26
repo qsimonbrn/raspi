@@ -1,6 +1,6 @@
 # 15 — Änderungshistorie des Systems
 
-*Erfasst: 18.08.2026 · zuletzt ergänzt 25.10.2026*
+*Erfasst: 18.08.2026 · zuletzt ergänzt 26.10.2026*
 
 Dieses Kapitel ist das Betriebstagebuch des Pi: **was am laufenden System geändert
 wurde, wann und warum**. Es beantwortet die Frage „seit wann ist das eigentlich so?"
@@ -19,14 +19,46 @@ Backup.
 
 ---
 
+## 26.10.2026 — Backup-Hauptziel: Hetzner Storage Box, OneDrive als Kopie
+
+| | |
+|---|---|
+| Hauptziel | `sftp:storagebox-pi:restic` (Repository `febb7fac6b`, Sub-Account `u672490-sub1`, Verzeichnis `pi-backup`) |
+| Zweitziel | `rclone:onedrive:Backups/raspberrypi-restic`, nach jedem Lauf per `restic copy`, eigenes `forget --prune` |
+| Neu auf dem Pi | `/root/.ssh/storagebox-backup` (+ `.pub`), `/root/.ssh/config`, `/root/.ssh/known_hosts` |
+| Neu auf der Box | `pi-backup/.ssh/authorized_keys` (vom Hauptkonto aus angelegt); Box-Snapshots von Simon eingeschaltet |
+| `/etc/pi-backup.env` | `RESTIC_REPOSITORY` → Box, neu `RESTIC_REPOSITORY_ZWEIT` → OneDrive |
+| `pi-backup.sh` | Abschnitt 7b (Kopie + Aufräumen OneDrive, Ausfall = Warnung), Meldung nennt beide Größen; `RESTIC_OPT` getrennt nach Ziel |
+| Historie | 45 Snapshots per `restic copy` übernommen, Snapshot vom 25.10. nachgeholt |
+| Sicherungen | `/etc/pi-backup.env.bak-20261025`, `/usr/local/bin/pi-backup.sh.bak-20261025` |
+| Rückweg | beide `.bak` zurückspielen — OneDrive ist vollständig erhalten |
+
+**Nachgewiesen:** siehe [12](12-backup.md), Abschnitt 6a. Erster Lauf über systemd
+26.10.2026 01:02, `success`, beide Ziele mit identischer tree-ID, Meldung angekommen.
+
+**Mein Fehler dabei:** Das geänderte `pi-backup.sh` lag vom 25.10. 01:00 bis 26.10. 01:01
+nur im Repository. Der Abgleich meldete das am 25.10. um 09:22 mit Priorität `high` —
+also auch über den Notruf. Ein Fehlalarm aus einem halbfertigen Zwischenstand. Regel
+daraus: **Eine Datei unter `system/` wird erst geändert, wenn sie in derselben Sitzung
+auch installiert wird** — sonst gehört die Änderung auf einen Zweig oder in eine Kopie.
+
+**Entscheidungen:** Simon, 25.10.2026 — OneDrive bleibt als Zweitziel (jede Nacht),
+Sub-Account mit Box-Snapshots, Historie übernehmen, Großbestände später in ein eigenes
+Repository.
+
+---
+
 ## 25.10.2026 — ntfy hält Meldungen sieben Tage statt 24 Stunden vor
 
 `stacks/ntfy/server.yml`: `cache-duration` von `"24h"` auf `"168h"`, an Ort und Stelle
 geschrieben (Inode 258321 unverändert), danach `compose restart`. **Nachgewiesen:** Wert im
 laufenden Container gelesen, `healthy` nach 6 s, die Meldungen vom 24.10. überstanden den
-Neustart, anonym weiterhin 403, `pi-guard` unverändert. **Noch offen:** Dass die längere
-Haltedauer greift, zeigt sich erst nach 24 Stunden — die Backup-Meldung vom 24.10.2026
-03:25 muss am 25.10. nach 03:25 noch abrufbar sein. **Entscheidung:** Simon, 25.10.2026.
+Neustart, anonym weiterhin 403, `pi-guard` unverändert. **Nachtrag 26.10.2026 — Wirkung
+nachgewiesen, und mein Prüfkriterium war falsch:** Ich hatte angekündigt, die Meldung vom
+24.10. müsse am 25.10. noch abrufbar sein. Sie war weg. Das ist kein Defekt: ntfy schreibt
+das Ablaufdatum (`expires`) **beim Veröffentlichen** fest; Meldungen von vor der Änderung
+behalten ihre 24 Stunden. Gemessen: die beiden nach der Änderung veröffentlichten Meldungen
+tragen `expires` = Veröffentlichung + **168 h**. **Entscheidung:** Simon, 25.10.2026.
 
 ---
 
@@ -44,8 +76,8 @@ System-`logrotate.timer` gleichzeitig auf `/etc/logrotate.d/pihole`.
 | Preis | Pi-hole-Logs werden doppelt rotiert, `pihole.log` hält effektiv ~2,5 Tage |
 
 **Nachgewiesen:** Timer zeigt 00:30, Handlauf `Result=success`, keine `failed`-Units,
-Abgleich 29/29. **Noch offen:** Der eigentliche Nachweis ist die erste Nacht, in der beide
-laufen (Mo 26.10., 00:00 und 00:30) — erst dann ist das Rennen nachweislich weg.
+Abgleich 29/29. **Nachtrag 26.10.2026:** In der ersten Nacht lief `pihole flush once` um
+00:00, der System-Lauf um 00:30:33 mit `success`, keine Fehlermeldung — das Rennen ist weg.
 
 **Entscheidung:** Simon, 25.10.2026 (Option B; verworfen: `flush once` auskommentieren,
 nichts tun).

@@ -9,6 +9,19 @@ Datumsformat: JJJJ-MM-TT
 
 ---
 
+## [2.31.0] — 2026-10-26
+
+### Geändert
+- `12`, `09` 1.5, `15`, `README`, `collect.sh` (Kommentar): Backup-Hauptziel ist die
+  Hetzner Storage Box (restic über SFTP, Sub-Account), OneDrive bekommt nach jedem Lauf
+  eine Kopie. Neuer Abschnitt mit den Nachweisen in `12` 6a.
+
+### Behoben
+- `15`: Nachträge zu ntfy (Wirkung nachgewiesen, Prüfkriterium war falsch) und logrotate
+  (erste Nacht ohne Rennen).
+
+---
+
 ## [2.30.0] — 2026-10-25
 
 ### Behoben
